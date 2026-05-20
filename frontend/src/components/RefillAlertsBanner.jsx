@@ -40,7 +40,7 @@ const RefillAlertsBanner = () => {
     <div className="rounded-2xl border border-amber-200 bg-amber-50/60 p-4 sm:p-5 flex items-start gap-3">
       <AlertTriangle className="text-amber-600 shrink-0 mt-0.5" size={20} />
       <div className="flex-1">
-        <p className="text-sm font-bold text-[#0B1B2B]">Refill alerts</p>
+        <p className="text-sm font-bold text-navy">Refill alerts</p>
         <p className="text-xs text-gray-600 mt-0.5">
           Based on your reminder durations — restock before doses run out.
         </p>
@@ -60,7 +60,7 @@ const RefillAlertsBanner = () => {
         </ul>
         <Link
           to="/dashboard/reminders"
-          className="inline-flex items-center gap-1 mt-3 text-[12px] font-bold text-[#0f803f] hover:underline"
+          className="inline-flex items-center gap-1 mt-3 text-[12px] font-bold text-teal hover:underline"
         >
           <RefreshCw size={12} /> Update reminders
           {more > 0 ? ` (+${more} more)` : ''}

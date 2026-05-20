@@ -72,7 +72,7 @@ const NearbyPharmacyPage = () => {
         <button
           type="button"
           onClick={locate}
-          className="bg-[#0f803f] hover:bg-[#0c6b34] text-white text-[14px] font-bold py-2.5 px-5 rounded-xl transition-colors flex items-center gap-2"
+          className="bg-brand-gradient hover:opacity-90 text-white text-[14px] font-bold py-2.5 px-5 rounded-xl transition-colors flex items-center gap-2"
         >
           <Crosshair size={16} />
           {pos ? 'Update my location' : 'Use my location'}
@@ -131,14 +131,14 @@ const NearbyPharmacyPage = () => {
           >
             <div className="flex items-start justify-between gap-3">
               <div>
-                <h3 className="font-bold text-[#0B1B2B]">{p.name}</h3>
+                <h3 className="font-bold text-navy">{p.name}</h3>
                 <p className="text-xs text-gray-500 mt-0.5">{metres(p.distance_m)} away</p>
               </div>
               <a
                 href={p.directions_url}
                 target="_blank"
                 rel="noreferrer noopener"
-                className="bg-[#0f803f] hover:bg-[#0c6b34] text-white text-[12px] font-bold px-3 py-1.5 rounded-lg flex items-center gap-1"
+                className="bg-brand-gradient hover:opacity-90 text-white text-[12px] font-bold px-3 py-1.5 rounded-lg flex items-center gap-1"
               >
                 <MapPin size={12} /> Directions
               </a>
@@ -164,7 +164,7 @@ const NearbyPharmacyPage = () => {
               href={p.osm_url}
               target="_blank"
               rel="noreferrer noopener"
-              className="text-xs text-blue-600 hover:underline mt-3 flex items-center gap-1"
+              className="text-xs text-teal hover:underline mt-3 flex items-center gap-1"
             >
               View on OpenStreetMap <ExternalLink size={12} />
             </a>

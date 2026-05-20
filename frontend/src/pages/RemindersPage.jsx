@@ -137,7 +137,7 @@ const RemindersPage = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal"></div>
       </div>
     );
   }
@@ -180,7 +180,7 @@ const RemindersPage = () => {
                   onChange={(e) =>
                     setForm((f) => ({ ...f, medicine_name: e.target.value }))
                   }
-                  className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-green-600/20 focus:border-green-600 outline-none"
+                  className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-teal/20 focus:border-teal outline-none"
                   placeholder="e.g. Metformin 500mg"
                 />
               </div>
@@ -190,7 +190,7 @@ const RemindersPage = () => {
                   type="text"
                   value={form.dose}
                   onChange={(e) => setForm((f) => ({ ...f, dose: e.target.value }))}
-                  className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-green-600/20 focus:border-green-600 outline-none"
+                  className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-teal/20 focus:border-teal outline-none"
                   placeholder="1 tablet"
                 />
               </div>
@@ -201,7 +201,7 @@ const RemindersPage = () => {
                 <select
                   value={form.frequency}
                   onChange={(e) => setForm((f) => ({ ...f, frequency: e.target.value }))}
-                  className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-green-600/20 focus:border-green-600 outline-none bg-white"
+                  className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-teal/20 focus:border-teal outline-none bg-white"
                 >
                   {FREQUENCIES.map((o) => (
                     <option key={o.value} value={o.value}>
@@ -218,7 +218,7 @@ const RemindersPage = () => {
                   type="text"
                   value={form.times}
                   onChange={(e) => setForm((f) => ({ ...f, times: e.target.value }))}
-                  className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-green-600/20 focus:border-green-600 outline-none"
+                  className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-teal/20 focus:border-teal outline-none"
                   placeholder="09:00, 21:00"
                 />
               </div>
@@ -234,7 +234,7 @@ const RemindersPage = () => {
                   onChange={(e) =>
                     setForm((f) => ({ ...f, duration_days: e.target.value }))
                   }
-                  className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-green-600/20 focus:border-green-600 outline-none"
+                  className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-teal/20 focus:border-teal outline-none"
                 />
               </div>
               <div className="md:col-span-2 flex justify-end gap-3 pt-2">
@@ -257,7 +257,7 @@ const RemindersPage = () => {
             key={reminder.id}
             className={`transition-all ${
               reminder.active
-                ? 'border-green-200 shadow-sm'
+                ? 'border-teal/30 shadow-sm'
                 : 'border-gray-200 bg-gray-50 opacity-75'
             }`}
           >
@@ -265,7 +265,7 @@ const RemindersPage = () => {
               <div className="flex items-center gap-4 flex-1">
                 <div
                   className={`w-12 h-12 rounded-full flex items-center justify-center shrink-0 ${
-                    reminder.active ? 'bg-green-100 text-green-600' : 'bg-gray-200 text-gray-500'
+                    reminder.active ? 'bg-teal/10 text-teal' : 'bg-gray-200 text-gray-500'
                   }`}
                 >
                   <Bell size={24} />
@@ -308,12 +308,12 @@ const RemindersPage = () => {
                 <button
                   onClick={() => handleToggle(reminder)}
                   className={`flex items-center gap-2 font-medium transition-colors ${
-                    reminder.active ? 'text-green-600' : 'text-gray-400'
+                    reminder.active ? 'text-teal' : 'text-gray-400'
                   }`}
                 >
                   {reminder.active ? (
                     <>
-                      On <ToggleRight size={32} className="text-green-500" />
+                      On <ToggleRight size={32} className="text-teal" />
                     </>
                   ) : (
                     <>

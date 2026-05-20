@@ -97,8 +97,8 @@ const UploadPrescriptionPage = () => {
           <Card.Body className="flex flex-col">
             <div
               className={`flex-1 border-2 border-dashed rounded-xl p-8 flex flex-col items-center justify-center text-center transition-colors min-h-[300px]
-                ${isDragging ? 'border-green-500 bg-green-50' : 'border-gray-300 hover:bg-gray-50 bg-white'}
-                ${file ? 'border-green-500 bg-green-50/50' : ''}
+                ${isDragging ? 'border-teal bg-teal/10' : 'border-gray-300 hover:bg-gray-50 bg-white'}
+                ${file ? 'border-teal bg-teal/10/50' : ''}
               `}
               onDragOver={handleDragOver}
               onDragLeave={handleDragLeave}
@@ -132,7 +132,7 @@ const UploadPrescriptionPage = () => {
                 </>
               ) : (
                 <div className="w-full flex flex-col items-center">
-                  <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4 text-green-600">
+                  <div className="w-16 h-16 bg-teal/10 rounded-full flex items-center justify-center mb-4 text-teal">
                     <FileType size={32} />
                   </div>
                   <p className="font-medium text-gray-900 truncate w-full max-w-xs mb-1">{file.name}</p>
@@ -181,9 +181,9 @@ const UploadPrescriptionPage = () => {
             {isUploading ? (
               <div className="h-full flex flex-col items-center justify-center text-center py-12">
                 <div className="relative mb-6">
-                  <div className="absolute inset-0 border-4 border-green-200 border-t-green-600 rounded-full animate-spin"></div>
+                  <div className="absolute inset-0 border-4 border-teal/30 border-t-teal rounded-full animate-spin"></div>
                   <div className="w-16 h-16 rounded-full bg-white flex items-center justify-center shadow-sm">
-                    <Search className="text-green-600" size={24} />
+                    <Search className="text-teal" size={24} />
                   </div>
                 </div>
                 <h4 className="text-lg font-medium text-gray-900 mb-2">Reading prescription…</h4>
@@ -193,7 +193,7 @@ const UploadPrescriptionPage = () => {
               </div>
             ) : result ? (
               <div className="space-y-6">
-                <div className="bg-green-100 text-green-800 p-4 rounded-lg flex items-start gap-3">
+                <div className="bg-teal/10 text-teal-dark p-4 rounded-lg flex items-start gap-3">
                   <CheckCircle2 className="shrink-0 mt-0.5" size={20} />
                   <div>
                     <p className="font-medium">Extracted {medicines.length} medicine{medicines.length === 1 ? '' : 's'}</p>
@@ -209,7 +209,7 @@ const UploadPrescriptionPage = () => {
                     return (
                       <div
                         key={`${med.name}-${index}`}
-                        className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex items-center justify-between group hover:border-green-300 transition-colors"
+                        className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex items-center justify-between group hover:border-teal/30 transition-colors"
                       >
                         <div className="flex items-center gap-4">
                           <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 font-medium">
@@ -221,7 +221,7 @@ const UploadPrescriptionPage = () => {
                               {[med.dosage, med.frequency, med.duration].filter(Boolean).join(' · ') || '—'}
                             </p>
                             {range && (
-                              <p className="text-xs font-medium text-green-700 mt-0.5">Live: {range}</p>
+                              <p className="text-xs font-medium text-teal-dark mt-0.5">Live: {range}</p>
                             )}
                           </div>
                         </div>
@@ -229,7 +229,7 @@ const UploadPrescriptionPage = () => {
                           <Button
                             variant="ghost"
                             size="sm"
-                            className="opacity-0 group-hover:opacity-100 text-green-600 hover:text-green-700 hover:bg-green-50"
+                            className="opacity-0 group-hover:opacity-100 text-teal hover:text-teal-dark hover:bg-teal/10"
                           >
                             Compare
                           </Button>

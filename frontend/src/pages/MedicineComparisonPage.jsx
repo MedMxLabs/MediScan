@@ -58,7 +58,7 @@ const MedicineComparisonPage = () => {
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center h-64 space-y-4">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600" />
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal" />
         <p className="text-gray-500">Fetching live pharmacy listings…</p>
       </div>
     );
@@ -69,7 +69,7 @@ const MedicineComparisonPage = () => {
       <div className="max-w-2xl mx-auto space-y-4">
         <Link
           to="/dashboard/search"
-          className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-green-600"
+          className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-teal"
         >
           <ArrowLeft size={16} /> Back to Search
         </Link>
@@ -81,7 +81,7 @@ const MedicineComparisonPage = () => {
   if (payload.failed_all) {
     return (
       <div className="max-w-2xl mx-auto space-y-4">
-        <Link to="/dashboard/search" className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-green-600">
+        <Link to="/dashboard/search" className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-teal">
           <ArrowLeft size={16} /> Back to Search
         </Link>
         <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-amber-900 text-sm">
@@ -96,7 +96,7 @@ const MedicineComparisonPage = () => {
       <div>
         <Link
           to="/dashboard/search"
-          className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-green-600 mb-4 transition-colors"
+          className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-teal mb-4 transition-colors"
         >
           <ArrowLeft size={16} /> Back to Search
         </Link>
@@ -106,10 +106,10 @@ const MedicineComparisonPage = () => {
             <p className="text-gray-500 mt-1">Live scrape — verify pack and price on the pharmacy site.</p>
           </div>
           {cheapest && (
-            <div className="bg-green-50 rounded-lg p-4 text-center min-w-[150px] border border-green-100">
-              <p className="text-sm font-medium text-green-800">Lowest MRP in result set</p>
-              <p className="text-3xl font-bold text-green-600 my-1">₹{Number(cheapest.price).toFixed(2)}</p>
-              <p className="text-xs text-green-700">at {cheapest.pharmacy_name}</p>
+            <div className="bg-teal/10 rounded-lg p-4 text-center min-w-[150px] border border-teal/20">
+              <p className="text-sm font-medium text-teal-dark">Lowest MRP in result set</p>
+              <p className="text-3xl font-bold text-teal my-1">₹{Number(cheapest.price).toFixed(2)}</p>
+              <p className="text-xs text-teal-dark">at {cheapest.pharmacy_name}</p>
             </div>
           )}
         </div>
@@ -137,11 +137,11 @@ const MedicineComparisonPage = () => {
                 const isLow = cheapest && row.pharmacy_name === cheapest.pharmacy_name;
                 const savingsPct = row.savings_percent_vs_lowest;
                 return (
-                  <tr key={`${row.pharmacy_name}-${idx}`} className={isLow ? 'bg-green-50/30' : ''}>
+                  <tr key={`${row.pharmacy_name}-${idx}`} className={isLow ? 'bg-teal/10/30' : ''}>
                     <td className="px-6 py-4 font-medium text-gray-900 flex items-center gap-2">
                       {row.pharmacy_name}
                       {isLow && (
-                        <span className="inline-flex rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-800">
+                        <span className="inline-flex rounded-full bg-teal/10 px-2 py-0.5 text-xs font-medium text-teal-dark">
                           Lowest
                         </span>
                       )}
@@ -181,7 +181,7 @@ const MedicineComparisonPage = () => {
         <Card>
           <Card.Header>
             <h3 className="text-lg font-bold text-gray-900">Generic alternatives</h3>
-            <p className="text-sm text-gray-500">Same composition / generic name from MedScan catalog.</p>
+            <p className="text-sm text-gray-500">Same composition / generic name from MedMx LABS catalog.</p>
           </Card.Header>
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
@@ -204,7 +204,7 @@ const MedicineComparisonPage = () => {
                     <td className="px-6 py-4 text-right">
                       <Link
                         to={`/dashboard/compare?m=${encodeURIComponent(g.name)}`}
-                        className="text-green-600 hover:text-green-700 text-sm font-bold"
+                        className="text-teal hover:text-teal-dark text-sm font-bold"
                       >
                         Compare prices
                       </Link>

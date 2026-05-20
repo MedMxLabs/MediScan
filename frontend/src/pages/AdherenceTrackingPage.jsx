@@ -11,7 +11,7 @@ import {
 import Card from '../components/ui/Card';
 import { getAdherence, getReminders, markDose } from '../services/api';
 
-const COLORS = ['bg-green-500', 'bg-blue-500', 'bg-orange-500', 'bg-purple-500', 'bg-pink-500'];
+const COLORS = ['bg-teal/100', 'bg-navy-light', 'bg-orange-500', 'bg-purple-500', 'bg-pink-500'];
 
 function seriesFromWeekly(weekly) {
   if (!Array.isArray(weekly)) return [];
@@ -92,7 +92,7 @@ const AdherenceTrackingPage = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600" />
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal" />
       </div>
     );
   }
@@ -119,12 +119,12 @@ const AdherenceTrackingPage = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="space-y-6">
-          <Card className="bg-gradient-to-br from-green-50 to-white">
+          <Card className="bg-gradient-to-br from-teal/10 to-white">
             <Card.Body className="p-6">
               <h3 className="text-sm font-medium text-gray-500 mb-2">Overall Adherence</h3>
               <div className="flex items-baseline gap-2 mb-6">
-                <span className="text-5xl font-extrabold text-green-600">{pct}%</span>
-                <span className="text-sm font-medium text-green-700 bg-green-100 px-2 py-0.5 rounded">
+                <span className="text-5xl font-extrabold text-teal">{pct}%</span>
+                <span className="text-sm font-medium text-teal-dark bg-teal/10 px-2 py-0.5 rounded">
                   Lifetime
                 </span>
               </div>
@@ -210,10 +210,10 @@ const AdherenceTrackingPage = () => {
                     <Line
                       type="monotone"
                       dataKey="score"
-                      stroke="#16a34a"
+                      stroke="#00a896"
                       strokeWidth={3}
                       dot={{ r: 5, strokeWidth: 2, fill: '#fff' }}
-                      activeDot={{ r: 7, fill: '#16a34a', stroke: '#fff' }}
+                      activeDot={{ r: 7, fill: '#00a896', stroke: '#fff' }}
                     />
                   </LineChart>
                 </ResponsiveContainer>
@@ -255,7 +255,7 @@ const AdherenceTrackingPage = () => {
                           type="button"
                           disabled={marking === `${r.id}:taken`}
                           onClick={() => handleMark(r, 'taken')}
-                          className="text-[12px] font-bold bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded-lg disabled:opacity-60"
+                          className="text-[12px] font-bold bg-brand-gradient hover:opacity-90 text-white px-3 py-1.5 rounded-lg disabled:opacity-60"
                         >
                           Mark taken
                         </button>

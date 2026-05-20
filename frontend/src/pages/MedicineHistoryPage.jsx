@@ -52,7 +52,7 @@ const MedicineHistoryPage = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal"></div>
       </div>
     );
   }
@@ -80,7 +80,7 @@ const MedicineHistoryPage = () => {
                 <tr key={item.id} className="hover:bg-gray-50 transition-colors">
                   <td className="px-6 py-4">
                     {item.type === 'search' ? (
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-blue-50 text-blue-700 text-xs font-medium border border-blue-100">
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-teal/10 text-teal-dark text-xs font-medium border border-teal/20">
                         <Search size={14} /> Search
                       </span>
                     ) : (
@@ -99,7 +99,7 @@ const MedicineHistoryPage = () => {
                   <td className="px-6 py-4 text-right">
                     <Link 
                       to={`/dashboard/search?q=${encodeURIComponent(item.query)}`}
-                      className="inline-flex items-center gap-1 text-green-600 hover:text-green-700 font-medium"
+                      className="inline-flex items-center gap-1 text-teal hover:text-teal-dark font-medium"
                     >
                       Search Again <ExternalLink size={14} />
                     </Link>
@@ -122,7 +122,7 @@ const MedicineHistoryPage = () => {
           <p className="text-sm text-gray-500">Showing 1 to {history.length} of {history.length} entries</p>
           <div className="flex gap-1">
             <button className="w-8 h-8 flex items-center justify-center rounded border border-gray-200 text-gray-500 hover:bg-gray-50" disabled>&lt;</button>
-            <button className="w-8 h-8 flex items-center justify-center rounded bg-green-600 text-white font-medium">1</button>
+            <button className="w-8 h-8 flex items-center justify-center rounded bg-brand-gradient text-white font-medium">1</button>
             <button className="w-8 h-8 flex items-center justify-center rounded border border-gray-200 text-gray-500 hover:bg-gray-50">&gt;</button>
           </div>
         </Card.Footer>

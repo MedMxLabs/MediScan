@@ -1,8 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { CheckCircle2 } from 'lucide-react';
+import { CheckCircle2, Search, RefreshCw, ExternalLink, Sparkles } from 'lucide-react';
 import { setSearchResults, addRecentSearch, setLoading, setError } from '../store/slices/medicineSlice';
 import { searchMedicines } from '../services/api';
+import Button from '../components/ui/Button';
+import Input from '../components/ui/Input';
+import Card from '../components/ui/Card';
+
+const TIPS = [
+  { title: 'Search by brand name', hint: 'Brand or trade name (e.g. Dolo 650)' },
+  { title: 'Search by generic name', hint: 'Salt / composition (e.g. Paracetamol)' },
+  { title: 'Compare prices & save more', hint: 'Live prices from 6 major pharmacies' },
+];
 
 const SearchMedicinePage = () => {
   const dispatch = useDispatch();
@@ -11,7 +20,6 @@ const SearchMedicinePage = () => {
   const [hasSearched, setHasSearched] = useState(false);
   const [fetchError, setFetchError] = useState('');
 
-  // Clear search results on initial load
   useEffect(() => {
     dispatch(setSearchResults([]));
   }, [dispatch]);
@@ -41,7 +49,7 @@ const SearchMedicinePage = () => {
       if (status === 502) {
         msg =
           backendMsg ||
-          'Live prices could not be loaded (502). Usually every pharmacy scrape failed, or the request timed out. Retry shortly. Ensure the backend is running the Docker image with Playwright/Chromium.';
+          'Live prices could not be loaded (502). Usually every pharmacy scrape failed, or the request timed out. Retry shortly.';
       }
       setFetchError(msg);
       dispatch(setError(msg));
@@ -53,135 +61,133 @@ const SearchMedicinePage = () => {
 
   return (
     <div className="max-w-4xl mx-auto space-y-8 pt-2">
-      {/* Search Header Area */}
-      <div>
-        <h2 className="text-[22px] font-bold text-[#0B1B2B] mb-1">Search Medicine</h2>
-        <p className="text-[14px] font-medium text-gray-500 mb-6">Search for any medicine and compare prices</p>
-        
-        <form onSubmit={(ev) => handleSearch(ev, {})} className="flex items-center gap-4">
-          <input
+      <div className="dna-pattern rounded-2xl border border-teal/10 bg-white p-6 sm:p-8">
+        <div className="flex items-start gap-3 mb-6">
+          <div className="hidden sm:flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-brand-gradient text-white shadow-brand">
+            <Search size={20} />
+          </div>
+          <div>
+            <h2 className="text-2xl font-bold text-navy tracking-tight">Search Medicine</h2>
+            <p className="text-sm text-muted mt-1">Compare live prices across PharmEasy, Netmeds, Apollo, TrueMeds, MedPlus & Tata 1mg</p>
+          </div>
+        </div>
+
+        <form onSubmit={(ev) => handleSearch(ev, {})} className="flex flex-col sm:flex-row gap-3">
+          <Input
             type="text"
-            className="flex-1 py-3 px-4 text-[15px] border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#0f803f]/20 focus:border-[#0f803f] outline-none transition-all shadow-sm text-gray-800 placeholder-gray-400"
+            className="flex-1"
             placeholder="Enter medicine name"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
           />
-          <button 
-            type="submit" 
-            disabled={loading}
-            className="bg-[#0f803f] hover:bg-[#0c6b34] text-white font-bold py-3 px-8 rounded-xl shadow-md transition-colors"
-          >
-            {loading ? '...' : 'Search'}
-          </button>
+          <Button type="submit" disabled={loading} size="lg" className="sm:min-w-[120px]">
+            {loading ? 'Searching…' : 'Search'}
+          </Button>
         </form>
       </div>
 
       {!hasSearched ? (
-        <>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
-            {/* Tips Card */}
-            <div className="bg-[#F8FAFC] rounded-2xl border border-gray-100 p-6">
-              <h3 className="text-[15px] font-bold text-[#0B1B2B] mb-6">Tips</h3>
-              <ul className="space-y-6">
-                <li className="flex items-start gap-3">
-                  <div className="text-[#0f803f] mt-0.5">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <Card className="p-6">
+            <h3 className="text-sm font-bold text-navy uppercase tracking-wide mb-5 flex items-center gap-2">
+              <Sparkles size={16} className="text-teal" />
+              Quick tips
+            </h3>
+            <ul className="space-y-5">
+              {TIPS.map((tip) => (
+                <li key={tip.title} className="flex items-start gap-3">
+                  <div className="text-teal mt-0.5">
                     <CheckCircle2 size={18} strokeWidth={2.5} />
                   </div>
                   <div>
-                    <p className="text-[14px] font-bold text-[#0B1B2B]">Search by brand name</p>
-                    <p className="text-[13px] text-gray-400 font-medium mt-0.5">Brand or trade name</p>
+                    <p className="text-sm font-bold text-navy">{tip.title}</p>
+                    {'hint' in tip && tip.hint && (
+                      <p className="text-xs text-muted mt-0.5">{tip.hint}</p>
+                    )}
                   </div>
                 </li>
-                <li className="flex items-start gap-3">
-                  <div className="text-[#0f803f] mt-0.5">
-                    <CheckCircle2 size={18} strokeWidth={2.5} />
-                  </div>
-                  <div>
-                    <p className="text-[14px] font-bold text-[#0B1B2B]">Search by generic name</p>
-                    <p className="text-[13px] text-gray-400 font-medium mt-0.5">Salt / composition</p>
-                  </div>
-                </li>
-                <li className="flex items-start gap-3">
-                  <div className="text-[#0f803f] mt-0.5">
-                    <CheckCircle2 size={18} strokeWidth={2.5} />
-                  </div>
-                  <div>
-                    <p className="text-[14px] font-bold text-[#0B1B2B]">Compare prices & save more</p>
-                  </div>
-                </li>
-              </ul>
-            </div>
-          </div>
-        </>
+              ))}
+            </ul>
+          </Card>
+
+          <Card className="p-6 bg-brand-gradient-soft border-teal/15">
+            <h3 className="text-sm font-bold text-navy mb-2">Why MedMx LABS?</h3>
+            <p className="text-sm text-muted leading-relaxed">
+              We pull real-time prices from India&apos;s top online pharmacies so you can find the best deal before you buy — no guesswork, no outdated listings.
+            </p>
+          </Card>
+        </div>
       ) : (
-        <div className="space-y-4 pt-4 border-t border-gray-100">
+        <div className="space-y-4">
           {fetchError && (
             <div className="rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-800">{fetchError}</div>
           )}
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-[15px] font-bold text-[#0B1B2B]">
-              Showing {searchResults.length} results for <span className="text-[#0f803f]">"{query}"</span>
+
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 pb-2 border-b border-slate-100">
+            <h3 className="text-sm font-bold text-navy">
+              {searchResults.length} results for <span className="text-gradient">{query}</span>
             </h3>
             <div className="flex items-center gap-4">
-              {hasSearched && query.trim() && (
+              {query.trim() && (
                 <button
                   type="button"
                   onClick={() => handleSearch(null, { refresh: true })}
                   disabled={loading}
-                  className="text-[13px] font-bold text-[#0f803f] hover:underline disabled:opacity-50"
+                  className="inline-flex items-center gap-1.5 text-xs font-bold text-teal hover:text-teal-dark disabled:opacity-50"
                 >
+                  <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
                   Refresh live prices
                 </button>
               )}
-              <button 
+              <button
                 type="button"
                 onClick={() => { setHasSearched(false); setQuery(''); }}
-                className="text-[13px] font-bold text-gray-400 hover:text-gray-600"
+                className="text-xs font-bold text-muted hover:text-navy"
               >
-                Clear Search
+                Clear search
               </button>
             </div>
           </div>
-          
+
+          {searchResults.length === 0 && !loading && !fetchError && (
+            <Card className="p-8 text-center">
+              <p className="text-muted text-sm">No results found. Try a different spelling or generic name.</p>
+            </Card>
+          )}
+
           <div className="grid grid-cols-1 gap-4">
-            {searchResults.map(item => (
-              <div key={item.id} className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                <div>
-                  <div className="flex items-center gap-3 mb-1">
-                    <h3 className="text-[16px] font-bold text-[#0B1B2B]">{item.name}</h3>
+            {searchResults.map((item) => (
+              <Card key={item.id} className="p-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 hover:border-teal/20 transition-colors">
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2 mb-1">
+                    <h3 className="text-base font-bold text-navy">{item.name}</h3>
                     {item.savings && item.savings !== '—' && (
-                      <span className="bg-green-50 text-green-700 text-[11px] font-bold px-2 py-0.5 rounded-full">
+                      <span className="bg-teal/10 text-teal-dark text-[11px] font-bold px-2 py-0.5 rounded-full">
                         {item.savings}
                       </span>
                     )}
                   </div>
-                  <p className="text-[13px] text-gray-500 mb-3">{item.packSize}</p>
-                  <p className="text-[13px] font-medium text-gray-700">
+                  <p className="text-xs text-muted mb-2">{item.packSize}</p>
+                  <p className="text-xs font-medium text-navy/80">
                     Pharmacy: <span className="font-bold">{item.pharmacy}</span>
                   </p>
                 </div>
-                <div className="text-right flex flex-row sm:flex-col items-center sm:items-end justify-between w-full sm:w-auto gap-3">
-                  <div className="text-[20px] font-bold text-[#0B1B2B]">₹{item.price}</div>
+                <div className="flex flex-row sm:flex-col items-center sm:items-end justify-between w-full sm:w-auto gap-3 shrink-0">
+                  <div className="text-xl font-bold text-navy">₹{item.price}</div>
                   {item.url ? (
-                    <a
-                      href={item.url}
-                      target="_blank"
-                      rel="noreferrer noopener"
-                      className="bg-[#0f803f] hover:bg-[#0c6b34] text-white text-[13px] font-bold px-5 py-2 rounded-lg transition-colors inline-block text-center"
-                    >
-                      Visit site
+                    <a href={item.url} target="_blank" rel="noreferrer noopener">
+                      <Button size="sm" className="gap-1.5">
+                        Visit site
+                        <ExternalLink size={14} />
+                      </Button>
                     </a>
                   ) : (
-                    <button
-                      type="button"
-                      disabled
-                      className="bg-gray-200 text-gray-500 text-[13px] font-bold px-5 py-2 rounded-lg"
-                    >
+                    <Button size="sm" disabled variant="outline">
                       No link
-                    </button>
+                    </Button>
                   )}
                 </div>
-              </div>
+              </Card>
             ))}
           </div>
         </div>

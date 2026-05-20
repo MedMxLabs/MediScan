@@ -4,7 +4,7 @@ import Button from '../components/ui/Button';
 import { analyzeReport } from '../services/api';
 
 const flagLabel = {
-  normal: { label: 'Normal', cls: 'text-[#0f803f]', bucket: 'normal' },
+  normal: { label: 'Normal', cls: 'text-teal', bucket: 'normal' },
   high: { label: 'High', cls: 'text-red-500', bucket: 'high' },
   low: { label: 'Low', cls: 'text-indigo-600', bucket: 'low' },
 };
@@ -75,7 +75,7 @@ const LabReportAnalysisPage = () => {
   return (
     <div className="max-w-6xl mx-auto space-y-6 pt-2">
       <div>
-        <h2 className="text-[22px] font-bold text-[#0B1B2B] mb-1">Lab Report Analysis</h2>
+        <h2 className="text-[22px] font-bold text-navy mb-1">Lab Report Analysis</h2>
         <p className="text-[14px] font-medium text-gray-500">
           Upload blood test / lab PDFs or images. We parse biomarkers, compare to reference ranges, and write plain-language insights.
         </p>
@@ -84,7 +84,7 @@ const LabReportAnalysisPage = () => {
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 sm:p-8 space-y-8">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           <div className="lg:col-span-5 flex flex-col">
-            <h3 className="text-[16px] font-bold text-[#0B1B2B] mb-4">Upload lab report</h3>
+            <h3 className="text-[16px] font-bold text-navy mb-4">Upload lab report</h3>
 
             <div
               className="flex-1 border-[1.5px] border-dashed border-gray-300 rounded-2xl p-8 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-gray-50 transition-colors"
@@ -102,7 +102,7 @@ const LabReportAnalysisPage = () => {
               </div>
               {file ? (
                 <>
-                  <h4 className="text-[15px] font-bold text-[#0B1B2B] mb-1">{file.name}</h4>
+                  <h4 className="text-[15px] font-bold text-navy mb-1">{file.name}</h4>
                   <p className="text-[12px] text-gray-500 mb-4">
                     {(file.size / 1024 / 1024).toFixed(2)} MB
                   </p>
@@ -122,7 +122,7 @@ const LabReportAnalysisPage = () => {
                     <button
                       type="button"
                       disabled={uploading}
-                      className="bg-[#0f803f] hover:bg-[#0c6b34] text-white text-[13px] font-bold py-2 px-5 rounded-xl disabled:opacity-60"
+                      className="bg-brand-gradient hover:opacity-90 text-white text-[13px] font-bold py-2 px-5 rounded-xl disabled:opacity-60"
                       onClick={(e) => {
                         e.stopPropagation();
                         onUpload();
@@ -134,13 +134,13 @@ const LabReportAnalysisPage = () => {
                 </>
               ) : (
                 <>
-                  <h4 className="text-[15px] font-bold text-[#0B1B2B] mb-2">
+                  <h4 className="text-[15px] font-bold text-navy mb-2">
                     Click to choose a file
                   </h4>
                   <p className="text-[13px] text-gray-400 font-medium mb-4">or drop it here</p>
                   <button
                     type="button"
-                    className="bg-[#0f803f] hover:bg-[#0c6b34] text-white text-[14px] font-bold py-2.5 px-6 rounded-xl transition-colors shadow-sm mb-6"
+                    className="bg-brand-gradient hover:opacity-90 text-white text-[14px] font-bold py-2.5 px-6 rounded-xl transition-colors shadow-sm mb-6"
                     onClick={(e) => {
                       e.stopPropagation();
                       pickFile();
@@ -162,7 +162,7 @@ const LabReportAnalysisPage = () => {
           </div>
 
           <div className="lg:col-span-7 flex flex-col">
-            <h3 className="text-[16px] font-bold text-[#0B1B2B] mb-4">Analysis summary</h3>
+            <h3 className="text-[16px] font-bold text-navy mb-4">Analysis summary</h3>
 
             {!result ? (
               <div className="border border-gray-100 rounded-2xl p-6 flex-1 flex flex-col items-center justify-center text-center text-gray-400">
@@ -184,14 +184,14 @@ const LabReportAnalysisPage = () => {
             ) : (
               <div className="border border-gray-100 rounded-2xl p-6 flex-1 flex flex-col">
                 <div className="flex flex-wrap gap-4 mb-6">
-                  <div className="bg-red-50 text-[#0B1B2B] text-[13px] font-bold px-4 py-2 rounded-xl border border-red-100/50 shadow-sm flex items-center gap-1.5">
+                  <div className="bg-red-50 text-navy text-[13px] font-bold px-4 py-2 rounded-xl border border-red-100/50 shadow-sm flex items-center gap-1.5">
                     High <span className="text-red-500 text-[14px]">{counts.high}</span>
                   </div>
-                  <div className="bg-indigo-50 text-[#0B1B2B] text-[13px] font-bold px-4 py-2 rounded-xl border border-indigo-100/50 shadow-sm flex items-center gap-1.5">
+                  <div className="bg-indigo-50 text-navy text-[13px] font-bold px-4 py-2 rounded-xl border border-indigo-100/50 shadow-sm flex items-center gap-1.5">
                     Low <span className="text-indigo-600 text-[14px]">{counts.low}</span>
                   </div>
-                  <div className="bg-green-50 text-[#0B1B2B] text-[13px] font-bold px-4 py-2 rounded-xl border border-green-100/50 shadow-sm flex items-center gap-1.5">
-                    Normal <span className="text-[#0f803f] text-[14px]">{counts.normal}</span>
+                  <div className="bg-teal/10 text-navy text-[13px] font-bold px-4 py-2 rounded-xl border border-teal/20/50 shadow-sm flex items-center gap-1.5">
+                    Normal <span className="text-teal text-[14px]">{counts.normal}</span>
                   </div>
                 </div>
 
@@ -199,16 +199,16 @@ const LabReportAnalysisPage = () => {
                   <table className="w-full text-left border-collapse">
                     <thead>
                       <tr className="border-b border-gray-100">
-                        <th className="px-1 py-4 text-[13px] font-bold text-[#0B1B2B] whitespace-nowrap">
+                        <th className="px-1 py-4 text-[13px] font-bold text-navy whitespace-nowrap">
                           Parameter
                         </th>
-                        <th className="px-4 py-4 text-[13px] font-bold text-[#0B1B2B] whitespace-nowrap">
+                        <th className="px-4 py-4 text-[13px] font-bold text-navy whitespace-nowrap">
                           Value
                         </th>
-                        <th className="px-4 py-4 text-[13px] font-bold text-[#0B1B2B] whitespace-nowrap">
+                        <th className="px-4 py-4 text-[13px] font-bold text-navy whitespace-nowrap">
                           Range
                         </th>
-                        <th className="px-4 py-4 text-[13px] font-bold text-[#0B1B2B] whitespace-nowrap">
+                        <th className="px-4 py-4 text-[13px] font-bold text-navy whitespace-nowrap">
                           Status
                         </th>
                       </tr>
@@ -220,15 +220,15 @@ const LabReportAnalysisPage = () => {
                           <tr key={idx} className="hover:bg-gray-50/50 transition-colors">
                             <td
                               className={`px-1 py-4 text-[13px] font-bold whitespace-nowrap ${
-                                r.flag === 'normal' ? 'text-[#0B1B2B]' : 'text-red-500'
+                                r.flag === 'normal' ? 'text-navy' : 'text-red-500'
                               }`}
                             >
                               {r.name}
                             </td>
-                            <td className="px-4 py-4 text-[13px] font-bold text-[#0B1B2B] whitespace-nowrap">
+                            <td className="px-4 py-4 text-[13px] font-bold text-navy whitespace-nowrap">
                               {r.value} {r.unit}
                             </td>
-                            <td className="px-4 py-4 text-[13px] font-medium text-[#0B1B2B] whitespace-nowrap">
+                            <td className="px-4 py-4 text-[13px] font-medium text-navy whitespace-nowrap">
                               {formatRange(r)} {r.unit}
                             </td>
                             <td className={`px-4 py-4 text-[13px] font-bold whitespace-nowrap ${meta.cls}`}>
@@ -244,11 +244,11 @@ const LabReportAnalysisPage = () => {
             )}
 
             {result?.insights && (
-              <div className="mt-6 rounded-2xl border border-green-100 bg-green-50/60 p-5 flex items-start gap-3">
-                <CheckCircle2 className="shrink-0 mt-0.5 text-green-600" size={20} />
+              <div className="mt-6 rounded-2xl border border-teal/20 bg-teal/10/60 p-5 flex items-start gap-3">
+                <CheckCircle2 className="shrink-0 mt-0.5 text-teal" size={20} />
                 <div>
-                  <p className="text-[14px] font-bold text-[#0B1B2B] mb-1">Plain-language notes</p>
-                  <p className="text-[13px] text-[#0B1B2B] whitespace-pre-wrap leading-relaxed">
+                  <p className="text-[14px] font-bold text-navy mb-1">Plain-language notes</p>
+                  <p className="text-[13px] text-navy whitespace-pre-wrap leading-relaxed">
                     {result.insights}
                   </p>
                   <p className="text-[11px] text-gray-500 mt-2">

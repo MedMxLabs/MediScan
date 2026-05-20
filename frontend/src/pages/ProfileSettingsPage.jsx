@@ -108,7 +108,7 @@ const ProfileSettingsPage = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600" />
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal" />
       </div>
     );
   }
@@ -125,7 +125,7 @@ const ProfileSettingsPage = () => {
               onClick={() => setActiveTab(tab)}
               className={`py-4 px-1 text-[15px] whitespace-nowrap transition-colors ${
                 activeTab === tab
-                  ? 'border-b-2 border-[#0f803f] text-[#0f803f] font-bold'
+                  ? 'border-b-2 border-teal text-teal font-bold'
                   : 'border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 font-medium'
               }`}
             >
@@ -139,7 +139,7 @@ const ProfileSettingsPage = () => {
         <div
           className={`rounded-xl border px-4 py-3 text-sm ${
             status.kind === 'ok'
-              ? 'border-green-100 bg-green-50 text-green-800'
+              ? 'border-teal/20 bg-teal/10 text-teal-dark'
               : 'border-red-100 bg-red-50 text-red-800'
           }`}
         >
@@ -149,10 +149,10 @@ const ProfileSettingsPage = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-12 gap-8 pt-2">
         <div className="md:col-span-4 flex flex-col items-center">
-          <div className="w-[120px] h-[120px] bg-[#E2E8F0] rounded-full flex items-center justify-center overflow-hidden mb-5 text-5xl font-extrabold text-[#0f803f]">
+          <div className="w-[120px] h-[120px] bg-[#E2E8F0] rounded-full flex items-center justify-center overflow-hidden mb-5 text-5xl font-extrabold text-teal">
             {initials}
           </div>
-          <h3 className="text-[20px] font-bold text-[#0B1B2B]">{p.name || '—'}</h3>
+          <h3 className="text-[20px] font-bold text-navy">{p.name || '—'}</h3>
           <p className="text-[14px] font-medium text-gray-400 mb-6 break-all text-center max-w-full">
             {p.email}
           </p>
@@ -161,7 +161,7 @@ const ProfileSettingsPage = () => {
         <div className="md:col-span-8">
           {activeTab === 'Profile' && (
             <div className="bg-white rounded-2xl border border-gray-100 p-8 shadow-sm">
-              <h3 className="text-[16px] font-bold text-[#0B1B2B] mb-8">Personal information</h3>
+              <h3 className="text-[16px] font-bold text-navy mb-8">Personal information</h3>
               <form className="space-y-6" onSubmit={saveProfile}>
                 <div className="space-y-2">
                   <label className="block text-[13px] font-bold text-gray-500">Full name</label>
@@ -169,7 +169,7 @@ const ProfileSettingsPage = () => {
                     type="text"
                     value={p.name}
                     onChange={(e) => setField('name', e.target.value)}
-                    className="w-full px-4 py-3 text-[14px] font-medium text-[#0B1B2B] border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#0f803f]/20 focus:border-[#0f803f] outline-none transition-all shadow-sm bg-white"
+                    className="w-full px-4 py-3 text-[14px] font-medium text-navy border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal/20 focus:border-teal outline-none transition-all shadow-sm bg-white"
                   />
                 </div>
                 <div className="space-y-2">
@@ -188,7 +188,7 @@ const ProfileSettingsPage = () => {
                     value={p.phone}
                     onChange={(e) => setField('phone', e.target.value)}
                     placeholder="+91 98765 43210"
-                    className="w-full px-4 py-3 text-[14px] font-medium text-[#0B1B2B] border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#0f803f]/20 focus:border-[#0f803f] outline-none transition-all shadow-sm bg-white"
+                    className="w-full px-4 py-3 text-[14px] font-medium text-navy border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal/20 focus:border-teal outline-none transition-all shadow-sm bg-white"
                   />
                 </div>
                 <div className="space-y-2">
@@ -197,7 +197,7 @@ const ProfileSettingsPage = () => {
                     type="date"
                     value={p.date_of_birth}
                     onChange={(e) => setField('date_of_birth', e.target.value)}
-                    className="w-full px-4 py-3 text-[14px] font-medium text-[#0B1B2B] border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#0f803f]/20 focus:border-[#0f803f] outline-none transition-all shadow-sm bg-white"
+                    className="w-full px-4 py-3 text-[14px] font-medium text-navy border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal/20 focus:border-teal outline-none transition-all shadow-sm bg-white"
                   />
                 </div>
                 <div className="space-y-2">
@@ -205,7 +205,7 @@ const ProfileSettingsPage = () => {
                   <select
                     value={p.gender}
                     onChange={(e) => setField('gender', e.target.value)}
-                    className="w-full px-4 py-3 text-[14px] font-medium text-[#0B1B2B] border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#0f803f]/20 focus:border-[#0f803f] outline-none transition-all shadow-sm bg-white"
+                    className="w-full px-4 py-3 text-[14px] font-medium text-navy border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal/20 focus:border-teal outline-none transition-all shadow-sm bg-white"
                   >
                     {GENDERS.map((g) => (
                       <option key={g} value={g}>
@@ -218,7 +218,7 @@ const ProfileSettingsPage = () => {
                   <button
                     type="submit"
                     disabled={saving}
-                    className="bg-[#0f803f] text-white text-[14px] font-bold py-2.5 px-6 rounded-xl shadow-sm hover:bg-[#0c6b34] transition-colors disabled:opacity-60"
+                    className="bg-brand-gradient text-white text-[14px] font-bold py-2.5 px-6 rounded-xl shadow-sm hover:opacity-90 transition-colors disabled:opacity-60"
                   >
                     {saving ? 'Saving…' : 'Save changes'}
                   </button>
@@ -229,7 +229,7 @@ const ProfileSettingsPage = () => {
 
           {activeTab === 'Preferences' && (
             <div className="bg-white rounded-2xl border border-gray-100 p-8 shadow-sm space-y-6">
-              <h3 className="text-[16px] font-bold text-[#0B1B2B]">System preferences</h3>
+              <h3 className="text-[16px] font-bold text-navy">System preferences</h3>
               <p className="text-sm text-gray-500">
                 Language / time zone are fixed at English · Asia/Kolkata for now.
               </p>
@@ -238,7 +238,7 @@ const ProfileSettingsPage = () => {
 
           {activeTab === 'Notifications' && (
             <div className="bg-white rounded-2xl border border-gray-100 p-8 shadow-sm">
-              <h3 className="text-[16px] font-bold text-[#0B1B2B] mb-6">
+              <h3 className="text-[16px] font-bold text-navy mb-6">
                 Notification preferences
               </h3>
 
@@ -265,14 +265,14 @@ const ProfileSettingsPage = () => {
                     className="flex items-center justify-between gap-4 py-2 border-b border-gray-100 last:border-0"
                   >
                     <div>
-                      <h4 className="text-[14px] font-bold text-[#0B1B2B]">{row.title}</h4>
+                      <h4 className="text-[14px] font-bold text-navy">{row.title}</h4>
                       <p className="text-[13px] text-gray-500 mt-0.5">{row.desc}</p>
                     </div>
                     <input
                       type="checkbox"
                       checked={Boolean(p[row.key])}
                       onChange={(e) => setField(row.key, e.target.checked)}
-                      className="h-5 w-9 accent-[#0f803f]"
+                      className="h-5 w-9 accent-teal"
                     />
                   </label>
                 ))}
@@ -283,7 +283,7 @@ const ProfileSettingsPage = () => {
                   type="button"
                   onClick={saveNotifications}
                   disabled={saving}
-                  className="bg-[#0f803f] text-white text-[14px] font-bold py-2.5 px-6 rounded-xl shadow-sm hover:bg-[#0c6b34] transition-colors disabled:opacity-60"
+                  className="bg-brand-gradient text-white text-[14px] font-bold py-2.5 px-6 rounded-xl shadow-sm hover:opacity-90 transition-colors disabled:opacity-60"
                 >
                   {saving ? 'Saving…' : 'Save preferences'}
                 </button>

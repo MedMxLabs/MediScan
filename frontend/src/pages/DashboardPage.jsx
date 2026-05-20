@@ -33,7 +33,7 @@ const DashboardPage = () => {
   const handleResetAll = async () => {
     if (
       !window.confirm(
-        'Clear all your MedScan activity? This removes searches, uploads, reminders, adherence logs, and lab reports. Your account stays.',
+        'Clear all your MedMx LABS activity? This removes searches, uploads, reminders, adherence logs, and lab reports. Your account stays.',
       )
     ) {
       return;
@@ -59,7 +59,7 @@ const DashboardPage = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#0f803f]"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal"></div>
       </div>
     );
   }
@@ -68,7 +68,7 @@ const DashboardPage = () => {
     <div className="space-y-6 max-w-7xl mx-auto pb-8">
       {/* Welcome Banner */}
       <div>
-        <h2 className="text-2xl font-bold text-[#0B1B2B] tracking-tight">
+        <h2 className="text-2xl font-bold text-navy tracking-tight">
           Welcome back, {user?.name?.split?.(' ')?.[0] || user?.email?.split?.('@')?.[0] || 'there'} 👋
         </h2>
         <p className="text-[15px] font-medium text-gray-500 mt-1">Here's your health overview</p>
@@ -81,21 +81,21 @@ const DashboardPage = () => {
         
         {/* Card 1 */}
         <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex flex-col justify-between h-[130px]">
-          <p className="text-[13px] font-bold text-[#0B1B2B]">Upcoming Reminders</p>
+          <p className="text-[13px] font-bold text-navy">Upcoming Reminders</p>
           <div className="mt-2">
-            <h4 className="text-[32px] leading-none font-bold text-[#0B1B2B]">{widgets.upcomingReminders}</h4>
+            <h4 className="text-[32px] leading-none font-bold text-navy">{widgets.upcomingReminders}</h4>
             <span className="text-[13px] font-medium text-gray-500 block mt-1">Today</span>
           </div>
         </div>
 
         {/* Card 2 */}
         <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex flex-col justify-between h-[130px]">
-          <p className="text-[13px] font-bold text-[#0B1B2B]">Adherence Score</p>
+          <p className="text-[13px] font-bold text-navy">Adherence Score</p>
           <div className="mt-2 relative">
             <div className="flex items-baseline gap-2">
-              <h4 className="text-[32px] leading-none font-bold text-[#0B1B2B]">{widgets.adherenceScore}%</h4>
+              <h4 className="text-[32px] leading-none font-bold text-navy">{widgets.adherenceScore}%</h4>
               {widgets.adherenceScore >= 80 ? (
-                <span className="text-[13px] font-bold text-[#0f803f]">Good</span>
+                <span className="text-[13px] font-bold text-teal">Good</span>
               ) : widgets.adherenceScore > 0 ? (
                 <span className="text-[13px] font-bold text-amber-600">Building</span>
               ) : (
@@ -104,25 +104,25 @@ const DashboardPage = () => {
             </div>
             {/* Progress bar */}
             <div className="w-full h-1.5 bg-gray-100 rounded-full mt-3 overflow-hidden">
-              <div className="h-full bg-[#0f803f] rounded-full" style={{ width: `${widgets.adherenceScore}%` }}></div>
+              <div className="h-full bg-brand-gradient rounded-full" style={{ width: `${widgets.adherenceScore}%` }}></div>
             </div>
           </div>
         </div>
 
         {/* Card 3 */}
         <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex flex-col justify-between h-[130px]">
-          <p className="text-[13px] font-bold text-[#0B1B2B]">Medicines Tracked</p>
+          <p className="text-[13px] font-bold text-navy">Medicines Tracked</p>
           <div className="mt-2">
-            <h4 className="text-[32px] leading-none font-bold text-[#0B1B2B]">{widgets.medicinesTracked}</h4>
+            <h4 className="text-[32px] leading-none font-bold text-navy">{widgets.medicinesTracked}</h4>
             <span className="text-[13px] font-medium text-gray-500 block mt-1">Active</span>
           </div>
         </div>
 
         {/* Card 4 */}
         <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex flex-col justify-between h-[130px]">
-          <p className="text-[13px] font-bold text-[#0B1B2B]">Money Saved</p>
+          <p className="text-[13px] font-bold text-navy">Money Saved</p>
           <div className="mt-2">
-            <h4 className="text-[32px] leading-none font-bold text-[#0f803f]">₹{widgets.monthlySavings}</h4>
+            <h4 className="text-[32px] leading-none font-bold text-teal">₹{widgets.monthlySavings}</h4>
             <span className="text-[13px] font-medium text-gray-500 block mt-1">This Month</span>
           </div>
         </div>
@@ -135,8 +135,8 @@ const DashboardPage = () => {
         {/* Left Column (Table) - spans 2 cols on lg screens */}
         <div className="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-gray-100 flex flex-col overflow-hidden">
           <div className="px-6 pt-6 pb-4 flex justify-between items-center">
-            <h3 className="text-[15px] font-bold text-[#0B1B2B]">Recent searches</h3>
-            <Link to="/dashboard/search" className="text-[13px] font-bold text-blue-600 hover:text-blue-700">
+            <h3 className="text-[15px] font-bold text-navy">Recent searches</h3>
+            <Link to="/dashboard/search" className="text-[13px] font-bold text-teal hover:text-teal-dark">
               Search medicines
             </Link>
           </div>
@@ -145,19 +145,19 @@ const DashboardPage = () => {
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-gray-50/50 border-y border-gray-100">
-                  <th className="px-6 py-3.5 text-[13px] font-bold text-[#0B1B2B] whitespace-nowrap">Pharmacy</th>
-                  <th className="px-6 py-3.5 text-[13px] font-bold text-[#0B1B2B] whitespace-nowrap">Pack Size</th>
-                  <th className="px-6 py-3.5 text-[13px] font-bold text-[#0B1B2B] whitespace-nowrap">Price</th>
-                  <th className="px-6 py-3.5 text-[13px] font-bold text-[#0B1B2B] whitespace-nowrap">Unit Price</th>
-                  <th className="px-6 py-3.5 text-[13px] font-bold text-[#0B1B2B] whitespace-nowrap">Savings</th>
-                  <th className="px-6 py-3.5 text-[13px] font-bold text-[#0B1B2B] whitespace-nowrap"></th>
+                  <th className="px-6 py-3.5 text-[13px] font-bold text-navy whitespace-nowrap">Pharmacy</th>
+                  <th className="px-6 py-3.5 text-[13px] font-bold text-navy whitespace-nowrap">Pack Size</th>
+                  <th className="px-6 py-3.5 text-[13px] font-bold text-navy whitespace-nowrap">Price</th>
+                  <th className="px-6 py-3.5 text-[13px] font-bold text-navy whitespace-nowrap">Unit Price</th>
+                  <th className="px-6 py-3.5 text-[13px] font-bold text-navy whitespace-nowrap">Savings</th>
+                  <th className="px-6 py-3.5 text-[13px] font-bold text-navy whitespace-nowrap"></th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
                 {recentSearches?.length ? (
                   recentSearches.map((row, idx) => (
                     <tr key={idx} className="hover:bg-gray-50/50 transition-colors">
-                      <td className="px-6 py-4 text-[13px] font-bold text-[#0B1B2B]" colSpan={4}>
+                      <td className="px-6 py-4 text-[13px] font-bold text-navy" colSpan={4}>
                         {row.query}
                       </td>
                       <td className="px-6 py-4 text-[12px] text-gray-500" colSpan={2}>
@@ -184,9 +184,9 @@ const DashboardPage = () => {
           {/* Adherence Overview Chart Card */}
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 flex flex-col flex-1 min-h-[250px]">
             <div className="p-6 pb-2">
-              <h3 className="text-[14px] font-bold text-[#0B1B2B]">Adherence Overview</h3>
+              <h3 className="text-[14px] font-bold text-navy">Adherence Overview</h3>
               <div className="mt-4">
-                <h4 className="text-[28px] leading-none font-bold text-[#0B1B2B]">{widgets.adherenceScore}%</h4>
+                <h4 className="text-[28px] leading-none font-bold text-navy">{widgets.adherenceScore}%</h4>
                 <span className="text-[12px] font-medium text-gray-500 block mt-1">This Week</span>
               </div>
             </div>
@@ -212,9 +212,9 @@ const DashboardPage = () => {
                     <Line
                       type="monotone"
                       dataKey="score"
-                      stroke="#16a34a"
+                      stroke="#00a896"
                       strokeWidth={2}
-                      dot={{ r: 3, strokeWidth: 2, fill: '#16a34a' }}
+                      dot={{ r: 3, strokeWidth: 2, fill: '#00a896' }}
                       activeDot={{ r: 5 }}
                     />
                   </LineChart>
@@ -226,19 +226,22 @@ const DashboardPage = () => {
           </div>
 
           {/* AI Health Assistant Widget */}
-          <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-            <h3 className="text-[14px] font-bold text-[#0B1B2B] mb-2">AI Health Assistant</h3>
-            <p className="text-[13px] text-gray-500 leading-relaxed pr-8">
-              Ask me anything about medicines, side effects, or health...
+          <Link
+            to="/dashboard/assistant"
+            className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 block hover:border-teal/25 hover:shadow-brand/30 transition-all group"
+          >
+            <h3 className="text-[14px] font-bold text-navy mb-2">AI Health Assistant</h3>
+            <p className="text-[13px] text-gray-500 leading-relaxed pr-4">
+              Ask about medicines, side effects, or general health questions.
             </p>
             <div className="mt-4 flex justify-end">
-              <button className="bg-blue-600 hover:bg-blue-700 text-white w-8 h-8 rounded-full flex items-center justify-center shadow-md transition-colors">
+              <span className="bg-brand-gradient group-hover:opacity-90 text-white w-8 h-8 rounded-full flex items-center justify-center shadow-brand transition-opacity">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M5 12h14M12 5l7 7-7 7"/>
                 </svg>
-              </button>
+              </span>
             </div>
-          </div>
+          </Link>
 
         </div>
 

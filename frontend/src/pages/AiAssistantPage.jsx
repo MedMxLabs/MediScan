@@ -5,7 +5,7 @@ import Card from '../components/ui/Card';
 
 const AiAssistantPage = () => {
   const [messages, setMessages] = useState([
-    { id: 1, text: "Hello! I'm your MedScan AI Health Assistant. Ask me anything about medicines, side-effects, or health queries.", sender: 'ai' }
+    { id: 1, text: "Hello! I'm your MedMx LABS AI Health Assistant. Ask me anything about medicines, side-effects, or health queries.", sender: 'ai' }
   ]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -41,25 +41,25 @@ const AiAssistantPage = () => {
   return (
     <div className="max-w-4xl mx-auto h-[calc(100vh-8rem)] flex flex-col">
       <div className="mb-4">
-        <h2 className="text-2xl font-bold text-gray-900">AI Health Assistant</h2>
-        <p className="text-gray-600 mt-1">Ask any health or medicine related question safely.</p>
+        <h2 className="text-2xl font-bold text-navy">AI Health Assistant</h2>
+        <p className="text-muted mt-1">Ask any health or medicine related question safely.</p>
       </div>
 
-      <Card className="flex-1 flex flex-col overflow-hidden border border-gray-200">
+      <Card className="flex-1 flex flex-col overflow-hidden border border-slate-200">
         {/* Chat Area */}
-        <div className="flex-1 overflow-y-auto p-6 bg-gray-50/50 space-y-6">
+        <div className="flex-1 overflow-y-auto p-6 bg-surface/80 space-y-6">
           <div className="flex items-center justify-center mb-8">
             <span className="text-xs font-medium text-gray-500 bg-gray-100 px-3 py-1 rounded-full">Today</span>
           </div>
 
           {messages.map((msg) => (
             <div key={msg.id} className={`flex gap-4 max-w-[85%] ${msg.sender === 'user' ? 'ml-auto flex-row-reverse' : ''}`}>
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 mt-1 ${msg.sender === 'user' ? 'bg-blue-100 text-blue-600' : 'bg-green-600 text-white shadow-sm'}`}>
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 mt-1 ${msg.sender === 'user' ? 'bg-navy text-white' : 'bg-brand-gradient text-white shadow-sm'}`}>
                 {msg.sender === 'user' ? <User size={16} /> : <Bot size={16} />}
               </div>
               <div className={`px-4 py-3 rounded-2xl text-sm leading-relaxed
                 ${msg.sender === 'user' 
-                  ? 'bg-blue-600 text-white rounded-tr-sm shadow-sm' 
+                  ? 'bg-navy text-white rounded-tr-sm shadow-sm' 
                   : msg.isError 
                     ? 'bg-red-50 text-red-700 border border-red-100 rounded-tl-sm'
                     : 'bg-white text-gray-800 border border-gray-200 rounded-tl-sm shadow-sm'
@@ -73,7 +73,7 @@ const AiAssistantPage = () => {
           
           {isLoading && (
             <div className="flex gap-4 max-w-[85%]">
-              <div className="w-8 h-8 rounded-full bg-green-600 text-white flex items-center justify-center shrink-0 shadow-sm mt-1">
+              <div className="w-8 h-8 rounded-full bg-brand-gradient text-white flex items-center justify-center shrink-0 shadow-sm mt-1">
                 <Bot size={16} />
               </div>
               <div className="px-4 py-4 rounded-2xl bg-white border border-gray-200 rounded-tl-sm shadow-sm flex items-center gap-2">
@@ -94,13 +94,13 @@ const AiAssistantPage = () => {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder="Type your question here..."
-              className="w-full pl-4 pr-14 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:bg-white transition-all shadow-inner text-sm"
+              className="w-full pl-4 pr-14 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal focus:bg-white transition-all shadow-inner text-sm"
               disabled={isLoading}
             />
             <button
               type="submit"
               disabled={!input.trim() || isLoading}
-              className="absolute right-2 p-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:hover:bg-green-600 transition-colors"
+              className="absolute right-2 p-2 bg-brand-gradient text-white rounded-lg hover:opacity-90 disabled:opacity-50 disabled:hover:bg-brand-gradient transition-colors"
             >
               <Send size={18} />
             </button>
