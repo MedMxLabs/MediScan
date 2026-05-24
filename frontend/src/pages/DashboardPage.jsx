@@ -1,13 +1,21 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { LineChart, Line, XAxis, Tooltip, ResponsiveContainer } from 'recharts';
+import { Link } from 'react-router-dom';
+import { Bell, TrendingUp, Pill, IndianRupee, ArrowRight, MessageSquare, LayoutDashboard } from 'lucide-react';
 import { setDashboardData, setLoading, setError, resetDashboard } from '../store/slices/dashboardSlice';
 import { resetMedicine } from '../store/slices/medicineSlice';
 import { resetReminders } from '../store/slices/reminderSlice';
 import { resetReports } from '../store/slices/reportSlice';
 import { getDashboardData, resetUserActivity } from '../services/api';
-import { Link } from 'react-router-dom';
 import RefillAlertsBanner from '../components/RefillAlertsBanner';
+import PageShell from '../components/dashboard/PageShell';
+import PageHeader from '../components/dashboard/PageHeader';
+import StatCard from '../components/dashboard/StatCard';
+import DashPanel from '../components/dashboard/DashPanel';
+import LoadingState from '../components/dashboard/LoadingState';
+import EmptyState from '../components/dashboard/EmptyState';
+import Button from '../components/ui/Button';
 
 const DashboardPage = () => {
   const dispatch = useDispatch();
@@ -56,156 +64,136 @@ const DashboardPage = () => {
     }
   };
 
+  const firstName = user?.name?.split?.(' ')?.[0] || user?.email?.split?.('@')?.[0] || 'there';
+
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal"></div>
-      </div>
-    );
+    return <LoadingState label="Loading your overview…" />;
   }
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto pb-8">
-      {/* Welcome Banner */}
-      <div>
-        <h2 className="text-2xl font-bold text-navy tracking-tight">
-          Welcome back, {user?.name?.split?.(' ')?.[0] || user?.email?.split?.('@')?.[0] || 'there'} 👋
-        </h2>
-        <p className="text-[15px] font-medium text-gray-500 mt-1">Here's your health overview</p>
-      </div>
+    <PageShell>
+      <PageHeader
+        title={`Welcome back, ${firstName} 👋`}
+        subtitle="Here's your health overview at a glance."
+        icon={LayoutDashboard}
+      />
 
       <RefillAlertsBanner />
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-        
-        {/* Card 1 */}
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex flex-col justify-between h-[130px]">
-          <p className="text-[13px] font-bold text-navy">Upcoming Reminders</p>
-          <div className="mt-2">
-            <h4 className="text-[32px] leading-none font-bold text-navy">{widgets.upcomingReminders}</h4>
-            <span className="text-[13px] font-medium text-gray-500 block mt-1">Today</span>
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+        <StatCard label="Upcoming reminders" value={widgets.upcomingReminders} sub="Due today" icon={Bell} />
+        <StatCard
+          label="Adherence score"
+          value={`${widgets.adherenceScore}%`}
+          sub={
+            widgets.adherenceScore >= 80
+              ? 'On track'
+              : widgets.adherenceScore > 0
+                ? 'Keep building'
+                : 'Log doses in Reminders'
+          }
+          accent="teal"
+          icon={TrendingUp}
+        >
+          <div className="w-full h-1.5 bg-slate-100 rounded-full mt-3 overflow-hidden">
+            <div
+              className="h-full bg-brand-gradient rounded-full transition-all duration-500"
+              style={{ width: `${Math.min(100, widgets.adherenceScore)}%` }}
+            />
           </div>
-        </div>
-
-        {/* Card 2 */}
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex flex-col justify-between h-[130px]">
-          <p className="text-[13px] font-bold text-navy">Adherence Score</p>
-          <div className="mt-2 relative">
-            <div className="flex items-baseline gap-2">
-              <h4 className="text-[32px] leading-none font-bold text-navy">{widgets.adherenceScore}%</h4>
-              {widgets.adherenceScore >= 80 ? (
-                <span className="text-[13px] font-bold text-teal">Good</span>
-              ) : widgets.adherenceScore > 0 ? (
-                <span className="text-[13px] font-bold text-amber-600">Building</span>
-              ) : (
-                <span className="text-[13px] font-medium text-gray-400">—</span>
-              )}
-            </div>
-            {/* Progress bar */}
-            <div className="w-full h-1.5 bg-gray-100 rounded-full mt-3 overflow-hidden">
-              <div className="h-full bg-brand-gradient rounded-full" style={{ width: `${widgets.adherenceScore}%` }}></div>
-            </div>
-          </div>
-        </div>
-
-        {/* Card 3 */}
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex flex-col justify-between h-[130px]">
-          <p className="text-[13px] font-bold text-navy">Medicines Tracked</p>
-          <div className="mt-2">
-            <h4 className="text-[32px] leading-none font-bold text-navy">{widgets.medicinesTracked}</h4>
-            <span className="text-[13px] font-medium text-gray-500 block mt-1">Active</span>
-          </div>
-        </div>
-
-        {/* Card 4 */}
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex flex-col justify-between h-[130px]">
-          <p className="text-[13px] font-bold text-navy">Money Saved</p>
-          <div className="mt-2">
-            <h4 className="text-[32px] leading-none font-bold text-teal">₹{widgets.monthlySavings}</h4>
-            <span className="text-[13px] font-medium text-gray-500 block mt-1">This Month</span>
-          </div>
-        </div>
-
+        </StatCard>
+        <StatCard label="Medicines tracked" value={widgets.medicinesTracked} sub="Active" icon={Pill} />
+        <StatCard
+          label="Money saved"
+          value={`₹${widgets.monthlySavings}`}
+          sub="This month"
+          accent="teal"
+          icon={IndianRupee}
+        />
       </div>
 
-      {/* Bottom Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        
-        {/* Left Column (Table) - spans 2 cols on lg screens */}
-        <div className="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-gray-100 flex flex-col overflow-hidden">
-          <div className="px-6 pt-6 pb-4 flex justify-between items-center">
-            <h3 className="text-[15px] font-bold text-navy">Recent searches</h3>
-            <Link to="/dashboard/search" className="text-[13px] font-bold text-teal hover:text-teal-dark">
-              Search medicines
+        <DashPanel
+          className="lg:col-span-2"
+          title="Recent searches"
+          action={
+            <Link
+              to="/dashboard/search"
+              className="text-xs sm:text-[13px] font-bold text-teal hover:text-teal-dark transition-colors"
+            >
+              Search medicines →
             </Link>
-          </div>
-          
-          <div className="w-full overflow-x-auto">
-            <table className="w-full text-left border-collapse">
+          }
+          noPadding
+          bodyClassName="p-0"
+        >
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm min-w-[32rem]">
               <thead>
-                <tr className="bg-gray-50/50 border-y border-gray-100">
-                  <th className="px-6 py-3.5 text-[13px] font-bold text-navy whitespace-nowrap">Pharmacy</th>
-                  <th className="px-6 py-3.5 text-[13px] font-bold text-navy whitespace-nowrap">Pack Size</th>
-                  <th className="px-6 py-3.5 text-[13px] font-bold text-navy whitespace-nowrap">Price</th>
-                  <th className="px-6 py-3.5 text-[13px] font-bold text-navy whitespace-nowrap">Unit Price</th>
-                  <th className="px-6 py-3.5 text-[13px] font-bold text-navy whitespace-nowrap">Savings</th>
-                  <th className="px-6 py-3.5 text-[13px] font-bold text-navy whitespace-nowrap"></th>
+                <tr className="bg-slate-50/90 border-b border-slate-100">
+                  <th className="px-5 py-3 font-bold text-navy">Medicine</th>
+                  <th className="px-5 py-3 font-bold text-navy">When</th>
+                  <th className="px-5 py-3 font-bold text-navy text-right">Action</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-50">
+              <tbody className="divide-y divide-slate-50">
                 {recentSearches?.length ? (
                   recentSearches.map((row, idx) => (
-                    <tr key={idx} className="hover:bg-gray-50/50 transition-colors">
-                      <td className="px-6 py-4 text-[13px] font-bold text-navy" colSpan={4}>
-                        {row.query}
-                      </td>
-                      <td className="px-6 py-4 text-[12px] text-gray-500" colSpan={2}>
+                    <tr key={idx} className="hover:bg-teal/[0.03] transition-colors">
+                      <td className="px-5 py-3.5 font-semibold text-navy">{row.query}</td>
+                      <td className="px-5 py-3.5 text-muted text-xs sm:text-sm tabular-nums">
                         {row.created_at?.replace('T', ' ').slice(0, 16) || '—'}
+                      </td>
+                      <td className="px-5 py-3.5 text-right">
+                        <Link
+                          to={`/dashboard/compare?m=${encodeURIComponent(row.query)}`}
+                          className="text-xs font-bold text-teal hover:underline"
+                        >
+                          Compare again
+                        </Link>
                       </td>
                     </tr>
                   ))
                 ) : (
                   <tr>
-                    <td className="px-6 py-8 text-[13px] text-gray-500 text-center" colSpan={6}>
-                      No saved searches yet. Use Search Medicine — prices come from live pharmacy pages when you run a
-                      query.
+                    <td colSpan={3}>
+                      <EmptyState
+                        title="No searches yet"
+                        description="Run a live price search across six pharmacies — results show up here."
+                        action={
+                          <Link to="/dashboard/search">
+                            <Button variant="primary" size="sm">
+                              Search medicine
+                            </Button>
+                          </Link>
+                        }
+                      />
                     </td>
                   </tr>
                 )}
               </tbody>
             </table>
           </div>
-        </div>
+        </DashPanel>
 
-        {/* Right Column */}
         <div className="space-y-6 flex flex-col">
-          
-          {/* Adherence Overview Chart Card */}
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 flex flex-col flex-1 min-h-[250px]">
-            <div className="p-6 pb-2">
-              <h3 className="text-[14px] font-bold text-navy">Adherence Overview</h3>
-              <div className="mt-4">
-                <h4 className="text-[28px] leading-none font-bold text-navy">{widgets.adherenceScore}%</h4>
-                <span className="text-[12px] font-medium text-gray-500 block mt-1">This Week</span>
-              </div>
-            </div>
-            <div className="flex-1 w-full mt-2 px-2 pb-4 min-h-[160px]">
+          <DashPanel title="Adherence this week" bodyClassName="pb-4">
+            <p className="text-3xl font-extrabold text-navy tabular-nums">{widgets.adherenceScore}%</p>
+            <div className="h-40 sm:h-44 mt-4 -mx-1">
               {adherenceTrend?.length ? (
                 <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={adherenceTrend} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                  <LineChart data={adherenceTrend} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
                     <XAxis
                       dataKey="name"
                       axisLine={false}
                       tickLine={false}
-                      tick={{ fill: '#9CA3AF', fontSize: 10, fontWeight: 500 }}
-                      dy={10}
+                      tick={{ fill: '#94a3b8', fontSize: 10 }}
                     />
                     <Tooltip
                       contentStyle={{
-                        borderRadius: '8px',
-                        border: 'none',
-                        boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)',
+                        borderRadius: '12px',
+                        border: '1px solid #e2e8f0',
+                        boxShadow: '0 8px 24px -8px rgba(10,25,47,0.15)',
                       }}
                       formatter={(value) => [`${value}%`, 'Score']}
                     />
@@ -213,51 +201,51 @@ const DashboardPage = () => {
                       type="monotone"
                       dataKey="score"
                       stroke="#00a896"
-                      strokeWidth={2}
-                      dot={{ r: 3, strokeWidth: 2, fill: '#00a896' }}
+                      strokeWidth={2.5}
+                      dot={{ r: 3, fill: '#00a896' }}
                       activeDot={{ r: 5 }}
                     />
                   </LineChart>
                 </ResponsiveContainer>
               ) : (
-                <p className="text-[13px] text-gray-400 px-4 pb-4">No adherence data yet — log doses from Reminders.</p>
+                <p className="text-sm text-muted py-6">Log doses from Reminders to see your trend.</p>
               )}
             </div>
-          </div>
+          </DashPanel>
 
-          {/* AI Health Assistant Widget */}
           <Link
             to="/dashboard/assistant"
-            className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 block hover:border-teal/25 hover:shadow-brand/30 transition-all group"
+            className="block rounded-2xl border border-slate-200/90 bg-white/95 p-5 sm:p-6 shadow-sm hover-lift hover:border-teal/30 transition-all group"
           >
-            <h3 className="text-[14px] font-bold text-navy mb-2">AI Health Assistant</h3>
-            <p className="text-[13px] text-gray-500 leading-relaxed pr-4">
-              Ask about medicines, side effects, or general health questions.
-            </p>
-            <div className="mt-4 flex justify-end">
-              <span className="bg-brand-gradient group-hover:opacity-90 text-white w-8 h-8 rounded-full flex items-center justify-center shadow-brand transition-opacity">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M5 12h14M12 5l7 7-7 7"/>
-                </svg>
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <h3 className="text-sm font-bold text-navy flex items-center gap-2">
+                  <MessageSquare size={18} className="text-teal" />
+                  AI Health Assistant
+                </h3>
+                <p className="text-sm text-muted mt-2 leading-relaxed">
+                  Ask about medicines, side effects, or lab results — informational only.
+                </p>
+              </div>
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-gradient text-white shadow-brand group-hover:scale-105 transition-transform">
+                <ArrowRight size={18} />
               </span>
             </div>
           </Link>
-
         </div>
-
       </div>
 
-      <div className="flex justify-end pt-2">
+      <div className="flex justify-end">
         <button
           type="button"
           onClick={handleResetAll}
           disabled={resetting}
-          className="text-[13px] font-semibold text-gray-500 hover:text-red-600 border border-gray-200 hover:border-red-200 rounded-xl px-4 py-2 transition-colors disabled:opacity-50"
+          className="text-xs sm:text-sm font-semibold text-muted hover:text-red-600 border border-slate-200 hover:border-red-200 rounded-xl px-4 py-2.5 transition-colors disabled:opacity-50"
         >
           {resetting ? 'Resetting…' : 'Reset all activity data'}
         </button>
       </div>
-    </div>
+    </PageShell>
   );
 };
 

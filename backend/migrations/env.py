@@ -30,7 +30,7 @@ def get_url() -> str:
 def run_migrations_offline() -> None:
     url = get_url()
     context.configure(url=url, target_metadata=target_metadata, literal_binds=True)
-    with context.begin_transaction():
+    with context.begin_transaction():   
         context.run_migrations()
 
 

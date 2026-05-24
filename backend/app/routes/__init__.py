@@ -1,2 +1,0 @@
-# noqa: namespace
-

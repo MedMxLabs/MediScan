@@ -66,20 +66,6 @@ def set_cache(key: str, value: Any, ttl_seconds: int | None = None) -> bool:
         return False
 
 
-def invalidate_cache(key_prefix: str) -> int:
-    """Delete keys matching prefix. Returns count deleted (best-effort)."""
-    r = _redis()
-    if not r:
-        return 0
-    n = 0
-    try:
-        for k in r.scan_iter(match=key_prefix + "*"):
-            r.delete(k)
-            n += 1
-    except Exception:
-        pass
-    return n
-
 
 def cache_key_search(normalized_query: str, date_bucket: str) -> str:
     return f"medscan:search:{normalized_query}:{date_bucket}"

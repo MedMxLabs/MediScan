@@ -1,8 +1,13 @@
 import React, { useEffect, useState } from 'react';
-import { Search, FileText, Calendar, ExternalLink } from 'lucide-react';
+import { Search, FileText, Calendar, ExternalLink, History } from 'lucide-react';
 import { getHistory } from '../services/api';
-import Card from '../components/ui/Card';
 import { Link } from 'react-router-dom';
+import PageShell from '../components/dashboard/PageShell';
+import PageHeader from '../components/dashboard/PageHeader';
+import DashPanel from '../components/dashboard/DashPanel';
+import LoadingState from '../components/dashboard/LoadingState';
+import EmptyState from '../components/dashboard/EmptyState';
+import Button from '../components/ui/Button';
 
 const MedicineHistoryPage = () => {
   const [history, setHistory] = useState([]);
@@ -14,12 +19,7 @@ const MedicineHistoryPage = () => {
         const data = await getHistory();
         const rows = [];
         (data.searches || []).forEach((s) => {
-          rows.push({
-            id: `search-${s.id}`,
-            type: 'search',
-            query: s.query,
-            date: s.created_at,
-          });
+          rows.push({ id: `search-${s.id}`, type: 'search', query: s.query, date: s.created_at });
         });
         (data.prescriptions || []).forEach((p) => {
           const names = Array.isArray(p.medicine_list)
@@ -44,90 +44,93 @@ const MedicineHistoryPage = () => {
     fetchHistory();
   }, []);
 
-  const formatDate = (dateString) => {
-    const options = { year: 'numeric', month: 'short', day: 'numeric' };
-    return new Date(dateString).toLocaleDateString(undefined, options);
-  };
+  const formatDate = (dateString) =>
+    new Date(dateString).toLocaleDateString(undefined, {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    });
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal"></div>
-      </div>
-    );
-  }
+  if (loading) return <LoadingState label="Loading history…" />;
 
   return (
-    <div className="max-w-5xl mx-auto space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold text-gray-900">Medicine History</h2>
-        <p className="text-gray-600 mt-1">Your past searches and extracted prescriptions.</p>
-      </div>
+    <PageShell className="max-w-5xl">
+      <PageHeader
+        title="Medicine history"
+        subtitle="Past searches and prescriptions extracted from uploads."
+        icon={History}
+      />
 
-      <Card>
+      <DashPanel noPadding bodyClassName="p-0">
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm whitespace-nowrap">
-            <thead className="bg-gray-50 text-gray-500 font-medium border-b border-gray-100">
+          <table className="w-full text-left text-sm min-w-[36rem]">
+            <thead className="bg-slate-50/90 border-b border-slate-100">
               <tr>
-                <th className="px-6 py-4">Type</th>
-                <th className="px-6 py-4">Query / Medicine</th>
-                <th className="px-6 py-4">Date</th>
-                <th className="px-6 py-4 text-right">Action</th>
+                <th className="px-5 py-3 font-bold text-navy">Type</th>
+                <th className="px-5 py-3 font-bold text-navy">Medicine / query</th>
+                <th className="px-5 py-3 font-bold text-navy">Date</th>
+                <th className="px-5 py-3 font-bold text-navy text-right">Action</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100 bg-white">
-              {history.map((item) => (
-                <tr key={item.id} className="hover:bg-gray-50 transition-colors">
-                  <td className="px-6 py-4">
-                    {item.type === 'search' ? (
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-teal/10 text-teal-dark text-xs font-medium border border-teal/20">
-                        <Search size={14} /> Search
+            <tbody className="divide-y divide-slate-50">
+              {history.length ? (
+                history.map((item) => (
+                  <tr key={item.id} className="hover:bg-teal/[0.03] transition-colors">
+                    <td className="px-5 py-4">
+                      {item.type === 'search' ? (
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-teal/10 text-teal-dark text-xs font-bold border border-teal/20">
+                          <Search size={14} /> Search
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-lime/15 text-lime-dark text-xs font-bold border border-lime/25">
+                          <FileText size={14} /> Rx
+                        </span>
+                      )}
+                    </td>
+                    <td className="px-5 py-4 font-semibold text-navy max-w-xs truncate">{item.query}</td>
+                    <td className="px-5 py-4 text-muted">
+                      <span className="inline-flex items-center gap-1.5">
+                        <Calendar size={14} />
+                        {formatDate(item.date)}
                       </span>
-                    ) : (
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-purple-50 text-purple-700 text-xs font-medium border border-purple-100">
-                        <FileText size={14} /> Prescription
-                      </span>
-                    )}
-                  </td>
-                  <td className="px-6 py-4 font-medium text-gray-900">
-                    {item.query}
-                  </td>
-                  <td className="px-6 py-4 text-gray-500 flex items-center gap-2">
-                    <Calendar size={14} className="text-gray-400" />
-                    {formatDate(item.date)}
-                  </td>
-                  <td className="px-6 py-4 text-right">
-                    <Link 
-                      to={`/dashboard/search?q=${encodeURIComponent(item.query)}`}
-                      className="inline-flex items-center gap-1 text-teal hover:text-teal-dark font-medium"
-                    >
-                      Search Again <ExternalLink size={14} />
-                    </Link>
-                  </td>
-                </tr>
-              ))}
-              
-              {history.length === 0 && (
+                    </td>
+                    <td className="px-5 py-4 text-right">
+                      <Link
+                        to={`/dashboard/search?q=${encodeURIComponent(item.query)}`}
+                        className="inline-flex items-center gap-1 text-sm font-bold text-teal hover:text-teal-dark"
+                      >
+                        Search again <ExternalLink size={14} />
+                      </Link>
+                    </td>
+                  </tr>
+                ))
+              ) : (
                 <tr>
-                  <td colSpan="4" className="px-6 py-12 text-center text-gray-500">
-                    No history found. Start by searching for a medicine or uploading a prescription.
+                  <td colSpan={4}>
+                    <EmptyState
+                      title="No history yet"
+                      description="Search a medicine or upload a prescription to build your timeline."
+                      action={
+                        <Link to="/dashboard/search">
+                          <Button variant="primary" size="sm">
+                            Search medicine
+                          </Button>
+                        </Link>
+                      }
+                    />
                   </td>
                 </tr>
               )}
             </tbody>
           </table>
         </div>
-        {/* Pagination mock */}
-        <Card.Footer className="flex items-center justify-between">
-          <p className="text-sm text-gray-500">Showing 1 to {history.length} of {history.length} entries</p>
-          <div className="flex gap-1">
-            <button className="w-8 h-8 flex items-center justify-center rounded border border-gray-200 text-gray-500 hover:bg-gray-50" disabled>&lt;</button>
-            <button className="w-8 h-8 flex items-center justify-center rounded bg-brand-gradient text-white font-medium">1</button>
-            <button className="w-8 h-8 flex items-center justify-center rounded border border-gray-200 text-gray-500 hover:bg-gray-50">&gt;</button>
+        {history.length > 0 && (
+          <div className="px-5 py-3 border-t border-slate-100 text-xs text-muted">
+            Showing {history.length} {history.length === 1 ? 'entry' : 'entries'}
           </div>
-        </Card.Footer>
-      </Card>
-    </div>
+        )}
+      </DashPanel>
+    </PageShell>
   );
 };
 

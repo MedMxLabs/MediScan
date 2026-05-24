@@ -8,8 +8,12 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
+import { TrendingUp } from 'lucide-react';
 import Card from '../components/ui/Card';
 import { getAdherence, getReminders, markDose } from '../services/api';
+import PageShell from '../components/dashboard/PageShell';
+import PageHeader from '../components/dashboard/PageHeader';
+import LoadingState from '../components/dashboard/LoadingState';
 
 const COLORS = ['bg-teal/100', 'bg-navy-light', 'bg-orange-500', 'bg-purple-500', 'bg-pink-500'];
 
@@ -89,13 +93,7 @@ const AdherenceTrackingPage = () => {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal" />
-      </div>
-    );
-  }
+  if (loading) return <LoadingState label="Loading adherence…" />;
 
   const pct = Number(adherence?.completion_percent ?? 0);
   const taken = adherence?.taken_doses ?? 0;
@@ -103,13 +101,12 @@ const AdherenceTrackingPage = () => {
   const total = adherence?.total_logged ?? 0;
 
   return (
-    <div className="max-w-6xl mx-auto space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold text-gray-900">Adherence Tracking</h2>
-        <p className="text-gray-600 mt-1">
-          Mark doses as taken or missed — percentages and charts come from real logs.
-        </p>
-      </div>
+    <PageShell className="max-w-6xl">
+      <PageHeader
+        title="Adherence tracking"
+        subtitle="Mark doses taken or missed — charts update from your logs."
+        icon={TrendingUp}
+      />
 
       {err && (
         <div className="rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-800">
@@ -276,7 +273,7 @@ const AdherenceTrackingPage = () => {
           </Card>
         </div>
       </div>
-    </div>
+    </PageShell>
   );
 };
 

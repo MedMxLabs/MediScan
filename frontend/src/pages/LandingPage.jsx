@@ -9,7 +9,6 @@ import {
   ArrowRight,
 } from 'lucide-react';
 import Navbar from '../components/Navbar';
-import Logo from '../components/Logo';
 import Button from '../components/ui/Button';
 import HeroDashboard from '../components/landing/HeroDashboard';
 import FeaturesSection from '../components/landing/FeaturesSection';
@@ -20,8 +19,8 @@ import PharmacySources from '../components/landing/PharmacySources';
 import WhyMedMx from '../components/landing/WhyMedMx';
 import Testimonials from '../components/landing/Testimonials';
 import FAQ from '../components/landing/FAQ';
+import LandingFooter from '../components/landing/LandingFooter';
 import LandingBleedBackground from '../components/landing/LandingBleedBackground';
-import ScrollReveal from '../components/landing/ScrollReveal';
 
 const fadeUp = {
   hidden: { opacity: 0, y: 28 },
@@ -201,116 +200,7 @@ const LandingPage = () => {
 
     <FAQ />
 
-    <ScrollReveal
-      as="section"
-      className="py-12 sm:py-16 lg:py-20 bg-navy text-white scroll-mt-nav"
-    >
-      <div className="layout-wide flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 sm:gap-8">
-        <div className="max-w-xl">
-          <h2 className="text-2xl sm:text-3xl font-extrabold leading-tight">
-            Start with one medicine search. See if it saves you money.
-          </h2>
-          <p className="mt-4 text-slate-300 leading-relaxed">
-            Free account · no card to compare · takes about a minute for most common brands.
-          </p>
-        </div>
-        <div className="flex flex-col sm:flex-row gap-3 shrink-0">
-          <Link to="/signup">
-            <Button variant="primary" size="lg" className="gap-2 w-full sm:w-auto shadow-brand">
-              Create account <ArrowRight size={18} />
-            </Button>
-          </Link>
-          <Link to="/login">
-            <Button variant="outlineOnDark" size="lg" className="w-full sm:w-auto">
-              Sign in
-            </Button>
-          </Link>
-        </div>
-      </div>
-    </ScrollReveal>
-
-    <footer id="contact" className="bg-navy text-white mt-auto scroll-mt-nav">
-      <div className="layout-wide py-16 lg:py-20">
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-10 lg:gap-12">
-          <div className="lg:col-span-1">
-            <Logo size="md" showLink={false} theme="on-dark" />
-            <p className="mt-5 text-sm text-slate-300 leading-relaxed">
-              MedMx LABS helps you compare live medicine prices, manage prescriptions, and make smarter
-              health decisions across India.
-            </p>
-          </div>
-          <div>
-            <h4 className="text-sm font-bold uppercase tracking-wider text-teal mb-5">Platform</h4>
-            <ul className="space-y-2 text-sm text-slate-300">
-              <li>
-                <Link to="/dashboard/search" className="hover:text-lime transition-colors duration-300">
-                  Price search
-                </Link>
-              </li>
-              <li>
-                <Link to="/dashboard/upload" className="hover:text-lime transition-colors duration-300">
-                  Prescription OCR
-                </Link>
-              </li>
-              <li>
-                <Link to="/dashboard/reports" className="hover:text-lime transition-colors duration-300">
-                  Lab reports
-                </Link>
-              </li>
-              <li>
-                <Link to="/dashboard/assistant" className="hover:text-lime transition-colors duration-300">
-                  AI assistant
-                </Link>
-              </li>
-            </ul>
-          </div>
-          <div>
-            <h4 className="text-sm font-bold uppercase tracking-wider text-teal mb-5">Company</h4>
-            <ul className="space-y-3 text-sm text-slate-300">
-              <li>
-                <a href="/#about" className="hover:text-lime transition-colors duration-300">
-                  About
-                </a>
-              </li>
-              <li>
-                <a href="/#how-it-works" className="hover:text-lime transition-colors duration-300">
-                  How it works
-                </a>
-              </li>
-              <li>
-                <a href="/#features" className="hover:text-lime transition-colors duration-300">
-                  Features
-                </a>
-              </li>
-            </ul>
-          </div>
-          <div>
-            <h4 className="text-sm font-bold uppercase tracking-wider text-teal mb-5">Legal</h4>
-            <ul className="space-y-2 text-sm text-slate-300">
-              <li>
-                <a href="#" className="hover:text-lime transition-colors duration-300">
-                  Privacy Policy
-                </a>
-              </li>
-              <li>
-                <a href="#" className="hover:text-lime transition-colors duration-300">
-                  Terms of Service
-                </a>
-              </li>
-              <li>
-                <a href="mailto:support@medmx.in" className="hover:text-lime transition-colors duration-300">
-                  support@medmx.in
-                </a>
-              </li>
-            </ul>
-          </div>
-        </div>
-        <div className="mt-12 pt-8 border-t border-white/10 flex flex-col sm:flex-row justify-between gap-4 text-xs text-slate-400">
-          <span>© {new Date().getFullYear()} MedMx LABS. Informational only — not medical advice.</span>
-          <span className="text-gradient font-semibold">Smarter choices. Better health.</span>
-        </div>
-      </div>
-    </footer>
+    <LandingFooter />
       </div>
     </motion.div>
   );

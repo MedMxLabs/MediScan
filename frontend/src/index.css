@@ -223,6 +223,14 @@
     scroll-margin-top: clamp(4.5rem, 12vw, 6rem);
   }
 
+  .landing-footer-watermark {
+    font-size: clamp(8rem, 32vw, 24rem);
+    line-height: 0.82;
+    color: color-mix(in srgb, var(--color-navy-light) 80%, var(--color-teal) 6%);
+    opacity: 0.42;
+    letter-spacing: -0.045em;
+  }
+
   @media (prefers-reduced-motion: reduce) {
     .animate-marquee-rtl,
     .animate-marquee-ltr {

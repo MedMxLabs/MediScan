@@ -15,7 +15,6 @@ import {
   Settings,
   LogOut,
   Menu,
-  X,
   MapPin,
   User as UserIcon,
 } from 'lucide-react';
@@ -36,7 +35,7 @@ const NAV_PRIMARY = [
 const NAV_SECONDARY = [{ name: 'Profile & Settings', href: '/dashboard/profile', icon: Settings }];
 
 const navClass = ({ isActive }) =>
-  `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
+  `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${
     isActive
       ? 'bg-brand-gradient text-white shadow-brand'
       : 'text-slate-300 hover:bg-white/10 hover:text-white'
@@ -62,12 +61,12 @@ const DashboardLayout = () => {
     'Dashboard';
 
   const Sidebar = ({ mobile = false }) => (
-    <div className={`flex flex-col h-full ${mobile ? '' : ''}`}>
+    <div className="flex flex-col h-full">
       <div className="h-16 flex items-center px-5 border-b border-white/10 shrink-0">
         <Logo to="/dashboard" size="sm" theme="on-dark" />
       </div>
 
-      <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-1">
+      <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-0.5">
         {NAV_PRIMARY.map((item) => (
           <NavLink
             key={item.name}
@@ -77,12 +76,12 @@ const DashboardLayout = () => {
             onClick={() => mobile && setSidebarOpen(false)}
           >
             <item.icon size={18} className="shrink-0" />
-            {item.name}
+            <span className="truncate">{item.name}</span>
           </NavLink>
         ))}
       </nav>
 
-      <div className="p-3 border-t border-white/10 space-y-1 shrink-0">
+      <div className="p-3 border-t border-white/10 space-y-0.5 shrink-0">
         {NAV_SECONDARY.map((item) => (
           <NavLink
             key={item.name}
@@ -97,7 +96,7 @@ const DashboardLayout = () => {
         <button
           type="button"
           onClick={handleLogout}
-          className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-red-300 hover:bg-red-500/20 w-full text-left mt-1"
+          className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-red-300 hover:bg-red-500/20 w-full text-left mt-1 transition-colors duration-200"
         >
           <LogOut size={18} />
           Logout
@@ -107,55 +106,62 @@ const DashboardLayout = () => {
   );
 
   return (
-    <div className="h-screen flex bg-surface text-navy overflow-hidden">
-      <aside className="hidden md:flex w-64 shrink-0 bg-navy flex-col">
-        <Sidebar />
+    <div className="h-[100dvh] flex bg-surface text-navy overflow-hidden">
+      <aside className="hidden md:flex relative w-[17rem] lg:w-64 shrink-0 bg-navy flex-col border-r border-white/5 overflow-hidden">
+        <div className="absolute inset-0 pointer-events-none bg-gradient-to-b from-teal/15 via-transparent to-lime/10 opacity-60" aria-hidden />
+        <div className="relative z-10 flex flex-col h-full">
+          <Sidebar />
+        </div>
       </aside>
 
       {sidebarOpen && (
         <div className="fixed inset-0 z-50 md:hidden">
           <button
             type="button"
-            className="absolute inset-0 bg-navy/60 backdrop-blur-sm"
+            className="absolute inset-0 bg-navy/70 backdrop-blur-sm"
             onClick={() => setSidebarOpen(false)}
             aria-label="Close menu"
           />
-          <aside className="relative w-72 max-w-[85vw] h-full bg-navy shadow-2xl">
+          <aside className="relative w-[min(18rem,88vw)] h-full bg-navy shadow-2xl">
             <Sidebar mobile />
           </aside>
         </div>
       )}
 
-      <div className="flex-1 flex flex-col min-w-0">
-        <header className="h-16 shrink-0 glass border-b border-slate-200/60 flex items-center justify-between px-4 sm:px-6 lg:px-8">
+      <div className="flex-1 flex flex-col min-w-0 min-h-0">
+        <header className="h-14 sm:h-16 shrink-0 bg-white/85 backdrop-blur-xl border-b border-slate-200/80 flex items-center justify-between px-4 sm:px-6 lg:px-8">
           <div className="flex items-center gap-3 min-w-0">
             <button
               type="button"
-              className="md:hidden p-2 -ml-1 text-navy rounded-lg hover:bg-slate-100"
+              className="md:hidden p-2 -ml-1 text-navy rounded-xl hover:bg-slate-100 transition-colors"
               onClick={() => setSidebarOpen(true)}
+              aria-label="Open menu"
             >
               <Menu size={22} />
             </button>
-            <div className="min-w-0">
-              <p className="text-xs font-semibold text-teal uppercase tracking-wider">MedMx LABS</p>
-              <h1 className="text-lg font-bold text-navy truncate">{pageTitle}</h1>
+            <div className="min-w-0 md:hidden">
+              <Logo to="/dashboard" size="sm" theme="on-light" />
+            </div>
+            <div className="min-w-0 hidden md:block">
+              <p className="text-[10px] sm:text-xs font-bold text-teal uppercase tracking-wider">MedMx LABS</p>
+              <h1 className="text-base sm:text-lg font-bold text-navy truncate">{pageTitle}</h1>
             </div>
           </div>
 
-          <div className="flex items-center gap-3 pl-3 border-l border-slate-200">
-            <div className="h-9 w-9 rounded-full bg-brand-gradient-soft border border-teal/30 flex items-center justify-center text-teal">
+          <div className="flex items-center gap-2 sm:gap-3 pl-2 sm:pl-3 sm:border-l sm:border-slate-200">
+            <div className="h-9 w-9 rounded-full bg-brand-gradient flex items-center justify-center text-white shadow-sm shrink-0">
               <UserIcon size={16} />
             </div>
-            <div className="hidden sm:block min-w-0">
-              <p className="text-sm font-bold text-navy truncate max-w-[140px]">
+            <div className="hidden sm:block min-w-0 text-right sm:text-left">
+              <p className="text-sm font-bold text-navy truncate max-w-[10rem] lg:max-w-[12rem]">
                 {user?.name || user?.email?.split('@')[0] || 'Account'}
               </p>
-              <p className="text-xs text-muted truncate max-w-[140px]">{user?.email}</p>
+              <p className="text-xs text-muted truncate max-w-[10rem] lg:max-w-[12rem]">{user?.email}</p>
             </div>
           </div>
         </header>
 
-        <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
+        <main className="flex-1 overflow-y-auto overflow-x-hidden p-4 sm:p-6 lg:p-8 bg-gradient-to-br from-slate-50 via-white to-teal/[0.06] dot-grid">
           <Outlet />
         </main>
       </div>

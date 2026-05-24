@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, Link } from 'react-router-dom';
-import { ArrowLeft } from 'lucide-react';
-import Card from '../components/ui/Card';
+import { ArrowLeft, BarChart3 } from 'lucide-react';
 import Button from '../components/ui/Button';
+import PageShell from '../components/dashboard/PageShell';
+import PageHeader from '../components/dashboard/PageHeader';
+import DashPanel from '../components/dashboard/DashPanel';
+import LoadingState from '../components/dashboard/LoadingState';
 import { compareMedicine, getAlternatives } from '../services/api';
 
 const MedicineComparisonPage = () => {
@@ -55,14 +58,7 @@ const MedicineComparisonPage = () => {
   const cheapest = prices.find((p) => Number(p.price) === lowest);
   const alternatives = payload?.alternatives || [];
 
-  if (loading) {
-    return (
-      <div className="flex flex-col items-center justify-center h-64 space-y-4">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal" />
-        <p className="text-gray-500">Fetching live pharmacy listings…</p>
-      </div>
-    );
-  }
+  if (loading) return <LoadingState label="Fetching live pharmacy listings…" />;
 
   if (error || !payload) {
     return (
@@ -92,33 +88,29 @@ const MedicineComparisonPage = () => {
   }
 
   return (
-    <div className="max-w-6xl mx-auto space-y-6">
-      <div>
-        <Link
-          to="/dashboard/search"
-          className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-teal mb-4 transition-colors"
-        >
-          <ArrowLeft size={16} /> Back to Search
-        </Link>
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <div>
-            <h2 className="text-2xl font-bold text-gray-900">{payload.medicine_display || medicineName}</h2>
-            <p className="text-gray-500 mt-1">Live scrape — verify pack and price on the pharmacy site.</p>
+    <PageShell className="max-w-6xl">
+      <Link
+        to="/dashboard/search"
+        className="inline-flex items-center gap-2 text-sm font-semibold text-muted hover:text-teal transition-colors"
+      >
+        <ArrowLeft size={16} /> Back to search
+      </Link>
+      <PageHeader
+        title={payload.medicine_display || medicineName}
+        subtitle="Live scrape — verify pack and price on the pharmacy site."
+        icon={BarChart3}
+      />
+      {cheapest && (
+        <div className="rounded-2xl border border-teal/25 bg-teal/5 p-5 sm:p-6 flex flex-col sm:flex-row justify-between items-center gap-4">
+          <p className="text-sm font-semibold text-teal-dark">Lowest MRP in this result set</p>
+          <div className="text-center sm:text-right">
+            <p className="text-3xl font-extrabold text-teal tabular-nums">₹{Number(cheapest.price).toFixed(2)}</p>
+            <p className="text-xs text-muted mt-1">at {cheapest.pharmacy_name}</p>
           </div>
-          {cheapest && (
-            <div className="bg-teal/10 rounded-lg p-4 text-center min-w-[150px] border border-teal/20">
-              <p className="text-sm font-medium text-teal-dark">Lowest MRP in result set</p>
-              <p className="text-3xl font-bold text-teal my-1">₹{Number(cheapest.price).toFixed(2)}</p>
-              <p className="text-xs text-teal-dark">at {cheapest.pharmacy_name}</p>
-            </div>
-          )}
         </div>
-      </div>
+      )}
 
-      <Card>
-        <Card.Header>
-          <h3 className="text-lg font-bold text-gray-900">Price comparison</h3>
-        </Card.Header>
+      <DashPanel title="Price comparison" noPadding bodyClassName="">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm whitespace-nowrap">
             <thead className="bg-gray-50 text-gray-500 font-medium">
@@ -170,19 +162,20 @@ const MedicineComparisonPage = () => {
             </tbody>
           </table>
         </div>
-        <Card.Footer>
-          <p className="text-xs text-gray-400">
-            Prices and links come from pharmacy search pages at query time — not cached demo data.
-          </p>
-        </Card.Footer>
-      </Card>
+        <p className="px-5 sm:px-6 py-4 text-xs text-muted border-t border-slate-100">
+          Prices and links come from pharmacy search pages at query time — not cached demo data.
+        </p>
+      </DashPanel>
 
       {generics.length > 0 && (
-        <Card>
-          <Card.Header>
-            <h3 className="text-lg font-bold text-gray-900">Generic alternatives</h3>
-            <p className="text-sm text-gray-500">Same composition / generic name from MedMx LABS catalog.</p>
-          </Card.Header>
+        <DashPanel
+          title="Generic alternatives"
+          noPadding
+          bodyClassName=""
+          action={
+            <p className="text-xs text-muted hidden sm:block">Same composition from catalog</p>
+          }
+        >
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
               <thead className="bg-gray-50 text-gray-500 font-medium">
@@ -214,14 +207,11 @@ const MedicineComparisonPage = () => {
               </tbody>
             </table>
           </div>
-        </Card>
+        </DashPanel>
       )}
 
       {alternatives.length > 0 && (
-        <Card>
-          <Card.Header>
-            <h3 className="text-lg font-bold text-gray-900">Ranked offers (same query)</h3>
-          </Card.Header>
+        <DashPanel title="Ranked offers (same query)" noPadding bodyClassName="">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
               <thead className="bg-gray-50 text-gray-500 font-medium">
@@ -242,9 +232,9 @@ const MedicineComparisonPage = () => {
               </tbody>
             </table>
           </div>
-        </Card>
+        </DashPanel>
       )}
-    </div>
+    </PageShell>
   );
 };
 

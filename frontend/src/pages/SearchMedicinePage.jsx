@@ -6,6 +6,9 @@ import { searchMedicines } from '../services/api';
 import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
 import Card from '../components/ui/Card';
+import PageShell from '../components/dashboard/PageShell';
+import PageHeader from '../components/dashboard/PageHeader';
+import DashPanel from '../components/dashboard/DashPanel';
 
 const TIPS = [
   { title: 'Search by brand name', hint: 'Brand or trade name (e.g. Dolo 650)' },
@@ -60,18 +63,14 @@ const SearchMedicinePage = () => {
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8 pt-2">
-      <div className="dna-pattern rounded-2xl border border-teal/10 bg-white p-6 sm:p-8">
-        <div className="flex items-start gap-3 mb-6">
-          <div className="hidden sm:flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-brand-gradient text-white shadow-brand">
-            <Search size={20} />
-          </div>
-          <div>
-            <h2 className="text-2xl font-bold text-navy tracking-tight">Search Medicine</h2>
-            <p className="text-sm text-muted mt-1">Compare live prices across PharmEasy, Netmeds, Apollo, TrueMeds, MedPlus & Tata 1mg</p>
-          </div>
-        </div>
+    <PageShell className="max-w-4xl">
+      <PageHeader
+        title="Search medicine"
+        subtitle="Compare live MRP from PharmEasy, Netmeds, Apollo, TrueMeds, MedPlus & Tata 1mg"
+        icon={Search}
+      />
 
+      <DashPanel className="dna-pattern border-teal/15">
         <form onSubmit={(ev) => handleSearch(ev, {})} className="flex flex-col sm:flex-row gap-3">
           <Input
             type="text"
@@ -84,7 +83,7 @@ const SearchMedicinePage = () => {
             {loading ? 'Searching…' : 'Search'}
           </Button>
         </form>
-      </div>
+      </DashPanel>
 
       {!hasSearched ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -192,7 +191,7 @@ const SearchMedicinePage = () => {
           </div>
         </div>
       )}
-    </div>
+    </PageShell>
   );
 };
 

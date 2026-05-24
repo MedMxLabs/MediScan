@@ -1,6 +1,9 @@
 import React, { useMemo, useRef, useState } from 'react';
-import { FileUp, AlertCircle, CheckCircle2, Info, X } from 'lucide-react';
+import { FileUp, AlertCircle, CheckCircle2, Info, X, FileText } from 'lucide-react';
 import Button from '../components/ui/Button';
+import PageShell from '../components/dashboard/PageShell';
+import PageHeader from '../components/dashboard/PageHeader';
+import DashPanel from '../components/dashboard/DashPanel';
 import { analyzeReport } from '../services/api';
 
 const flagLabel = {
@@ -73,15 +76,14 @@ const LabReportAnalysisPage = () => {
   };
 
   return (
-    <div className="max-w-6xl mx-auto space-y-6 pt-2">
-      <div>
-        <h2 className="text-[22px] font-bold text-navy mb-1">Lab Report Analysis</h2>
-        <p className="text-[14px] font-medium text-gray-500">
-          Upload blood test / lab PDFs or images. We parse biomarkers, compare to reference ranges, and write plain-language insights.
-        </p>
-      </div>
+    <PageShell className="max-w-6xl">
+      <PageHeader
+        title="Lab report analysis"
+        subtitle="Upload PDFs or images — biomarkers, reference ranges, and plain-language insights."
+        icon={FileText}
+      />
 
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 sm:p-8 space-y-8">
+      <DashPanel bodyClassName="space-y-8">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           <div className="lg:col-span-5 flex flex-col">
             <h3 className="text-[16px] font-bold text-navy mb-4">Upload lab report</h3>
@@ -259,8 +261,8 @@ const LabReportAnalysisPage = () => {
             )}
           </div>
         </div>
-      </div>
-    </div>
+      </DashPanel>
+    </PageShell>
   );
 };
 

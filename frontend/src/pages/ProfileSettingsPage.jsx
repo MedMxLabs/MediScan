@@ -2,6 +2,12 @@ import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { getProfile, updateProfile } from '../services/api';
 import { updateProfile as updateReduxProfile } from '../store/slices/authSlice';
+import { Settings } from 'lucide-react';
+import PageShell from '../components/dashboard/PageShell';
+import PageHeader from '../components/dashboard/PageHeader';
+import DashPanel from '../components/dashboard/DashPanel';
+import LoadingState from '../components/dashboard/LoadingState';
+import Button from '../components/ui/Button';
 
 const tabs = ['Profile', 'Preferences', 'Notifications'];
 
@@ -105,19 +111,16 @@ const ProfileSettingsPage = () => {
       'Notification preferences saved.',
     );
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal" />
-      </div>
-    );
-  }
+  if (loading) return <LoadingState label="Loading profile…" />;
 
   const initials = (p.name || p.email || '?').slice(0, 1).toUpperCase();
 
   return (
-    <div className="max-w-5xl mx-auto space-y-6 pt-2">
-      <div className="border-b border-gray-200">
+    <PageShell className="max-w-5xl">
+      <PageHeader title="Profile & settings" subtitle="Account details and notification preferences." icon={Settings} />
+
+      <DashPanel noPadding bodyClassName="p-0">
+      <div className="border-b border-slate-100 px-4 sm:px-6">
         <nav className="-mb-px flex gap-10 overflow-x-auto">
           {tabs.map((tab) => (
             <button
@@ -137,7 +140,7 @@ const ProfileSettingsPage = () => {
 
       {status.text && (
         <div
-          className={`rounded-xl border px-4 py-3 text-sm ${
+          className={`mx-4 sm:mx-6 mt-4 rounded-xl border px-4 py-3 text-sm ${
             status.kind === 'ok'
               ? 'border-teal/20 bg-teal/10 text-teal-dark'
               : 'border-red-100 bg-red-50 text-red-800'
@@ -147,7 +150,7 @@ const ProfileSettingsPage = () => {
         </div>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-12 gap-8 pt-2">
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-8 p-5 sm:p-6">
         <div className="md:col-span-4 flex flex-col items-center">
           <div className="w-[120px] h-[120px] bg-[#E2E8F0] rounded-full flex items-center justify-center overflow-hidden mb-5 text-5xl font-extrabold text-teal">
             {initials}
@@ -160,7 +163,7 @@ const ProfileSettingsPage = () => {
 
         <div className="md:col-span-8">
           {activeTab === 'Profile' && (
-            <div className="bg-white rounded-2xl border border-gray-100 p-8 shadow-sm">
+            <div className="rounded-2xl border border-slate-100 bg-slate-50/50 p-6 sm:p-8">
               <h3 className="text-[16px] font-bold text-navy mb-8">Personal information</h3>
               <form className="space-y-6" onSubmit={saveProfile}>
                 <div className="space-y-2">
@@ -237,7 +240,7 @@ const ProfileSettingsPage = () => {
           )}
 
           {activeTab === 'Notifications' && (
-            <div className="bg-white rounded-2xl border border-gray-100 p-8 shadow-sm">
+            <div className="rounded-2xl border border-slate-100 bg-slate-50/50 p-6 sm:p-8">
               <h3 className="text-[16px] font-bold text-navy mb-6">
                 Notification preferences
               </h3>
@@ -279,20 +282,16 @@ const ProfileSettingsPage = () => {
               </div>
 
               <div className="pt-6">
-                <button
-                  type="button"
-                  onClick={saveNotifications}
-                  disabled={saving}
-                  className="bg-brand-gradient text-white text-[14px] font-bold py-2.5 px-6 rounded-xl shadow-sm hover:opacity-90 transition-colors disabled:opacity-60"
-                >
+                <Button type="button" onClick={saveNotifications} disabled={saving}>
                   {saving ? 'Saving…' : 'Save preferences'}
-                </button>
+                </Button>
               </div>
             </div>
           )}
         </div>
       </div>
-    </div>
+      </DashPanel>
+    </PageShell>
   );
 };
 

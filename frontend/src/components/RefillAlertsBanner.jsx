@@ -37,7 +37,7 @@ const RefillAlertsBanner = () => {
   const more = alerts.length - top.length;
 
   return (
-    <div className="rounded-2xl border border-amber-200 bg-amber-50/60 p-4 sm:p-5 flex items-start gap-3">
+    <div className="rounded-2xl border border-amber-200/80 bg-amber-50/80 backdrop-blur-sm shadow-sm p-4 sm:p-5 flex items-start gap-3">
       <AlertTriangle className="text-amber-600 shrink-0 mt-0.5" size={20} />
       <div className="flex-1">
         <p className="text-sm font-bold text-navy">Refill alerts</p>

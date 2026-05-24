@@ -1,6 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { Crosshair, ExternalLink, MapPin, Phone, Search } from 'lucide-react';
 import { getNearbyPharmacies } from '../services/api';
+import PageShell from '../components/dashboard/PageShell';
+import PageHeader from '../components/dashboard/PageHeader';
+import DashPanel from '../components/dashboard/DashPanel';
+import Button from '../components/ui/Button';
 
 function metres(m) {
   if (m == null) return '—';
@@ -60,23 +64,18 @@ const NearbyPharmacyPage = () => {
     : '';
 
   return (
-    <div className="max-w-6xl mx-auto space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold text-gray-900">Nearby pharmacies</h2>
-        <p className="text-gray-600 mt-1">
-          Real pharmacies pulled from OpenStreetMap. Use “Directions” to open Google Maps with a route.
-        </p>
-      </div>
+    <PageShell className="max-w-6xl">
+      <PageHeader
+        title="Nearby pharmacies"
+        subtitle="OpenStreetMap listings near you — open directions in Google Maps."
+        icon={MapPin}
+      />
 
-      <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm flex flex-col sm:flex-row gap-4 sm:items-end">
-        <button
-          type="button"
-          onClick={locate}
-          className="bg-brand-gradient hover:opacity-90 text-white text-[14px] font-bold py-2.5 px-5 rounded-xl transition-colors flex items-center gap-2"
-        >
+      <DashPanel bodyClassName="flex flex-col sm:flex-row gap-4 sm:items-end">
+        <Button type="button" variant="primary" onClick={locate} className="gap-2 shrink-0">
           <Crosshair size={16} />
-          {pos ? 'Update my location' : 'Use my location'}
-        </button>
+          {pos ? 'Update location' : 'Use my location'}
+        </Button>
         <div className="flex flex-col">
           <label className="text-[12px] font-bold text-gray-500 mb-1">Radius</label>
           <select
@@ -91,17 +90,12 @@ const NearbyPharmacyPage = () => {
           </select>
         </div>
         {pos && (
-          <button
-            type="button"
-            onClick={search}
-            disabled={loading}
-            className="text-[14px] font-bold border border-gray-200 hover:bg-gray-50 px-5 py-2.5 rounded-xl flex items-center gap-2 disabled:opacity-60"
-          >
+          <Button type="button" variant="outline" onClick={search} disabled={loading} className="gap-2">
             <Search size={16} />
             {loading ? 'Searching…' : 'Refresh'}
-          </button>
+          </Button>
         )}
-      </div>
+      </DashPanel>
 
       {err && (
         <div className="rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-800">
@@ -110,7 +104,7 @@ const NearbyPharmacyPage = () => {
       )}
 
       {center && mapEmbed && (
-        <div className="rounded-2xl overflow-hidden border border-gray-100 shadow-sm bg-white">
+        <DashPanel noPadding bodyClassName="p-0 overflow-hidden">
           <iframe
             title="Nearby pharmacies map"
             width="100%"
@@ -120,14 +114,14 @@ const NearbyPharmacyPage = () => {
             src={mapEmbed}
             style={{ border: 0 }}
           />
-        </div>
+        </DashPanel>
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {results.map((p) => (
           <div
             key={p.id}
-            className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 flex flex-col"
+            className="rounded-2xl border border-slate-200/90 bg-white/95 backdrop-blur-sm shadow-sm p-5 flex flex-col hover-lift"
           >
             <div className="flex items-start justify-between gap-3">
               <div>
@@ -183,7 +177,7 @@ const NearbyPharmacyPage = () => {
           Enable location to find pharmacies nearby.
         </div>
       )}
-    </div>
+    </PageShell>
   );
 };
 

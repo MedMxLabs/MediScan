@@ -49,4 +49,3 @@ config_by_name = {
 def get_config():
     env = os.environ.get("FLASK_ENV", "development")
     return config_by_name.get(env, DevelopmentConfig)
-

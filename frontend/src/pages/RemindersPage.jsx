@@ -17,6 +17,11 @@ import {
 } from '../services/api';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
+import PageShell from '../components/dashboard/PageShell';
+import PageHeader from '../components/dashboard/PageHeader';
+import LoadingState from '../components/dashboard/LoadingState';
+import DashPanel from '../components/dashboard/DashPanel';
+import EmptyState from '../components/dashboard/EmptyState';
 
 const FREQUENCIES = [
   { value: 'once_daily', label: 'Once daily' },
@@ -134,30 +139,21 @@ const RemindersPage = () => {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal"></div>
-      </div>
-    );
-  }
+  if (loading) return <LoadingState label="Loading reminders…" />;
 
   return (
-    <div className="max-w-5xl mx-auto space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900">Reminders & Schedule</h2>
-          <p className="text-gray-600 mt-1">Manage medicine reminders and refill windows.</p>
-        </div>
-        <Button
-          variant="primary"
-          className="gap-2 shrink-0"
-          onClick={() => setShowForm((v) => !v)}
-        >
-          {showForm ? <X size={18} /> : <Plus size={18} />}
-          {showForm ? 'Close' : 'Add Reminder'}
-        </Button>
-      </div>
+    <PageShell className="max-w-5xl">
+      <PageHeader
+        title="Reminders & schedule"
+        subtitle="Manage medicine reminders and refill windows."
+        icon={Bell}
+        action={
+          <Button variant="primary" className="gap-2 shrink-0" onClick={() => setShowForm((v) => !v)}>
+            {showForm ? <X size={18} /> : <Plus size={18} />}
+            {showForm ? 'Close' : 'Add reminder'}
+          </Button>
+        }
+      />
 
       {err && (
         <div className="rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-800">
@@ -166,8 +162,7 @@ const RemindersPage = () => {
       )}
 
       {showForm && (
-        <Card>
-          <Card.Body>
+        <DashPanel title="New reminder">
             <form onSubmit={handleCreate} className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-[13px] font-bold text-gray-500 mb-1">
@@ -247,8 +242,7 @@ const RemindersPage = () => {
                 </Button>
               </div>
             </form>
-          </Card.Body>
-        </Card>
+        </DashPanel>
       )}
 
       <div className="grid gap-4">
@@ -327,19 +321,19 @@ const RemindersPage = () => {
         ))}
 
         {reminders.length === 0 && (
-          <div className="text-center py-12 bg-white rounded-xl border border-gray-100 shadow-sm">
-            <Bell size={48} className="mx-auto text-gray-300 mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-1">No reminders set</h3>
-            <p className="text-gray-500 mb-6">
-              You haven't set up any medicine reminders yet.
-            </p>
-            <Button variant="primary" onClick={() => setShowForm(true)}>
-              Create First Reminder
-            </Button>
-          </div>
+          <EmptyState
+            icon={Bell}
+            title="No reminders yet"
+            description="Set schedules so we can nudge you before doses run out."
+            action={
+              <Button variant="primary" onClick={() => setShowForm(true)}>
+                Create first reminder
+              </Button>
+            }
+          />
         )}
       </div>
-    </div>
+    </PageShell>
   );
 };
 

@@ -1,1 +1,0 @@
-# MedScan business logic services

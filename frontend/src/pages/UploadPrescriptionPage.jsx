@@ -1,9 +1,11 @@
 import React, { useState, useRef } from 'react';
 import { UploadCloud, FileType, CheckCircle2, AlertCircle, X, Search } from 'lucide-react';
 import { uploadPrescription } from '../services/api';
-import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import { Link } from 'react-router-dom';
+import PageShell from '../components/dashboard/PageShell';
+import PageHeader from '../components/dashboard/PageHeader';
+import DashPanel from '../components/dashboard/DashPanel';
 
 const UploadPrescriptionPage = () => {
   const [file, setFile] = useState(null);
@@ -81,20 +83,15 @@ const UploadPrescriptionPage = () => {
   };
 
   return (
-    <div className="max-w-6xl mx-auto space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold text-gray-900">Upload Prescription</h2>
-        <p className="text-gray-600 mt-1">
-          Upload an image or PDF of your prescription. OCR extracts medicines and we fetch live pharmacy prices.
-        </p>
-      </div>
+    <PageShell className="max-w-6xl">
+      <PageHeader
+        title="Upload prescription"
+        subtitle="Photo or PDF → medicine names and live pharmacy prices."
+        icon={UploadCloud}
+      />
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <Card className="h-full">
-          <Card.Header>
-            <h3 className="text-lg font-bold text-gray-900">Upload prescription file</h3>
-          </Card.Header>
-          <Card.Body className="flex flex-col">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
+        <DashPanel title="Upload prescription file" className="h-full" bodyClassName="flex flex-col">
             <div
               className={`flex-1 border-2 border-dashed rounded-xl p-8 flex flex-col items-center justify-center text-center transition-colors min-h-[300px]
                 ${isDragging ? 'border-teal bg-teal/10' : 'border-gray-300 hover:bg-gray-50 bg-white'}
@@ -170,14 +167,12 @@ const UploadPrescriptionPage = () => {
                 <p>{error}</p>
               </div>
             )}
-          </Card.Body>
-        </Card>
+        </DashPanel>
 
-        <Card className="h-full bg-gray-50 border-dashed border-gray-200 shadow-none">
-          <Card.Header className="bg-transparent border-gray-200">
-            <h3 className="text-lg font-bold text-gray-900">Extracted medicines</h3>
-          </Card.Header>
-          <Card.Body>
+        <DashPanel
+          title="Extracted medicines"
+          className="h-full border-dashed bg-slate-50/80"
+        >
             {isUploading ? (
               <div className="h-full flex flex-col items-center justify-center text-center py-12">
                 <div className="relative mb-6">
@@ -245,10 +240,9 @@ const UploadPrescriptionPage = () => {
                 <p>Upload a prescription to see extracted medicines and live prices here.</p>
               </div>
             )}
-          </Card.Body>
-        </Card>
+        </DashPanel>
       </div>
-    </div>
+    </PageShell>
   );
 };
 

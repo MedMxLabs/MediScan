@@ -2,8 +2,8 @@ import React from 'react';
 
 const Card = ({ children, className = '', hover = false, ...props }) => (
   <div
-    className={`bg-white rounded-2xl shadow-sm border border-slate-100/80 overflow-hidden ${
-      hover ? 'hover:shadow-md hover:border-teal/20 transition-all duration-200' : ''
+    className={`rounded-2xl border border-slate-200/90 bg-white/95 backdrop-blur-sm shadow-sm overflow-hidden ${
+      hover ? 'hover-lift hover:border-teal/25 hover:shadow-md transition-all duration-300' : ''
     } ${className}`}
     {...props}
   >
