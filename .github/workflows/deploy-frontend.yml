@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - "frontend/**"
+      - "mobile/**"
       - ".github/workflows/deploy-frontend.yml"
 
 jobs:
@@ -24,6 +25,23 @@ jobs:
       - name: Install dependencies
         working-directory: frontend
         run: npm ci
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+          cache-key: flutter-mobile
+
+      - name: Build Android APK
+        working-directory: mobile
+        run: |
+          flutter pub get
+          flutter build apk --release --dart-define=API_BASE_URL=https://medscan-api.azurewebsites.net
+
+      - name: Copy APK into frontend public
+        working-directory: frontend
+        run: npm run copy:apk
 
       - name: Build
         working-directory: frontend

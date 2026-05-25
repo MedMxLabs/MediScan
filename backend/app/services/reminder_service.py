@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta
 
-from app.extensions import db
 from app.models.reminder import Reminder
 
 

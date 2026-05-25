@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Crosshair, ExternalLink, MapPin, Phone, Search } from 'lucide-react';
 import { getNearbyPharmacies } from '../services/api';
 import PageShell from '../components/dashboard/PageShell';

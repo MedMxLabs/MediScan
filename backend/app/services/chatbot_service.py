@@ -1,8 +1,6 @@
 """Chatbot — OmniDimension / OpenAI-compatible API with deterministic FAQ fallback."""
 from __future__ import annotations
 
-from typing import Any
-
 from app.services.ai_service import LLMConfigurationError, chat_completion, llm_is_configured
 
 _FAQ_KEYWORDS: list[tuple[tuple[str, ...], str]] = (

@@ -1,0 +1,222 @@
+import 'package:dio/dio.dart';
+
+import '../config.dart';
+import 'api_client.dart';
+
+class MedscanApi {
+  MedscanApi(this._client);
+
+  final ApiClient _client;
+
+  Dio get _dio => _client.dio;
+
+  Future<Map<String, dynamic>> login(String email, String password) async {
+    final res = await _dio.post(
+      '/api/auth/login',
+      data: {
+        'email': email.trim().toLowerCase(),
+        'password': password,
+      },
+      options: Options(extra: {'skipAuth': true}),
+    );
+    return Map<String, dynamic>.from(res.data as Map);
+  }
+
+  Future<Map<String, dynamic>> register(String email, String password) async {
+    final res = await _dio.post(
+      '/api/auth/register',
+      data: {
+        'email': email.trim().toLowerCase(),
+        'password': password,
+      },
+      options: Options(extra: {'skipAuth': true}),
+    );
+    return Map<String, dynamic>.from(res.data as Map);
+  }
+
+  Future<Map<String, dynamic>> getDashboard({bool refresh = false}) async {
+    final res = await _dio.get(
+      '/api/dashboard',
+      queryParameters: refresh ? {'refresh': '1'} : null,
+    );
+    return Map<String, dynamic>.from(_client.unwrap(res) as Map);
+  }
+
+  Future<Map<String, dynamic>> getAdherence() async {
+    final res = await _dio.get('/api/adherence');
+    return Map<String, dynamic>.from(_client.unwrap(res) as Map);
+  }
+
+  Future<List<Map<String, dynamic>>> searchMedicine(
+    String query, {
+    bool refresh = false,
+  }) async {
+    final res = await _dio.get(
+      '/api/search-medicine',
+      queryParameters: {
+        'query': query.trim(),
+        if (refresh) 'refresh': '1',
+      },
+      options: Options(receiveTimeout: AppConfig.scrapeTimeout),
+    );
+    final data = _client.unwrap(res) as Map;
+    if (data['failed_all'] == true) {
+      final errors = data['scrape_errors'] as List?;
+      final firstErr = errors != null && errors.isNotEmpty
+          ? (errors.first as Map)['error']?.toString()
+          : null;
+      throw DioException(
+        requestOptions: res.requestOptions,
+        response: res,
+        message: firstErr ?? 'All pharmacy sources failed',
+      );
+    }
+    final prices = (data['prices'] as List?) ?? [];
+    final md = data['medicine_display'] ?? query;
+    return prices.asMap().entries.map((e) {
+      final row = Map<String, dynamic>.from(e.value as Map);
+      return {
+        'id': '${row['pharmacy_name']}-${e.key}',
+        'name': md,
+        'packSize': row['pack_size'] ?? '—',
+        'price': row['price'],
+        'pharmacy': row['pharmacy_name'],
+        'availability': row['availability'],
+        'url': row['url'],
+      };
+    }).toList();
+  }
+
+  Future<Map<String, dynamic>> compareMedicine(String medicine) async {
+    final res = await _dio.get(
+      '/api/compare',
+      queryParameters: {'medicine': medicine.trim()},
+      options: Options(receiveTimeout: AppConfig.scrapeTimeout),
+    );
+    return Map<String, dynamic>.from(_client.unwrap(res) as Map);
+  }
+
+  Future<Map<String, dynamic>> uploadPrescription(FormData formData) async {
+    final res = await _dio.post(
+      '/api/upload-prescription',
+      data: formData,
+      options: Options(
+        receiveTimeout: AppConfig.scrapeTimeout,
+        contentType: 'multipart/form-data',
+      ),
+    );
+    final body = res.data;
+    if (body is Map && body['status'] == 'success' && body['data'] != null) {
+      return Map<String, dynamic>.from(body['data'] as Map);
+    }
+    return Map<String, dynamic>.from(body as Map);
+  }
+
+  Future<Map<String, dynamic>> getHistory({int page = 1}) async {
+    final res = await _dio.get('/api/history', queryParameters: {'page': page});
+    return Map<String, dynamic>.from(_client.unwrap(res) as Map);
+  }
+
+  List<Map<String, dynamic>> _normalizeReminders(List rows) {
+    return rows.map((e) {
+      final r = Map<String, dynamic>.from(e as Map);
+      final sch = r['schedule'];
+      if (r['times'] == null && sch is Map && sch['times'] is List) {
+        r['times'] = sch['times'];
+      }
+      return r;
+    }).toList();
+  }
+
+  Future<List<Map<String, dynamic>>> getReminders() async {
+    final res = await _dio.get('/api/reminders');
+    final data = _client.unwrap(res) as Map;
+    return _normalizeReminders((data['reminders'] as List?) ?? []);
+  }
+
+  Future<Map<String, dynamic>> createReminder(Map<String, dynamic> payload) async {
+    final res = await _dio.post('/api/reminders/create', data: payload);
+    return Map<String, dynamic>.from(_client.unwrap(res) as Map);
+  }
+
+  Future<Map<String, dynamic>> updateReminder(Map<String, dynamic> payload) async {
+    final body = Map<String, dynamic>.from(payload);
+    if (body.containsKey('enabled') && !body.containsKey('status')) {
+      body['status'] = body['enabled'] == true ? 'active' : 'paused';
+      body.remove('enabled');
+    }
+    final res = await _dio.patch('/api/reminders/update', data: body);
+    return Map<String, dynamic>.from(_client.unwrap(res) as Map);
+  }
+
+  Future<void> deleteReminder(int id) async {
+    await _dio.delete('/api/reminders/delete', queryParameters: {'id': id});
+  }
+
+  Future<void> markDose(int reminderId, {String status = 'taken'}) async {
+    await _dio.post('/api/adherence/mark-dose', data: {
+      'reminder_id': reminderId,
+      'status': status,
+    });
+  }
+
+  Future<Map<String, dynamic>> analyzeReport(FormData formData) async {
+    final res = await _dio.post(
+      '/api/report-analysis',
+      data: formData,
+      options: Options(
+        receiveTimeout: const Duration(seconds: 120),
+        contentType: 'multipart/form-data',
+      ),
+    );
+    final body = res.data;
+    if (body is Map && body['status'] == 'success' && body['data'] != null) {
+      return Map<String, dynamic>.from(body['data'] as Map);
+    }
+    return Map<String, dynamic>.from(body as Map);
+  }
+
+  Future<Map<String, dynamic>> askAssistant(String message) async {
+    final res = await _dio.post('/api/chatbot', data: {'message': message});
+    final body = res.data;
+    if (body is Map && body['status'] == 'success' && body['data'] != null) {
+      final data = body['data'] as Map;
+      return {'text': data['reply'], 'fromLlm': data['from_llm'] ?? false};
+    }
+    if (body is Map && body['reply'] != null) {
+      return {'text': body['reply'], 'fromLlm': body['from_llm'] ?? false};
+    }
+    return {'text': body.toString(), 'fromLlm': false};
+  }
+
+  Future<Map<String, dynamic>> getProfile() async {
+    final res = await _dio.get('/api/profile');
+    return Map<String, dynamic>.from(_client.unwrap(res) as Map);
+  }
+
+  Future<Map<String, dynamic>> updateProfile(Map<String, dynamic> partial) async {
+    final res = await _dio.patch('/api/profile/update', data: partial);
+    return Map<String, dynamic>.from(_client.unwrap(res) as Map);
+  }
+
+  Future<Map<String, dynamic>> getNearbyPharmacies({
+    required double lat,
+    required double lng,
+    int radius = 2000,
+  }) async {
+    final res = await _dio.get(
+      '/api/pharmacies/nearby',
+      queryParameters: {'lat': lat, 'lng': lng, 'radius': radius},
+    );
+    return Map<String, dynamic>.from(_client.unwrap(res) as Map);
+  }
+
+  Future<Map<String, dynamic>> getRefillAlerts() async {
+    final res = await _dio.get('/api/refill/alerts');
+    return Map<String, dynamic>.from(_client.unwrap(res) as Map);
+  }
+
+  Future<void> resetUserActivity() async {
+    await _dio.post('/api/profile/reset-data');
+  }
+}

@@ -7,10 +7,7 @@ from flask_jwt_extended import get_jwt_identity, jwt_required
 from app.extensions import db
 from app.models.reminder import Reminder
 from app.services.reminder_service import compute_next_trigger, update_reminder_fields
-from app.utils.logger import get_logger
 from app.utils.responses import err, ok
-
-logger = get_logger(__name__)
 
 bp = Blueprint("reminder", __name__, url_prefix="/api")
 
@@ -42,14 +39,16 @@ def list_reminders():
 def create_reminder():
     uid = int(get_jwt_identity())
     data = request.get_json(silent=True) or {}
-    sch = data.get("schedule") or {}
-    if isinstance(data.get("times"), list):
-        sch = {"times": data.get("times")}
+    sch = data.get("schedule") if isinstance(data.get("schedule"), dict) else {}
     times_list = data.get("times")
     if isinstance(times_list, str):
         times_list = [times_list]
     if isinstance(times_list, list):
-        sch = {"times": times_list}
+        sch = {**sch, "times": times_list}
+    if data.get("notes"):
+        sch = {**sch, "notes": data.get("notes")}
+    if data.get("start_date"):
+        sch = {**sch, "start_date": data.get("start_date")}
 
     r = Reminder(
         user_id=uid,

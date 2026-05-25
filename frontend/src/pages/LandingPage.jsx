@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
@@ -6,9 +6,9 @@ import {
   UploadCloud,
   Sparkles,
   Star,
-  ArrowRight,
 } from 'lucide-react';
 import Navbar from '../components/Navbar';
+import AndroidAppDownloadButton from '../components/AndroidAppDownloadButton';
 import Button from '../components/ui/Button';
 import HeroDashboard from '../components/landing/HeroDashboard';
 import FeaturesSection from '../components/landing/FeaturesSection';
@@ -128,7 +128,7 @@ const LandingPage = () => {
                   insights — built for Indian pharmacies and INR pricing.
                 </motion.p>
 
-                <motion.div variants={fadeUp} className="mt-10 flex flex-col sm:flex-row gap-4">
+                <motion.div variants={fadeUp} className="mt-10 flex flex-col sm:flex-row flex-wrap gap-4">
                   <Link to="/dashboard/search">
                     <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
                       <Button variant="primary" size="lg" className="w-full sm:w-auto gap-2 shadow-brand">
@@ -149,7 +149,21 @@ const LandingPage = () => {
                       </Button>
                     </motion.div>
                   </Link>
+                  <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                    <AndroidAppDownloadButton
+                      variant="secondary"
+                      size="lg"
+                      className="w-full sm:w-auto shadow-sm"
+                    >
+                      Get Android App
+                    </AndroidAppDownloadButton>
+                  </motion.div>
                 </motion.div>
+
+                <motion.p variants={fadeUp} className="mt-3 text-sm text-muted max-w-xl">
+                  Free Android APK for any phone. After download, open the file and tap Install (enable
+                  &quot;Install unknown apps&quot; for your browser if Android asks).
+                </motion.p>
 
                 <motion.div variants={fadeUp} className="mt-12 flex flex-wrap items-center gap-5 pt-2">
                   <div className="flex -space-x-2">

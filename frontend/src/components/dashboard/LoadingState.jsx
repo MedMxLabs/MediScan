@@ -1,4 +1,4 @@
-import React from 'react';
+
 
 const LoadingState = ({ label = 'Loading…' }) => (
   <div className="flex flex-col items-center justify-center min-h-[16rem] gap-3">

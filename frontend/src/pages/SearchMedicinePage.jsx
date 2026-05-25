@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { CheckCircle2, Search, RefreshCw, ExternalLink, Sparkles } from 'lucide-react';
 import { setSearchResults, addRecentSearch, setLoading, setError } from '../store/slices/medicineSlice';

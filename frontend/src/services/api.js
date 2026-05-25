@@ -38,17 +38,6 @@ export async function loginWithGoogleCredential(idToken) {
   return data;
 }
 
-export async function refreshAccessToken() {
-  const rt = localStorage.getItem('medscan_refresh');
-  if (!rt) throw new Error('No refresh token');
-  const res = await client.post('/api/auth/refresh', null, {
-    headers: { Authorization: `Bearer ${rt}` },
-  });
-  const data = res.data;
-  if (data.access_token) setToken(data.access_token);
-  return data;
-}
-
 function mapDashboard(raw) {
   const stats = raw.stats || {};
   const reminders = raw.reminders_preview || [];
@@ -237,4 +226,3 @@ export async function getRefillAlerts() {
   return unwrap(res);
 }
 
-export default client;

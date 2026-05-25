@@ -1,4 +1,4 @@
-import React from 'react';
+
 
 const Card = ({ children, className = '', hover = false, ...props }) => (
   <div
@@ -16,9 +16,5 @@ Card.Header = ({ children, className = '' }) => (
 );
 
 Card.Body = ({ children, className = '' }) => <div className={`p-6 ${className}`}>{children}</div>;
-
-Card.Footer = ({ children, className = '' }) => (
-  <div className={`px-6 py-4 border-t border-slate-100 bg-slate-50/80 ${className}`}>{children}</div>
-);
 
 export default Card;

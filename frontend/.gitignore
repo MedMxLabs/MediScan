@@ -5,6 +5,9 @@ node_modules/
 dist/
 dist-ssr/
 
+# Built locally via `npm run copy:apk`; CI generates before deploy
+public/downloads/*.apk
+
 # Environment
 *.local
 .env

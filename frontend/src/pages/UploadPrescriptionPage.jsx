@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import { useState, useRef } from 'react';
 import { UploadCloud, FileType, CheckCircle2, AlertCircle, X, Search } from 'lucide-react';
 import { uploadPrescription } from '../services/api';
 import Button from '../components/ui/Button';

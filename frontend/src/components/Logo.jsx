@@ -1,4 +1,4 @@
-import React from 'react';
+
 import { Link } from 'react-router-dom';
 import logoLight from '../assets/medmx-logo-light.png';
 import logoOnDark from '../assets/medmx-logo-on-dark.png';

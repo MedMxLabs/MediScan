@@ -1,7 +1,6 @@
 """WSGI entrypoint for Gunicorn, uWSGI, and other production servers."""
 from __future__ import annotations
 
-import os
 from pathlib import Path
 
 from dotenv import load_dotenv

@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Send, User, Bot, AlertCircle, MessageSquare } from 'lucide-react';
 import { askAiAssistant } from '../services/api';
 import PageShell from '../components/dashboard/PageShell';

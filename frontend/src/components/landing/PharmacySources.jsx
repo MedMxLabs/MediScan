@@ -1,4 +1,4 @@
-import React from 'react';
+
 
 const SOURCES = ['Tata 1mg', 'PharmEasy', 'Apollo Pharmacy', 'Netmeds', 'TrueMeds', 'MedPlus'];
 

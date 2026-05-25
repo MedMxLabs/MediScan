@@ -49,8 +49,4 @@ export function setToken(token) {
   else localStorage.removeItem('medscan_token')
 }
 
-export function getToken() {
-  return localStorage.getItem('medscan_token')
-}
-
 export default client

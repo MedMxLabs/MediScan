@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Search, FileText, Calendar, ExternalLink, History } from 'lucide-react';
 import { getHistory } from '../services/api';
 import { Link } from 'react-router-dom';
@@ -35,7 +35,6 @@ const MedicineHistoryPage = () => {
         rows.sort((a, b) => new Date(b.date) - new Date(a.date));
         setHistory(rows);
       } catch (err) {
-        console.error(err);
         setHistory([]);
       } finally {
         setLoading(false);

@@ -1,4 +1,4 @@
-import React from 'react';
+
 import { motion } from 'framer-motion';
 import { Receipt, Package, ShieldCheck, LayoutGrid } from 'lucide-react';
 import ScrollReveal from './ScrollReveal';

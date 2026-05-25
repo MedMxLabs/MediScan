@@ -4,6 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
+    "copy:apk": "node scripts/copy-apk.mjs",
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",

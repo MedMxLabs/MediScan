@@ -1,7 +1,8 @@
-import React, { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence, LayoutGroup } from 'framer-motion';
 import { Menu, X, ArrowRight, User } from 'lucide-react';
+import AndroidAppDownloadButton from './AndroidAppDownloadButton';
 import Logo from './Logo';
 import Button from './ui/Button';
 
@@ -251,8 +252,13 @@ const Navbar = ({ embedded = false }) => {
               initial={{ opacity: 0, x: 16 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.2, duration: 0.45 }}
-              className="hidden lg:flex items-center gap-5 xl:gap-6 shrink-0 pl-2"
+              className="hidden lg:flex items-center gap-4 xl:gap-5 shrink-0 pl-2"
             >
+              <motion.div whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.97 }}>
+                <AndroidAppDownloadButton variant="outline" size="sm" className="whitespace-nowrap">
+                  Android App
+                </AndroidAppDownloadButton>
+              </motion.div>
               <motion.div whileHover={{ x: 2 }} transition={{ duration: 0.2 }}>
                 <Link
                   to="/login"
@@ -400,6 +406,9 @@ const Navbar = ({ embedded = false }) => {
                 transition={{ delay: 0.35, duration: 0.4 }}
                 className="space-y-3 pt-4 border-t border-slate-100"
               >
+                <AndroidAppDownloadButton variant="secondary" size="md" fullWidth>
+                  Download Android App
+                </AndroidAppDownloadButton>
                 <Link to="/login">
                   <Button variant="outline" fullWidth>
                     Sign in

@@ -10,6 +10,7 @@ Medicine price comparison for India (**MedScan PRD v1.0** alongside `../MedScan_
 | **OCR / PDF** | Images: OpenCV preprocess + Tesseract. PDFs: embedded text or first-page raster + OCR via **PyMuPDF**. Empty OCR → **422** (no fake prescription text). |
 | **LLM** | **Required** for `/api/chatbot/query` (set `OMNIDIMENSION_API_BASE` + `OMNIDIMENSION_API_KEY`). Lab report "insights" use structured reference comparison first; optional LLM wrap when keys are set. |
 | **Frontend** | React + Vite + Tailwind; surfaces scrape errors, 502 all-fail state, and 503 when chat API is not configured. |
+| **Mobile** | Flutter app in `mobile/` — same Flask API, JWT auth, all core features. See [`mobile/README.md`](mobile/README.md). |
 
 ## Prerequisites
 

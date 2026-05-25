@@ -1,5 +1,6 @@
-import React from 'react';
+
 import { Link } from 'react-router-dom';
+import { ANDROID_APK_FILENAME, ANDROID_APK_URL } from '../../constants/mobileApp';
 import Logo from '../Logo';
 
 const PRODUCT_LINKS = [
@@ -7,6 +8,7 @@ const PRODUCT_LINKS = [
   { label: 'Prescription OCR', to: '/dashboard/upload' },
   { label: 'Lab reports', to: '/dashboard/reports' },
   { label: 'AI assistant', to: '/dashboard/assistant' },
+  { label: 'Android app', href: ANDROID_APK_URL, download: ANDROID_APK_FILENAME },
 ];
 
 const COMPANY_LINKS = [
@@ -43,14 +45,24 @@ const LandingFooter = () => {
           </div>
 
           <FooterLinkColumn title="Product">
-            {PRODUCT_LINKS.map(({ label, to }) => (
+            {PRODUCT_LINKS.map(({ label, to, href, download }) => (
               <li key={label}>
-                <Link
-                  to={to}
-                  className="text-sm text-slate-300 hover:text-lime transition-colors duration-300"
-                >
-                  {label}
-                </Link>
+                {href ? (
+                  <a
+                    href={href}
+                    download={download}
+                    className="text-sm text-slate-300 hover:text-lime transition-colors duration-300"
+                  >
+                    {label}
+                  </a>
+                ) : (
+                  <Link
+                    to={to}
+                    className="text-sm text-slate-300 hover:text-lime transition-colors duration-300"
+                  >
+                    {label}
+                  </Link>
+                )}
               </li>
             ))}
           </FooterLinkColumn>

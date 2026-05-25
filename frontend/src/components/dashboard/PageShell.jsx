@@ -1,4 +1,4 @@
-import React from 'react';
+
 
 /** Consistent max-width and spacing for dashboard routes */
 const PageShell = ({ children, className = '' }) => (

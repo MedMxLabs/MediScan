@@ -1,4 +1,4 @@
-import React from 'react';
+
 
 /** Shared teal → white → lime bleed used across the entire landing page */
 const LandingBleedBackground = () => (

@@ -1,4 +1,4 @@
-import React from 'react';
+
 import { motion, useReducedMotion } from 'framer-motion';
 import { fadeUp, staggerContainer, viewportDefault } from './landingMotion';
 

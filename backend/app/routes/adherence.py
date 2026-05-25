@@ -23,8 +23,8 @@ def mark_dose():
     except (TypeError, ValueError):
         return err("reminder_id required", status=400)
     status = (data.get("status") or "taken").strip()
-    if status not in ("taken", "missed"):
-        return err("status must be taken or missed", status=400)
+    if status not in ("taken", "missed", "skipped"):
+        return err("status must be taken, missed, or skipped", status=400)
     log = AdherenceLog(user_id=uid, reminder_id=rid, status=status)
     db.session.add(log)
     db.session.commit()
@@ -43,7 +43,8 @@ def adherence_summary():
     )
     taken = sum(1 for x in logs if x.status == "taken")
     missed = sum(1 for x in logs if x.status == "missed")
-    total = taken + missed
+    skipped = sum(1 for x in logs if x.status == "skipped")
+    total = taken + missed + skipped
     pct = round(100.0 * taken / total, 1) if total else 0.0
 
     # Weekly buckets for charts (last 7 days)
@@ -53,11 +54,11 @@ def adherence_summary():
     by_day: dict[str, dict[str, int]] = {}
     for x in recent:
         d = x.taken_at.date().isoformat()
-        by_day.setdefault(d, {"taken": 0, "missed": 0})
+        by_day.setdefault(d, {"taken": 0, "missed": 0, "skipped": 0})
         by_day[d][x.status] = by_day[d].get(x.status, 0) + 1
 
     weekly_series = sorted(
-        [{"date": d, "taken": v["taken"], "missed": v["missed"]} for d, v in by_day.items()],
+        [{"date": d, "taken": v["taken"], "missed": v["missed"], "skipped": v["skipped"]} for d, v in by_day.items()],
         key=lambda r: r["date"],
     )
 
@@ -67,6 +68,7 @@ def adherence_summary():
             "completion_percent": pct,
             "taken_doses": taken,
             "missed_doses": missed,
+            "skipped_doses": skipped,
             "total_logged": total,
             "active_reminders": reminders_count,
             "weekly_series": weekly_series,

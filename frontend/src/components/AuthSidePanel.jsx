@@ -1,4 +1,4 @@
-import React from 'react';
+
 import { ShieldCheck, Cpu, Award } from 'lucide-react';
 import { motion } from 'framer-motion';
 

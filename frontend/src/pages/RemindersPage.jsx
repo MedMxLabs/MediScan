@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Bell,
   Clock,
@@ -68,7 +68,6 @@ const RemindersPage = () => {
       const list = Array.isArray(data) ? data : [];
       setReminders(list.map(toViewModel));
     } catch (e) {
-      console.error(e);
       setErr(e.response?.data?.message || e.message || 'Could not load reminders');
       setReminders([]);
     } finally {
