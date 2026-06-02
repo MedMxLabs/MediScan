@@ -1,9 +1,9 @@
 """Dev entrypoint: flask --app run or python run.py"""
 import os
 
-from dotenv import load_dotenv
+from load_env import load_app_env
 
-load_dotenv()
+load_app_env()
 
 from app import create_app
 

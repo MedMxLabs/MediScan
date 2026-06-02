@@ -44,9 +44,19 @@ class _HistoryScreenState extends State<HistoryScreen> {
   List<Map<String, dynamic>> get _allItems {
     final searches = (_data?['searches'] as List?) ?? [];
     final prescriptions = (_data?['prescriptions'] as List?) ?? [];
+    final labs = (_data?['lab_reports'] as List?) ?? [];
     return [
       ...prescriptions.map((p) => {'type': 'rx', ...Map<String, dynamic>.from(p as Map)}),
       ...searches.map((s) => {'type': 'search', ...Map<String, dynamic>.from(s as Map)}),
+      ...labs.map((lr) {
+        final row = Map<String, dynamic>.from(lr as Map);
+        return {
+          'type': 'lab',
+          'query': row['insights_preview'] ?? 'Lab report',
+          'created_at': row['created_at'],
+          ...row,
+        };
+      }),
     ];
   }
 
@@ -54,6 +64,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
     final items = _allItems;
     if (_filter == 'Searches') return items.where((r) => r['type'] == 'search').toList();
     if (_filter == 'Prescriptions') return items.where((r) => r['type'] == 'rx').toList();
+    if (_filter == 'Lab reports') return items.where((r) => r['type'] == 'lab').toList();
     return items;
   }
 
@@ -61,6 +72,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
     if (row['type'] == 'search') {
       final query = row['query']?.toString() ?? '';
       if (query.isNotEmpty) context.openPage('/compare?q=${Uri.encodeComponent(query)}');
+    } else if (row['type'] == 'lab') {
+      context.openPage('/reports');
     } else {
       context.openPage('/upload');
     }
@@ -82,7 +95,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, AppSpacing.bottomNavClearance),
                 children: [
                   FilterTabs(
-                    tabs: const ['All', 'Searches', 'Prescriptions'],
+                    tabs: const ['All', 'Searches', 'Prescriptions', 'Lab reports'],
                     selected: _filter,
                     onSelected: (f) => setState(() => _filter = f),
                   ),
@@ -93,9 +106,12 @@ class _HistoryScreenState extends State<HistoryScreen> {
                     ...items.asMap().entries.map((e) {
                       final row = e.value;
                       final isRx = row['type'] == 'rx';
+                      final isLab = row['type'] == 'lab';
                       final name = isRx
                           ? '${(row['medicine_list'] as List?)?.length ?? 0} medicines extracted'
-                          : row['query']?.toString() ?? 'Search';
+                          : isLab
+                              ? row['query']?.toString() ?? 'Lab report'
+                              : row['query']?.toString() ?? 'Search';
                       final date = isRx ? row['uploaded_at'] : row['created_at'];
                       return FadeSlideIn(
                         delay: Duration(milliseconds: e.key * 60),
@@ -112,7 +128,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                     borderRadius: BorderRadius.circular(12),
                                   ),
                                   child: Icon(
-                                    isRx ? Icons.medication : Icons.search,
+                                    isRx ? Icons.medication : isLab ? Icons.biotech : Icons.search,
                                     color: AppColors.teal,
                                   ),
                                 ),
@@ -124,7 +140,11 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                       Text(formatIsoDate(date?.toString()), style: const TextStyle(color: AppColors.textMuted, fontSize: 11)),
                                       Text(name, style: const TextStyle(fontWeight: FontWeight.w700, color: Colors.white)),
                                       Text(
-                                        isRx ? 'Prescription upload' : 'Price search',
+                                        isRx
+                                            ? 'Prescription upload'
+                                            : isLab
+                                                ? 'Lab report'
+                                                : 'Price search',
                                         style: const TextStyle(color: AppColors.textMuted, fontSize: 12),
                                       ),
                                     ],

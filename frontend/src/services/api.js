@@ -3,54 +3,41 @@
  * Dev: leave VITE_API_URL unset so Vite proxies /api → http://127.0.0.1:5000
  * Prod: set VITE_API_URL=https://your-api-host
  */
-import client, { setToken } from '../api/client';
+import client from '../api/client';
 
 const SCRAPE_TIMEOUT_MS = 180_000;
+const OCR_UPLOAD_TIMEOUT_MS = 120_000;
 
-/** Backend returns either `{ status, data }` or legacy flat JSON */
 function unwrap(res) {
   const d = res?.data;
   if (d && typeof d === 'object' && d.status === 'success' && 'data' in d) return d.data;
   return d;
 }
 
-export async function loginWithPassword(email, password) {
-  const res = await client.post('/api/auth/login', { email, password });
-  const data = res.data;
-  if (data.access_token) setToken(data.access_token);
-  if (data.refresh_token) localStorage.setItem('medscan_refresh', data.refresh_token);
-  return data;
-}
-
-export async function registerAccount(email, password) {
-  const res = await client.post('/api/auth/register', { email, password });
-  return res.data;
-}
-
-/** Google ID token from GIS — backend verifies when GOOGLE_OAUTH_CLIENT_ID is set */
-export async function loginWithGoogleCredential(idToken) {
-  const res = await client.post('/api/auth/google-login', {
-    credential: idToken,
-  });
-  const data = res.data;
-  if (data.access_token) setToken(data.access_token);
-  if (data.refresh_token) localStorage.setItem('medscan_refresh', data.refresh_token);
-  return data;
-}
+export { loginWithPassword, registerAccount, forgotPassword, loginWithGoogle, logoutApi } from '../auth'
 
 function mapDashboard(raw) {
   const stats = raw.stats || {};
   const reminders = raw.reminders_preview || [];
   const recent = raw.recent_searches || [];
+  const dueToday = reminders.filter((r) => {
+    if (!r.next_trigger) return false;
+    const d = new Date(r.next_trigger);
+    const now = new Date();
+    return d.toDateString() === now.toDateString();
+  });
   return {
     widgets: {
-      upcomingReminders: reminders.length,
+      upcomingReminders: dueToday.length || reminders.length,
       adherenceScore: Number(stats.adherence_score_percent ?? 0),
       medicinesTracked: Number(stats.medicines_tracked ?? 0),
       monthlySavings: Math.round(Number(stats.monthly_savings_estimate_inr ?? 0)),
     },
     remindersPreview: reminders,
     recentSearches: recent,
+    medicinesToday: raw.medicines_today || [],
+    cheapestPicks: raw.cheapest_picks || [],
+    todayProgress: raw.today_progress || {},
     raw,
   };
 }
@@ -60,8 +47,8 @@ function adherenceToTrendSeries(adherencePayload) {
   return weekly.map((row) => ({
     name: row.date?.slice(5) || row.date,
     score:
-      row.taken + row.missed > 0
-        ? Math.round((100 * row.taken) / (row.taken + row.missed))
+      row.taken + row.missed + (row.skipped || 0) > 0
+        ? Math.round((100 * row.taken) / (row.taken + row.missed + (row.skipped || 0)))
         : 0,
   }));
 }
@@ -84,7 +71,9 @@ export async function getDashboardData(options = {}) {
   return {
     ...mapped,
     adherenceTrend: trend,
-    savingsAnalytics: [],
+    medicinesToday: mapped.medicinesToday,
+    cheapestPicks: mapped.cheapestPicks,
+    todayProgress: mapped.todayProgress,
   };
 }
 
@@ -134,7 +123,7 @@ export async function compareMedicine(medicine) {
 export async function uploadPrescription(formData) {
   const res = await client.post('/api/upload-prescription', formData, {
     headers: { 'Content-Type': 'multipart/form-data' },
-    timeout: SCRAPE_TIMEOUT_MS,
+    timeout: OCR_UPLOAD_TIMEOUT_MS,
   });
   const body = res.data;
   if (body.status === 'success' && body.data) return body.data;
@@ -182,7 +171,7 @@ export async function markDose(reminderId, status = 'taken') {
 export async function analyzeReport(formData) {
   const res = await client.post('/api/report-analysis', formData, {
     headers: { 'Content-Type': 'multipart/form-data' },
-    timeout: 120_000,
+    timeout: OCR_UPLOAD_TIMEOUT_MS,
   });
   const body = res.data;
   if (body.status === 'success' && body.data) return body.data;
@@ -223,6 +212,24 @@ export async function getNearbyPharmacies({ lat, lng, radius = 2000 }) {
 
 export async function getRefillAlerts() {
   const res = await client.get('/api/refill/alerts');
+  return unwrap(res);
+}
+
+export async function getLabReports() {
+  const res = await client.get('/api/reports');
+  return unwrap(res);
+}
+
+export async function getHistoryAnalytics() {
+  const res = await client.get('/api/history/analytics');
+  return unwrap(res);
+}
+
+export async function getJanAushadhiNearby({ lat, lng, radius = 5000 }) {
+  const res = await client.get('/api/jan-aushadhi/nearby', {
+    params: { lat, lng, radius },
+    timeout: 30_000,
+  });
   return unwrap(res);
 }
 

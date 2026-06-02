@@ -8,6 +8,7 @@ from app.models.medicine import MedicineCatalog
 from app.services.comparison_service import compare_medicine, search_medicine
 from app.services.recommendation_service import suggest_alternatives
 from app.utils.logger import get_logger
+from app.utils.rate_limit import check_scrape_limit
 from app.utils.responses import err, ok
 
 logger = get_logger(__name__)
@@ -29,6 +30,9 @@ def _uid_optional():
 @bp.get("/search_medicine")
 @jwt_required(optional=True)
 def search_medicine_route():
+    allowed, msg = check_scrape_limit()
+    if not allowed:
+        return err(msg or "Rate limited", status=429)
     q = request.args.get("query") or request.args.get("q") or ""
     uid = _uid_optional()
     force = request.args.get("refresh") == "1"
@@ -48,6 +52,9 @@ def search_medicine_route():
 @bp.get("/compare")
 @jwt_required(optional=True)
 def compare_route():
+    allowed, msg = check_scrape_limit()
+    if not allowed:
+        return err(msg or "Rate limited", status=429)
     medicine = request.args.get("medicine") or request.args.get("query") or request.args.get("q") or ""
     uid = _uid_optional()
     force = request.args.get("refresh") == "1"
@@ -187,3 +194,36 @@ def alternatives():
             nm = m.name
             comp = m.composition or ""
     return jsonify({"alternatives": suggest_alternatives(nm or "medicine", comp)})
+
+
+_ALLOWED_BUY_HOSTS = (
+    "1mg.com",
+    "pharmeasy.in",
+    "apollopharmacy.in",
+    "netmeds.com",
+    "truemeds.in",
+    "medplusmart.com",
+    "amazon.in",
+    "flipkart.com",
+)
+
+
+@bp.get("/buy")
+@jwt_required(optional=True)
+def buy_redirect():
+    """Track and redirect to pharmacy purchase URL (whitelist only)."""
+    from urllib.parse import urlparse
+
+    from flask import redirect
+
+    raw = (request.args.get("url") or "").strip()
+    if not raw:
+        return err("url query param required", status=400)
+    parsed = urlparse(raw)
+    if parsed.scheme not in ("http", "https") or not parsed.netloc:
+        return err("Invalid URL", status=400)
+    host = parsed.netloc.lower().removeprefix("www.")
+    if not any(host == h or host.endswith("." + h) for h in _ALLOWED_BUY_HOSTS):
+        return err("Pharmacy URL not allowed", status=400)
+    return redirect(raw, code=302)
+

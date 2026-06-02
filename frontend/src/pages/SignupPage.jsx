@@ -1,22 +1,20 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
-import { motion } from 'framer-motion';
 import { loginSuccess, loginFailure, loginStart } from '../store/slices/authSlice';
-import { registerAccount, loginWithPassword } from '../services/api';
-import Logo from '../components/Logo';
-import AuthSidePanel from '../components/AuthSidePanel';
+import { registerAccount, loginWithGoogle, profileFromAuthData } from '../auth';
+import { useSupabaseAuth } from '../hooks/useSupabaseAuth';
+import AuthPageShell from '../components/AuthPageShell';
+import AuthFormLayout from '../components/auth/AuthFormLayout';
+import AuthDivider from '../components/auth/AuthDivider';
 import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
-
-const fadeUp = {
-  hidden: { opacity: 0, y: 16 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.45 } },
-};
+import GoogleSignInButton from '../components/auth/GoogleSignInButton';
 
 const SignupPage = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const { supabaseEnabled, supabaseLoading } = useSupabaseAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -33,14 +31,8 @@ const SignupPage = () => {
     dispatch(loginStart());
     setIsLoading(true);
     try {
-      await registerAccount(email.trim(), password);
-      const data = await loginWithPassword(email.trim(), password);
-      const profile = {
-        id: String(data.user?.id ?? ''),
-        email: data.user?.email ?? email,
-        name: data.user?.email?.split('@')[0] ?? 'User',
-      };
-      localStorage.setItem('medscan_user', JSON.stringify(profile));
+      const data = await registerAccount(email.trim(), password);
+      const profile = profileFromAuthData(data, email);
       dispatch(loginSuccess(profile));
       navigate('/dashboard');
     } catch (err) {
@@ -56,65 +48,102 @@ const SignupPage = () => {
     }
   };
 
+  const handleGoogle = async () => {
+    setFormError('');
+    setIsLoading(true);
+    try {
+      await loginWithGoogle();
+    } catch (err) {
+      setFormError(err?.message || 'Google sign-in failed');
+      setIsLoading(false);
+    }
+  };
+
+  const busy = isLoading || supabaseLoading;
+
   return (
-    <div className="min-h-screen flex bg-white">
-      <div className="w-full lg:w-[52%] flex flex-col justify-center px-6 sm:px-12 py-12">
-        <motion.div initial="hidden" animate="visible" variants={fadeUp} className="w-full max-w-md mx-auto">
-          <Logo size="lg" className="mb-10" />
-
-          <h1 className="text-2xl font-extrabold text-navy">Create your account</h1>
-          <p className="text-muted mt-1 mb-8">Start comparing medicine prices for free</p>
-
-          <form onSubmit={handleSignup} className="space-y-4">
-            {formError && (
-              <p className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-xl px-4 py-3">
-                {formError}
-              </p>
-            )}
-            <Input
-              label="Email"
-              type="email"
-              placeholder="you@example.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              autoComplete="email"
-            />
-            <Input
-              label="Password"
-              type="password"
-              placeholder="At least 8 characters"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              minLength={8}
-              autoComplete="new-password"
-            />
-            <Input
-              label="Confirm password"
-              type="password"
-              placeholder="Repeat your password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              required
-              minLength={8}
-              autoComplete="new-password"
-            />
-            <Button type="submit" variant="primary" fullWidth size="lg" disabled={isLoading}>
-              {isLoading ? 'Creating account…' : 'Create account'}
-            </Button>
-          </form>
-
-          <p className="mt-8 text-center text-sm text-muted">
+    <AuthPageShell>
+      <AuthFormLayout
+        title="Create your account"
+        footer={
+          <p className="text-center text-xs sm:text-sm text-slate-600">
             Already have an account?{' '}
-            <Link to="/login" className="font-bold text-teal hover:text-teal-dark">
+            <Link to="/login" className="font-bold text-teal hover:text-teal-dark transition-colors">
               Sign in
             </Link>
           </p>
-        </motion.div>
-      </div>
-      <AuthSidePanel />
-    </div>
+        }
+      >
+        {!supabaseLoading && !supabaseEnabled && (
+          <p className="text-xs text-red-700 bg-red-50/90 border border-red-200 rounded-lg px-3 py-2 mb-3">
+            Configure Supabase in frontend/.env before signing up.
+          </p>
+        )}
+
+        <GoogleSignInButton onClick={handleGoogle} disabled={busy || !supabaseEnabled} />
+
+        <AuthDivider label="or email" />
+
+        <form onSubmit={handleSignup} className="space-y-2">
+          {formError && (
+            <p
+              className="text-xs text-red-700 bg-red-50/90 border border-red-200 rounded-lg px-3 py-2"
+              role="alert"
+            >
+              {formError}
+            </p>
+          )}
+          <Input
+            compact
+            lightSurface
+            label="Email"
+            type="email"
+            placeholder="you@example.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            autoComplete="email"
+            disabled={!supabaseEnabled}
+          />
+          <Input
+            compact
+            lightSurface
+            label="Password"
+            type="password"
+            placeholder="At least 8 characters"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            minLength={8}
+            autoComplete="new-password"
+            disabled={!supabaseEnabled}
+          />
+          <Input
+            compact
+            lightSurface
+            label="Confirm password"
+            type="password"
+            placeholder="Repeat password"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            required
+            minLength={8}
+            autoComplete="new-password"
+            disabled={!supabaseEnabled}
+          />
+          <Button
+            type="submit"
+            variant="primary"
+            fullWidth
+            size="md"
+            disabled={busy || !supabaseEnabled}
+            className="rounded-xl shadow-brand !mt-2"
+          >
+            {busy ? 'Creating account…' : 'Create account'}
+          </Button>
+        </form>
+      </AuthFormLayout>
+    </AuthPageShell>
   );
 };
 

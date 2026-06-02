@@ -12,15 +12,17 @@ class BaseConfig:
         "MEDSCAN_UPLOAD_FOLDER", os.path.join(os.path.dirname(__file__), "..", "..", "uploads")
     )
     MAX_CONTENT_LENGTH = 16 * 1024 * 1024
-    # OmniDimension / generic OpenAI-compatible base URL if needed
-    OMNIDIMENSION_API_BASE = os.environ.get(
-        "OMNIDIMENSION_API_BASE",
-        "",
-    ).rstrip("/")
-    OMNIDIMENSION_API_KEY = os.environ.get("OMNIDIMENSION_API_KEY", "")
+    # Azure OpenAI (chatbot, lab insights, medicine LLM fallback)
+    AZURE_OPENAI_API_BASE = os.environ.get("AZURE_OPENAI_API_BASE", "").rstrip("/")
+    AZURE_OPENAI_API_KEY = os.environ.get("AZURE_OPENAI_API_KEY", "")
+    AZURE_OPENAI_MODEL = os.environ.get("AZURE_OPENAI_MODEL", "gpt-4.1-mini")
     GOOGLE_OAUTH_CLIENT_ID = os.environ.get("GOOGLE_OAUTH_CLIENT_ID", "")
     GOOGLE_OAUTH_CLIENT_SECRET = os.environ.get("GOOGLE_OAUTH_CLIENT_SECRET", "")
     REDIS_URL = os.environ.get("REDIS_URL", "")
+    # Supabase Auth (primary when all three are set)
+    SUPABASE_URL = os.environ.get("SUPABASE_URL", "").rstrip("/")
+    SUPABASE_ANON_KEY = os.environ.get("SUPABASE_ANON_KEY", "")
+    SUPABASE_JWT_SECRET = os.environ.get("SUPABASE_JWT_SECRET", "")
 
 
 def _normalize_database_url(uri: str) -> str:

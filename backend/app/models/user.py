@@ -9,7 +9,7 @@ class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(255), unique=True, nullable=False, index=True)
     password_hash = db.Column(db.String(255), nullable=True)
-    google_id = db.Column(db.String(255), unique=True, nullable=True, index=True)
+    supabase_id = db.Column(db.String(36), unique=True, nullable=True, index=True)
     role = db.Column(db.String(32), default="user", nullable=False)
     name = db.Column(db.String(255), nullable=True)
     phone = db.Column(db.String(32), nullable=True)

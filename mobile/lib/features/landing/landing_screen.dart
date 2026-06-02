@@ -5,6 +5,7 @@ import '../../core/l10n_ext.dart';
 import '../../core/theme.dart';
 import 'landing_hero.dart';
 import 'medmx_logo.dart';
+import '../../widgets/backed_by_microsoft.dart';
 
 class LandingScreen extends StatelessWidget {
   const LandingScreen({super.key});
@@ -40,6 +41,39 @@ class LandingScreen extends StatelessWidget {
                           const SizedBox(height: 24),
                           const MedMxLogo(height: 56),
                           const SizedBox(height: 16),
+                          Wrap(
+                            alignment: WrapAlignment.center,
+                            spacing: 8,
+                            runSpacing: 8,
+                            children: [
+                              const BackedByMicrosoftPill(),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withValues(alpha: 0.08),
+                                  borderRadius: BorderRadius.circular(999),
+                                  border: Border.all(color: AppColors.teal.withValues(alpha: 0.4)),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(Icons.auto_awesome, size: 14, color: AppColors.lime),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      'AI-POWERED HEALTHCARE',
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w800,
+                                        letterSpacing: 0.6,
+                                        color: AppColors.teal.withValues(alpha: 0.95),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 20),
                           const LandingHero(),
                           const SizedBox(height: 8),
                           const Text(

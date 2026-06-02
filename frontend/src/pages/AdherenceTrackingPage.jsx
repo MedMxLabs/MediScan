@@ -20,7 +20,7 @@ const COLORS = ['bg-teal/100', 'bg-navy-light', 'bg-orange-500', 'bg-purple-500'
 function seriesFromWeekly(weekly) {
   if (!Array.isArray(weekly)) return [];
   return weekly.map((row) => {
-    const total = (row.taken || 0) + (row.missed || 0);
+    const total = (row.taken || 0) + (row.missed || 0) + (row.skipped || 0);
     const score = total > 0 ? Math.round((100 * row.taken) / total) : 0;
     return { name: (row.date || '').slice(5), score };
   });
@@ -57,7 +57,7 @@ const AdherenceTrackingPage = () => {
     const byRid = {};
     logs.forEach((l) => {
       const k = l.reminder_id;
-      if (!byRid[k]) byRid[k] = { taken: 0, missed: 0 };
+      if (!byRid[k]) byRid[k] = { taken: 0, missed: 0, skipped: 0 };
       byRid[k][l.status] = (byRid[k][l.status] || 0) + 1;
     });
     const nameOf = {};
@@ -66,7 +66,7 @@ const AdherenceTrackingPage = () => {
     });
     return Object.entries(byRid)
       .map(([rid, v], i) => {
-        const total = (v.taken || 0) + (v.missed || 0);
+        const total = (v.taken || 0) + (v.missed || 0) + (v.skipped || 0);
         const score = total > 0 ? Math.round((100 * v.taken) / total) : 0;
         return {
           id: rid,
@@ -98,6 +98,7 @@ const AdherenceTrackingPage = () => {
   const pct = Number(adherence?.completion_percent ?? 0);
   const taken = adherence?.taken_doses ?? 0;
   const missed = adherence?.missed_doses ?? 0;
+  const skipped = adherence?.skipped_doses ?? 0;
   const total = adherence?.total_logged ?? 0;
 
   return (
@@ -109,16 +110,16 @@ const AdherenceTrackingPage = () => {
       />
 
       {err && (
-        <div className="rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-800">
+        <div className="rounded-xl dash-alert-error px-4 py-3 text-sm">
           {err}
         </div>
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="space-y-6">
-          <Card className="bg-gradient-to-br from-teal/10 to-white">
+          <Card className="bg-gradient-to-br from-teal/10 to-white dark:to-navy-light/40">
             <Card.Body className="p-6">
-              <h3 className="text-sm font-medium text-gray-500 mb-2">Overall Adherence</h3>
+              <h3 className="text-sm font-medium dash-muted mb-2">Overall Adherence</h3>
               <div className="flex items-baseline gap-2 mb-6">
                 <span className="text-5xl font-extrabold text-teal">{pct}%</span>
                 <span className="text-sm font-medium text-teal-dark bg-teal/10 px-2 py-0.5 rounded">
@@ -127,17 +128,21 @@ const AdherenceTrackingPage = () => {
               </div>
 
               <div className="space-y-4">
-                <div className="flex justify-between items-center py-2 border-b border-gray-100">
-                  <span className="text-gray-600">Doses Taken</span>
-                  <span className="font-bold text-gray-900">{taken}</span>
+                <div className="flex justify-between items-center py-2 border-b border-slate-100 dark:border-slate-700">
+                  <span className="dash-muted">Doses Taken</span>
+                  <span className="font-bold dash-text">{taken}</span>
                 </div>
-                <div className="flex justify-between items-center py-2 border-b border-gray-100">
-                  <span className="text-gray-600">Doses Missed</span>
+                <div className="flex justify-between items-center py-2 border-b border-slate-100 dark:border-slate-700">
+                  <span className="dash-muted">Doses Missed</span>
                   <span className="font-bold text-red-500">{missed}</span>
                 </div>
+                <div className="flex justify-between items-center py-2 border-b border-slate-100 dark:border-slate-700">
+                  <span className="dash-muted">Doses Skipped</span>
+                  <span className="font-bold text-amber-600">{skipped}</span>
+                </div>
                 <div className="flex justify-between items-center py-2">
-                  <span className="text-gray-600 font-medium">Total Logged</span>
-                  <span className="font-bold text-gray-900">{total}</span>
+                  <span className="dash-muted font-medium">Total Logged</span>
+                  <span className="font-bold dash-text">{total}</span>
                 </div>
               </div>
             </Card.Body>
@@ -145,21 +150,21 @@ const AdherenceTrackingPage = () => {
 
           <Card>
             <Card.Header>
-              <h3 className="text-lg font-bold text-gray-900">Per-medicine adherence</h3>
+              <h3 className="text-lg font-bold dash-text">Per-medicine adherence</h3>
             </Card.Header>
             <Card.Body className="space-y-6">
               {perMedicine.length === 0 ? (
-                <p className="text-sm text-gray-400">
+                <p className="text-sm dash-muted">
                   No logged doses yet. Mark reminders taken below to populate.
                 </p>
               ) : (
                 perMedicine.map((med) => (
                   <div key={med.id}>
                     <div className="flex justify-between text-sm mb-1.5">
-                      <span className="font-medium text-gray-700 truncate pr-4">{med.name}</span>
-                      <span className="font-bold text-gray-900">{med.score}%</span>
+                      <span className="font-medium dash-text truncate pr-4">{med.name}</span>
+                      <span className="font-bold dash-text">{med.score}%</span>
                     </div>
-                    <div className="w-full bg-gray-100 rounded-full h-2.5">
+                    <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2.5">
                       <div
                         className={`${med.color} h-2.5 rounded-full transition-all duration-700`}
                         style={{ width: `${med.score}%` }}
@@ -175,8 +180,8 @@ const AdherenceTrackingPage = () => {
         <div className="lg:col-span-2 space-y-6">
           <Card className="min-h-[300px] flex flex-col">
             <Card.Header>
-              <h3 className="text-lg font-bold text-gray-900">Weekly trend</h3>
-              <p className="text-sm text-gray-500">Taken vs missed, last 7 days</p>
+              <h3 className="text-lg font-bold dash-text">Weekly trend</h3>
+              <p className="text-sm dash-muted">Taken vs missed, last 7 days</p>
             </Card.Header>
             <Card.Body className="flex-1 min-h-0 pt-6">
               {chartData.length ? (
@@ -215,7 +220,7 @@ const AdherenceTrackingPage = () => {
                   </LineChart>
                 </ResponsiveContainer>
               ) : (
-                <p className="text-sm text-gray-400 px-2">
+                <p className="text-sm dash-muted px-2">
                   Log some doses to see your weekly trend here.
                 </p>
               )}
@@ -224,14 +229,14 @@ const AdherenceTrackingPage = () => {
 
           <Card>
             <Card.Header>
-              <h3 className="text-lg font-bold text-gray-900">Log today's doses</h3>
-              <p className="text-sm text-gray-500">
+              <h3 className="text-lg font-bold dash-text">Log today's doses</h3>
+              <p className="text-sm dash-muted">
                 Mark each active reminder so adherence stays accurate.
               </p>
             </Card.Header>
             <Card.Body>
               {reminders.length === 0 ? (
-                <p className="text-sm text-gray-400">
+                <p className="text-sm dash-muted">
                   No active reminders. Add reminders from the Reminders page to log doses here.
                 </p>
               ) : (
@@ -239,11 +244,11 @@ const AdherenceTrackingPage = () => {
                   {reminders.map((r) => (
                     <div
                       key={r.id}
-                      className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border border-gray-100 rounded-xl p-3"
+                      className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border border-slate-100 dark:border-slate-700 rounded-xl p-3"
                     >
                       <div>
-                        <p className="font-bold text-gray-900">{r.medicine_name}</p>
-                        <p className="text-xs text-gray-500">
+                        <p className="font-bold dash-text">{r.medicine_name}</p>
+                        <p className="text-xs dash-muted">
                           {[r.dose, r.frequency].filter(Boolean).join(' · ') || '—'}
                         </p>
                       </div>
@@ -260,9 +265,17 @@ const AdherenceTrackingPage = () => {
                           type="button"
                           disabled={marking === `${r.id}:missed`}
                           onClick={() => handleMark(r, 'missed')}
-                          className="text-[12px] font-bold border border-gray-200 text-gray-700 hover:bg-gray-50 px-3 py-1.5 rounded-lg disabled:opacity-60"
+                          className="text-[12px] font-bold dash-btn-secondary px-3 py-1.5 rounded-lg disabled:opacity-60"
                         >
                           Missed
+                        </button>
+                        <button
+                          type="button"
+                          disabled={marking === `${r.id}:skipped`}
+                          onClick={() => handleMark(r, 'skipped')}
+                          className="text-[12px] font-bold border border-amber-200 text-amber-800 hover:bg-amber-50 px-3 py-1.5 rounded-lg disabled:opacity-60"
+                        >
+                          Skipped
                         </button>
                       </div>
                     </div>

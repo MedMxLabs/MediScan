@@ -8,6 +8,7 @@ from flask_jwt_extended import get_jwt_identity, jwt_required
 
 from app.extensions import db
 from app.models.reminder import AdherenceLog, Reminder
+from app.services.reminder_service import advance_after_dose
 from app.utils.responses import err, ok
 
 bp = Blueprint("adherence", __name__, url_prefix="/api")
@@ -25,10 +26,21 @@ def mark_dose():
     status = (data.get("status") or "taken").strip()
     if status not in ("taken", "missed", "skipped"):
         return err("status must be taken, missed, or skipped", status=400)
+    reminder = Reminder.query.filter_by(id=rid, user_id=uid).first()
+    if not reminder:
+        return err("reminder not found", status=404)
     log = AdherenceLog(user_id=uid, reminder_id=rid, status=status)
     db.session.add(log)
+    if reminder.status == "active":
+        advance_after_dose(reminder)
     db.session.commit()
-    return ok({"id": log.id, "status": status})
+    return ok(
+        {
+            "id": log.id,
+            "status": status,
+            "next_trigger": reminder.next_trigger.isoformat() if reminder.next_trigger else None,
+        }
+    )
 
 
 @bp.get("/adherence")

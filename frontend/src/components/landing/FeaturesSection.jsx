@@ -54,7 +54,7 @@ const FeaturesSection = () => (
       </ScrollReveal>
 
       <ScrollReveal className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
-        <Link to="/dashboard/search" className={cardBase}>
+        <Link to="/search" className={cardBase}>
           <CardHead icon={Search} title="Compare prices" subtitle="Live MRP from 6 pharmacies" />
           <div className="flex-1 rounded-xl border border-slate-100 overflow-hidden text-sm">
             <div className="flex items-center justify-between px-4 py-3 bg-slate-50 border-b border-slate-100">
@@ -85,7 +85,7 @@ const FeaturesSection = () => (
           </div>
         </Link>
 
-        <Link to="/dashboard/upload" className={cardBase}>
+        <Link to="/upload" className={cardBase}>
           <CardHead icon={UploadCloud} title="Upload Rx" subtitle="Photo or PDF → medicine list" />
           <div className="flex-1 flex flex-col justify-center rounded-xl border-2 border-dashed border-slate-200 bg-slate-50/80 px-4 py-8 text-center">
             <UploadCloud size={32} className="mx-auto text-teal/40 mb-3" strokeWidth={1.5} />
@@ -94,7 +94,7 @@ const FeaturesSection = () => (
           </div>
         </Link>
 
-        <Link to="/dashboard/assistant" className={cardBase}>
+        <Link to="/assistant" className={cardBase}>
           <CardHead icon={MessageSquare} title="Health assistant" subtitle="Ask in plain English" />
           <div className="flex-1 flex flex-col justify-end gap-2">
             <div className="rounded-2xl bg-slate-100 px-3 py-2.5 text-xs text-navy leading-relaxed">
@@ -106,7 +106,7 @@ const FeaturesSection = () => (
           </div>
         </Link>
 
-        <Link to="/dashboard/reminders" className={cardBase}>
+        <Link to="/login" className={cardBase}>
           <CardHead icon={Bell} title="Reminders" subtitle="Doses & refills" />
           <div className="flex-1 flex items-center">
             <div className="w-full flex items-center gap-3 rounded-xl border border-orange-200 bg-orange-50 px-4 py-4">
@@ -119,7 +119,7 @@ const FeaturesSection = () => (
           </div>
         </Link>
 
-        <Link to="/dashboard/reports" className={cardBase}>
+        <Link to="/login" className={cardBase}>
           <CardHead icon={FileText} title="Lab reports" subtitle="PDF → readable summary" />
           <div className="flex-1 rounded-xl border border-slate-100 divide-y divide-slate-100 text-sm overflow-hidden">
             <div className="flex justify-between px-4 py-3 bg-white">
@@ -134,7 +134,7 @@ const FeaturesSection = () => (
           </div>
         </Link>
 
-        <Link to="/dashboard/adherence" className={cardBase}>
+        <Link to="/login" className={cardBase}>
           <CardHead icon={TrendingUp} title="Adherence" subtitle="Weekly score & streak" />
           <div className="flex-1 flex items-center justify-center gap-6">
             <div className="relative h-20 w-20 shrink-0">

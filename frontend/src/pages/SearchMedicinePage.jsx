@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { useSearchParams, Link } from 'react-router-dom';
 import { CheckCircle2, Search, RefreshCw, ExternalLink, Sparkles } from 'lucide-react';
 import { setSearchResults, addRecentSearch, setLoading, setError } from '../store/slices/medicineSlice';
 import { searchMedicines } from '../services/api';
@@ -16,16 +17,31 @@ const TIPS = [
   { title: 'Compare prices & save more', hint: 'Live prices from 6 major pharmacies' },
 ];
 
-const SearchMedicinePage = () => {
+const SearchMedicinePage = ({ publicMode = false }) => {
   const dispatch = useDispatch();
   const { searchResults, loading } = useSelector((state) => state.medicine);
-  const [query, setQuery] = useState('');
+  const [searchParams] = useSearchParams();
+  const [query, setQuery] = useState(searchParams.get('q') || '');
+  const compareBase = publicMode ? '/compare' : '/dashboard/compare';
   const [hasSearched, setHasSearched] = useState(false);
   const [fetchError, setFetchError] = useState('');
 
   useEffect(() => {
     dispatch(setSearchResults([]));
   }, [dispatch]);
+
+  useEffect(() => {
+    const q = searchParams.get('q');
+    if (q && q.trim()) {
+      setQuery(q);
+      setHasSearched(true);
+      dispatch(setLoading(true));
+      searchMedicines(q)
+        .then((results) => dispatch(setSearchResults(results)))
+        .catch(() => dispatch(setSearchResults([])))
+        .finally(() => dispatch(setLoading(false)));
+    }
+  }, [searchParams, dispatch]);
 
   const handleSearch = async (e, opts = {}) => {
     if (e) e.preventDefault();
@@ -68,11 +84,13 @@ const SearchMedicinePage = () => {
         title="Search medicine"
         subtitle="Compare live MRP from PharmEasy, Netmeds, Apollo, TrueMeds, MedPlus & Tata 1mg"
         icon={Search}
+        lightSurface={publicMode}
       />
 
-      <DashPanel className="dna-pattern border-teal/15">
+      <DashPanel className="dna-pattern border-teal/15" lightSurface={publicMode}>
         <form onSubmit={(ev) => handleSearch(ev, {})} className="flex flex-col sm:flex-row gap-3">
           <Input
+            lightSurface={publicMode}
             type="text"
             className="flex-1"
             placeholder="Enter medicine name"
@@ -88,7 +106,7 @@ const SearchMedicinePage = () => {
       {!hasSearched ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <Card className="p-6">
-            <h3 className="text-sm font-bold text-navy uppercase tracking-wide mb-5 flex items-center gap-2">
+            <h3 className="text-sm font-bold dash-text uppercase tracking-wide mb-5 flex items-center gap-2">
               <Sparkles size={16} className="text-teal" />
               Quick tips
             </h3>
@@ -99,7 +117,7 @@ const SearchMedicinePage = () => {
                     <CheckCircle2 size={18} strokeWidth={2.5} />
                   </div>
                   <div>
-                    <p className="text-sm font-bold text-navy">{tip.title}</p>
+                    <p className="text-sm font-bold dash-text">{tip.title}</p>
                     {'hint' in tip && tip.hint && (
                       <p className="text-xs text-muted mt-0.5">{tip.hint}</p>
                     )}
@@ -109,9 +127,9 @@ const SearchMedicinePage = () => {
             </ul>
           </Card>
 
-          <Card className="p-6 bg-brand-gradient-soft border-teal/15">
+          <Card className="p-6 bg-brand-gradient-soft border-teal/15 dash-light-panel">
             <h3 className="text-sm font-bold text-navy mb-2">Why MedMx LABS?</h3>
-            <p className="text-sm text-muted leading-relaxed">
+            <p className="text-sm text-slate-600 leading-relaxed">
               We pull real-time prices from India&apos;s top online pharmacies so you can find the best deal before you buy — no guesswork, no outdated listings.
             </p>
           </Card>
@@ -123,10 +141,18 @@ const SearchMedicinePage = () => {
           )}
 
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 pb-2 border-b border-slate-100">
-            <h3 className="text-sm font-bold text-navy">
+            <h3 className="text-sm font-bold dash-text">
               {searchResults.length} results for <span className="text-gradient">{query}</span>
             </h3>
             <div className="flex items-center gap-4">
+              {query.trim() && (
+                <Link
+                  to={`${compareBase}?m=${encodeURIComponent(query.trim())}`}
+                  className="text-xs font-bold dash-text hover:text-teal"
+                >
+                  Full compare →
+                </Link>
+              )}
               {query.trim() && (
                 <button
                   type="button"
@@ -141,7 +167,7 @@ const SearchMedicinePage = () => {
               <button
                 type="button"
                 onClick={() => { setHasSearched(false); setQuery(''); }}
-                className="text-xs font-bold text-muted hover:text-navy"
+                className="text-xs font-bold text-muted hover:text-teal dark:hover:text-teal"
               >
                 Clear search
               </button>
@@ -159,7 +185,7 @@ const SearchMedicinePage = () => {
               <Card key={item.id} className="p-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 hover:border-teal/20 transition-colors">
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2 mb-1">
-                    <h3 className="text-base font-bold text-navy">{item.name}</h3>
+                    <h3 className="text-base font-bold dash-text">{item.name}</h3>
                     {item.savings && item.savings !== '—' && (
                       <span className="bg-teal/10 text-teal-dark text-[11px] font-bold px-2 py-0.5 rounded-full">
                         {item.savings}
@@ -167,12 +193,12 @@ const SearchMedicinePage = () => {
                     )}
                   </div>
                   <p className="text-xs text-muted mb-2">{item.packSize}</p>
-                  <p className="text-xs font-medium text-navy/80">
+                  <p className="text-xs font-medium dash-muted">
                     Pharmacy: <span className="font-bold">{item.pharmacy}</span>
                   </p>
                 </div>
                 <div className="flex flex-row sm:flex-col items-center sm:items-end justify-between w-full sm:w-auto gap-3 shrink-0">
-                  <div className="text-xl font-bold text-navy">₹{item.price}</div>
+                  <div className="text-xl font-bold dash-text">₹{item.price}</div>
                   {item.url ? (
                     <a href={item.url} target="_blank" rel="noreferrer noopener">
                       <Button size="sm" className="gap-1.5">

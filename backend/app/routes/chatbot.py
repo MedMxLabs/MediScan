@@ -1,14 +1,34 @@
-"""AI assistant — OpenAI-compatible / OmniDimension endpoints."""
+"""AI assistant — Azure OpenAI chat completions."""
 from __future__ import annotations
 
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import get_jwt_identity, jwt_required
 
 from app.services.chatbot_service import complete_chat
+from app.utils.redis_cache import get_cache, set_cache
 
 bp = Blueprint("chatbot", __name__, url_prefix="/api")
 
-_sessions: dict[str, list] = {}
+_SESSION_TTL = 7 * 24 * 3600
+_memory_sessions: dict[str, list] = {}
+
+
+def _session_key(uid: str) -> str:
+    return f"medscan:chat:{uid}"
+
+
+def _load_session(uid: str) -> list:
+    cached = get_cache(_session_key(uid))
+    if isinstance(cached, list):
+        return cached
+    mem = _memory_sessions.get(uid)
+    return list(mem) if isinstance(mem, list) else []
+
+
+def _save_session(uid: str, hist: list) -> None:
+    trimmed = hist[-24:]
+    if not set_cache(_session_key(uid), trimmed, ttl_seconds=_SESSION_TTL):
+        _memory_sessions[uid] = trimmed
 
 
 def _handle_chat(envelope: bool):
@@ -23,11 +43,11 @@ def _handle_chat(envelope: bool):
     if uid is not None:
         key = str(uid)
         ctx = f"Authenticated MedScan user id {key}; India medicine price comparison context."
-        hist = _sessions.setdefault(key, [])
+        hist = _load_session(key)
         hist.append({"role": "user", "content": message})
         reply, from_llm = complete_chat(hist.copy(), ctx)
         hist.append({"role": "assistant", "content": reply})
-        del hist[:-24:]
+        _save_session(key, hist)
         if envelope:
             return jsonify(
                 {

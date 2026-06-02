@@ -2,12 +2,14 @@
 import { Link } from 'react-router-dom';
 import { ANDROID_APK_FILENAME, ANDROID_APK_URL } from '../../constants/mobileApp';
 import Logo from '../Logo';
+import BackedByMicrosoft from '../BackedByMicrosoft';
 
 const PRODUCT_LINKS = [
-  { label: 'Price search', to: '/dashboard/search' },
-  { label: 'Prescription OCR', to: '/dashboard/upload' },
-  { label: 'Lab reports', to: '/dashboard/reports' },
-  { label: 'AI assistant', to: '/dashboard/assistant' },
+  { label: 'Price search', to: '/search' },
+  { label: 'Prescription OCR', to: '/upload' },
+  { label: 'AI assistant', to: '/assistant' },
+  { label: 'Jan Aushadhi locator', to: '/jan-aushadhi' },
+  { label: 'Lab reports', to: '/login' },
   { label: 'Android app', href: ANDROID_APK_URL, download: ANDROID_APK_FILENAME },
 ];
 
@@ -82,7 +84,10 @@ const LandingFooter = () => {
         </div>
 
         <div className="mt-12 pt-8 border-t border-white/10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 text-xs text-slate-400">
-          <p>© {year} MedMx LABS. All rights reserved. Informational only — not medical advice.</p>
+          <div className="space-y-3">
+            <BackedByMicrosoft variant="dark" />
+            <p>© {year} MedMx LABS. All rights reserved. Informational only — not medical advice.</p>
+          </div>
           <div className="flex items-center gap-6">
             <a
               href="https://twitter.com"

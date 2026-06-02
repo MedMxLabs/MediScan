@@ -7,13 +7,22 @@ const DashPanel = ({
   className = '',
   bodyClassName = '',
   noPadding = false,
+  lightSurface = false,
 }) => (
   <section
-    className={`rounded-2xl border border-slate-200/90 bg-white/95 backdrop-blur-sm shadow-sm overflow-hidden ${className}`}
+    className={`dash-surface rounded-2xl shadow-sm overflow-hidden ${lightSurface ? 'dash-light-panel' : ''} ${className}`}
   >
     {title && (
-      <div className="px-5 sm:px-6 py-4 border-b border-slate-100 flex flex-wrap items-center justify-between gap-3">
-        <h2 className="text-sm sm:text-[15px] font-bold text-navy">{title}</h2>
+      <div
+        className={`px-5 sm:px-6 py-4 border-b flex flex-wrap items-center justify-between gap-3 ${
+          lightSurface ? 'border-slate-100' : 'border-slate-100 dark:border-slate-700'
+        }`}
+      >
+        <h2
+          className={`text-sm sm:text-[15px] font-bold ${lightSurface ? 'text-navy' : 'dash-text'}`}
+        >
+          {title}
+        </h2>
         {action}
       </div>
     )}

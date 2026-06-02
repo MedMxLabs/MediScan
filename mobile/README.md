@@ -43,7 +43,7 @@ The app is organized as a **feature-first** Flutter project with a thin **core**
 
 High-level capabilities:
 
-- **Auth** — Email/password login and signup; JWT stored in `SharedPreferences`.
+- **Auth** — Email/password login and signup; JWT stored in `SharedPreferences`. (Web uses Supabase Auth exclusively; mobile still uses legacy `/api/auth/login` and `/api/auth/register` endpoints.)
 - **Dashboard** — Stats, refill alerts, quick actions.
 - **Medicines** — Search and compare prices across Indian pharmacies (long-running scrape, up to 180s).
 - **Prescriptions** — Image/PDF upload → OCR + medicine extraction.

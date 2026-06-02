@@ -8,11 +8,11 @@
 | Status | Item |
 |--------|------|
 | **Fixed** | Central API module `src/services/api.js` now calls real Flask routes under `/api/*`, uses `src/api/client.js` (JWT in `Authorization`), unwraps `{ status, data }` responses, and uses the Vite dev proxy (empty `baseURL` + `/api` on port 5173 → 5000). |
-| **Fixed** | Login uses `POST /api/auth/login`; tokens stored; session restored from `medscan_token` + `medscan_user`; logout clears storage. |
+| **Fixed** | Login uses Supabase Auth (web) → `POST /api/auth/supabase` for MedScan JWT; tokens stored; session restored from `medscan_token` + `medscan_user`; logout clears storage. |
 | **Fixed** | `App.jsx` protects `/dashboard/*` with Redux `auth.isAuthenticated` (no hardcoded `true`). |
 | **Fixed** | Dashboard, search, compare, history, reminders aligned to backend response shapes. |
 | **Partial** | Lab report UI, profile settings, and adherence page still contain static UI samples; main API paths exist (`/api/report-analysis`, `/api/profile`, `/api/adherence`) and can be wired the same way as search. |
-| **Manual** | Search/compare require Playwright + network; Google sign-in needs `VITE_GOOGLE_CLIENT_ID` + Google Identity script on the page. |
+| **Manual** | Search/compare require Playwright + network. |
 
 ## Configuration
 
@@ -23,8 +23,7 @@
 
 | Frontend helper | HTTP |
 |-----------------|------|
-| `loginWithPassword` | `POST /api/auth/login` |
-| `loginWithGoogleCredential` | `POST /api/auth/google-login` |
+| `supabaseLogin` | Supabase `signInWithPassword` / OAuth → `POST /api/auth/supabase` |
 | `getDashboardData` | `GET /api/dashboard` + `GET /api/adherence` |
 | `searchMedicines` | `GET /api/search-medicine?query=` |
 | `compareMedicine` | `GET /api/compare?medicine=` |
@@ -40,7 +39,7 @@
 ## Verification checklist
 
 - [ ] `GET http://127.0.0.1:5000/health` → `{"status":"ok",...}`
-- [ ] Register user: `POST /api/auth/register` then login via UI
+- [ ] Sign up via Supabase on `/signup`, then login via `/login`
 - [ ] Dashboard loads without 401 (JWT attached)
 - [ ] Search: allow **up to ~2 minutes** for first Playwright scrape (`timeout` set to 120s)
 - [ ] Compare page: open `/dashboard/compare?m=Paracetamol` (URL-encoded medicine name)
@@ -48,8 +47,8 @@
 ## Known limitations
 
 - **Scraping:** If all pharmacies fail, UI shows API error (no fabricated prices).
-- **LLM:** Chat needs `OMNIDIMENSION_*` on the server; otherwise backend may return FAQ fallback text.
-- **Google OAuth:** Frontend button calls GIS only when `window.google` and `VITE_GOOGLE_CLIENT_ID` exist.
+- **LLM:** Chat needs `AZURE_OPENAI_*` on the server; otherwise backend may return FAQ fallback text.
+- **Google OAuth (web):** Handled via Supabase Auth (Google provider must be enabled in Supabase dashboard).
 
 ## Build
 

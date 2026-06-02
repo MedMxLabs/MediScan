@@ -1,0 +1,84 @@
+# MedScan — local API keys (PRIVATE)
+
+Copy this file to **`API_KEYS.local.md`** in the same folder and fill in your values.
+`API_KEYS.local.md` is gitignored — do not commit it.
+
+```powershell
+copy docs\API_KEYS.local.md.example docs\API_KEYS.local.md
+```
+
+**Last updated:** _YYYY-MM-DD_
+
+---
+
+## Backend — `medscan/backend/.env`
+
+| Variable | Value |
+|----------|-------|
+| `SECRET_KEY` | |
+| `JWT_SECRET_KEY` | |
+| `DATABASE_URL` | |
+| `MEDSCAN_CLIENT_API_KEYS` | |
+| `AZURE_OPENAI_API_BASE` | |
+| `AZURE_OPENAI_API_KEY` | |
+| `AZURE_OPENAI_MODEL` | `gpt-4.1-mini` |
+| `AZURE_OPENAI_API_VERSION` | `2024-08-01-preview` |
+| `MEDSCAN_AI_MEDICINE_FALLBACK` | `1` |
+| `AZURE_DOCUMENT_INTELLIGENCE_ENDPOINT` | |
+| `AZURE_DOCUMENT_INTELLIGENCE_KEY` | |
+| `GOOGLE_OAUTH_CLIENT_ID` | |
+| `GOOGLE_OAUTH_CLIENT_SECRET` | |
+| `CORS_ORIGINS` | |
+
+---
+
+## Frontend — `medscan/frontend/.env`
+
+| Variable | Value |
+|----------|-------|
+| `VITE_API_URL` | `https://medscan-api.azurewebsites.net` |
+| `VITE_MEDSCAN_API_KEY` | _(same as `MEDSCAN_CLIENT_API_KEYS`)_ |
+| `VITE_GOOGLE_CLIENT_ID` | |
+| `VITE_OMNIDIMENSION_WIDGET_SECRET` | |
+
+---
+
+## Mobile — `flutter run` / `flutter build`
+
+| Dart define | Value |
+|-------------|-------|
+| `API_BASE_URL` | `https://medscan-api.azurewebsites.net` |
+| `MEDSCAN_API_KEY` | _(same as `MEDSCAN_CLIENT_API_KEYS`)_ |
+| `GOOGLE_CLIENT_ID` | _(same as `GOOGLE_OAUTH_CLIENT_ID`)_ |
+
+---
+
+## Azure App Service — `medscan-api`
+
+Portal: **rg-medscan** → **medscan-api** → Configuration → Application settings
+
+| Setting | Value |
+|---------|-------|
+| `MEDSCAN_CLIENT_API_KEYS` | |
+| `AZURE_OPENAI_API_KEY` | |
+| `AZURE_OPENAI_API_BASE` | |
+| `SECRET_KEY` | |
+| `JWT_SECRET_KEY` | |
+| `DATABASE_URL` | |
+| `CORS_ORIGINS` | `https://icy-pond-06a17d300.7.azurestaticapps.net` |
+
+---
+
+## GitHub Actions secrets
+
+| Secret | Value / notes |
+|--------|----------------|
+| `AZURE_CREDENTIALS` | Service principal JSON |
+| `AZURE_SWA_DEPLOYMENT_TOKEN` | `az staticwebapp secrets list -g rg-medscan -n swa-medscan` |
+
+---
+
+## Notes
+
+- Rotate keys if they were ever pasted in chat, screenshots, or a public repo.
+- Azure OpenAI keys stay on the server only — never embed in mobile or frontend source.

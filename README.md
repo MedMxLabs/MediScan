@@ -8,7 +8,7 @@ Medicine price comparison for India (**MedScan PRD v1.0** alongside `../MedScan_
 | --- | --- |
 | **Scraping** | Parallel headless Chromium sessions; normalised query → first valid INR + product link per pharmacy. Failures are returned per source; HTTP **502** if every source fails. |
 | **OCR / PDF** | Images: OpenCV preprocess + Tesseract. PDFs: embedded text or first-page raster + OCR via **PyMuPDF**. Empty OCR → **422** (no fake prescription text). |
-| **LLM** | **Required** for `/api/chatbot/query` (set `OMNIDIMENSION_API_BASE` + `OMNIDIMENSION_API_KEY`). Lab report "insights" use structured reference comparison first; optional LLM wrap when keys are set. |
+| **LLM** | **Required** for `/api/chatbot/query` (set `AZURE_OPENAI_API_BASE` + `AZURE_OPENAI_API_KEY`). Lab report "insights" use structured reference comparison first; optional LLM wrap when keys are set. |
 | **Frontend** | React + Vite + Tailwind; surfaces scrape errors, 502 all-fail state, and 503 when chat API is not configured. |
 | **Mobile** | Flutter app in `mobile/` — same Flask API, JWT auth, all core features. See [`mobile/README.md`](mobile/README.md). |
 
@@ -43,12 +43,13 @@ npm run dev
 
 Copy **`.env.example`** to **`.env`** and set at least:
 
-- `OMNIDIMENSION_API_BASE` — OpenAI-compatible base URL (no trailing slash), e.g. `https://api.openai.com` or your OmniDimension host.
-- `OMNIDIMENSION_API_KEY` — bearer token.
+- `AZURE_OPENAI_API_BASE` — Azure OpenAI deployment URL (includes `/openai/deployments/<name>`).
+- `AZURE_OPENAI_API_KEY` — Azure OpenAI key.
+- `AZURE_OPENAI_MODEL` — deployment name (e.g. `gpt-4.1-mini`).
 
 ## Docker (local)
 
-`docker compose up --build` uses the Playwright-based API image so Chromium is available in the container. Point `OMNIDIMENSION_*` at your provider.
+`docker compose up --build` uses the Playwright-based API image so Chromium is available in the container. Set `AZURE_OPENAI_*` for chat and medicine LLM fallback.
 
 ## Azure Deployment
 

@@ -8,8 +8,11 @@ services:
       DATABASE_URL: sqlite:///var/lib/medscan/medscan.db
       SECRET_KEY: ${SECRET_KEY:-change-me-in-prod}
       JWT_SECRET_KEY: ${JWT_SECRET_KEY:-change-me-jwt}
-      OMNIDIMENSION_API_BASE: ${OMNIDIMENSION_API_BASE:-}
-      OMNIDIMENSION_API_KEY: ${OMNIDIMENSION_API_KEY:-}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:5173}
+      MEDSCAN_RESET_URL_BASE: ${MEDSCAN_RESET_URL_BASE:-http://localhost:5173/reset-password}
+      AZURE_OPENAI_API_BASE: ${AZURE_OPENAI_API_BASE:-}
+      AZURE_OPENAI_API_KEY: ${AZURE_OPENAI_API_KEY:-}
+      AZURE_OPENAI_MODEL: ${AZURE_OPENAI_MODEL:-gpt-4.1-mini}
     ports:
       - "5000:5000"
     volumes:
@@ -20,6 +23,8 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      args:
+        VITE_API_URL: ""
     ports:
       - "5173:80"
     depends_on:

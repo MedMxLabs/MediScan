@@ -15,6 +15,11 @@ import {
   getReminders,
   updateReminder,
 } from '../services/api';
+import {
+  ensureNotificationPermission,
+  loadWebNotifyPref,
+  scheduleWebReminderNotifications,
+} from '../utils/reminderNotifications';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import PageShell from '../components/dashboard/PageShell';
@@ -66,7 +71,11 @@ const RemindersPage = () => {
     try {
       const data = await getReminders();
       const list = Array.isArray(data) ? data : [];
-      setReminders(list.map(toViewModel));
+      const views = list.map(toViewModel);
+      setReminders(views);
+      if (loadWebNotifyPref()) {
+        scheduleWebReminderNotifications(views);
+      }
     } catch (e) {
       setErr(e.response?.data?.message || e.message || 'Could not load reminders');
       setReminders([]);
@@ -105,6 +114,9 @@ const RemindersPage = () => {
         times,
         schedule: { times },
       });
+      if (loadWebNotifyPref() && 'Notification' in window && Notification.permission === 'default') {
+        await ensureNotificationPermission();
+      }
       resetForm();
       await load();
     } catch (e2) {
@@ -155,7 +167,7 @@ const RemindersPage = () => {
       />
 
       {err && (
-        <div className="rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-800">
+        <div className="rounded-xl dash-alert-error px-4 py-3 text-sm">
           {err}
         </div>
       )}
@@ -164,7 +176,7 @@ const RemindersPage = () => {
         <DashPanel title="New reminder">
             <form onSubmit={handleCreate} className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-[13px] font-bold text-gray-500 mb-1">
+                <label className="dash-form-label mb-1">
                   Medicine name
                 </label>
                 <input
@@ -174,28 +186,28 @@ const RemindersPage = () => {
                   onChange={(e) =>
                     setForm((f) => ({ ...f, medicine_name: e.target.value }))
                   }
-                  className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-teal/20 focus:border-teal outline-none"
+                  className="dash-input py-2.5"
                   placeholder="e.g. Metformin 500mg"
                 />
               </div>
               <div>
-                <label className="block text-[13px] font-bold text-gray-500 mb-1">Dose</label>
+                <label className="dash-form-label mb-1">Dose</label>
                 <input
                   type="text"
                   value={form.dose}
                   onChange={(e) => setForm((f) => ({ ...f, dose: e.target.value }))}
-                  className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-teal/20 focus:border-teal outline-none"
+                  className="dash-input py-2.5"
                   placeholder="1 tablet"
                 />
               </div>
               <div>
-                <label className="block text-[13px] font-bold text-gray-500 mb-1">
+                <label className="dash-form-label mb-1">
                   Frequency
                 </label>
                 <select
                   value={form.frequency}
                   onChange={(e) => setForm((f) => ({ ...f, frequency: e.target.value }))}
-                  className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-teal/20 focus:border-teal outline-none bg-white"
+                  className="dash-input py-2.5 bg-white"
                 >
                   {FREQUENCIES.map((o) => (
                     <option key={o.value} value={o.value}>
@@ -205,19 +217,19 @@ const RemindersPage = () => {
                 </select>
               </div>
               <div>
-                <label className="block text-[13px] font-bold text-gray-500 mb-1">
+                <label className="dash-form-label mb-1">
                   Times (HH:MM, comma-sep)
                 </label>
                 <input
                   type="text"
                   value={form.times}
                   onChange={(e) => setForm((f) => ({ ...f, times: e.target.value }))}
-                  className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-teal/20 focus:border-teal outline-none"
+                  className="dash-input py-2.5"
                   placeholder="09:00, 21:00"
                 />
               </div>
               <div>
-                <label className="block text-[13px] font-bold text-gray-500 mb-1">
+                <label className="dash-form-label mb-1">
                   Duration (days)
                 </label>
                 <input
@@ -228,7 +240,7 @@ const RemindersPage = () => {
                   onChange={(e) =>
                     setForm((f) => ({ ...f, duration_days: e.target.value }))
                   }
-                  className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-teal/20 focus:border-teal outline-none"
+                  className="dash-input py-2.5"
                 />
               </div>
               <div className="md:col-span-2 flex justify-end gap-3 pt-2">
@@ -251,14 +263,14 @@ const RemindersPage = () => {
             className={`transition-all ${
               reminder.active
                 ? 'border-teal/30 shadow-sm'
-                : 'border-gray-200 bg-gray-50 opacity-75'
+                : 'border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/40 opacity-75'
             }`}
           >
             <Card.Body className="p-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
               <div className="flex items-center gap-4 flex-1">
                 <div
                   className={`w-12 h-12 rounded-full flex items-center justify-center shrink-0 ${
-                    reminder.active ? 'bg-teal/10 text-teal' : 'bg-gray-200 text-gray-500'
+                    reminder.active ? 'bg-teal/10 text-teal' : 'bg-slate-200 dark:bg-slate-700 dash-muted'
                   }`}
                 >
                   <Bell size={24} />
@@ -266,24 +278,24 @@ const RemindersPage = () => {
                 <div>
                   <h3
                     className={`text-lg font-bold ${
-                      reminder.active ? 'text-gray-900' : 'text-gray-600'
+                      reminder.active ? 'dash-text' : 'dash-muted'
                     }`}
                   >
                     {reminder.name}
                   </h3>
                   <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1">
-                    <span className="flex items-center gap-1.5 text-sm text-gray-500 font-medium">
-                      <Clock size={14} className="text-gray-400" />
+                    <span className="flex items-center gap-1.5 text-sm dash-muted font-medium">
+                      <Clock size={14} className="opacity-60" />
                       {reminder.time}
                     </span>
-                    <span className="text-xs text-gray-500 bg-white border border-gray-200 px-2 py-0.5 rounded-full">
+                    <span className="text-xs dash-muted dash-surface px-2 py-0.5 rounded-full">
                       {reminder.schedule}
                     </span>
                     {reminder.dose && (
-                      <span className="text-xs text-gray-500">{reminder.dose}</span>
+                      <span className="text-xs dash-muted">{reminder.dose}</span>
                     )}
                     {reminder.duration && (
-                      <span className="text-xs text-gray-500">{reminder.duration}</span>
+                      <span className="text-xs dash-muted">{reminder.duration}</span>
                     )}
                   </div>
                 </div>
@@ -291,17 +303,17 @@ const RemindersPage = () => {
 
               <div className="flex items-center gap-4 w-full sm:w-auto justify-between sm:justify-end border-t sm:border-0 pt-4 sm:pt-0">
                 <button
-                  className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                  className="p-2 dash-muted hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40 rounded-lg transition-colors"
                   onClick={() => handleDelete(reminder)}
                   title="Delete"
                 >
                   <Trash2 size={18} />
                 </button>
-                <div className="h-6 w-px bg-gray-200 hidden sm:block"></div>
+                <div className="h-6 w-px bg-slate-200 dark:bg-slate-700 hidden sm:block" />
                 <button
                   onClick={() => handleToggle(reminder)}
                   className={`flex items-center gap-2 font-medium transition-colors ${
-                    reminder.active ? 'text-teal' : 'text-gray-400'
+                    reminder.active ? 'text-teal' : 'dash-muted'
                   }`}
                 >
                   {reminder.active ? (
@@ -310,7 +322,7 @@ const RemindersPage = () => {
                     </>
                   ) : (
                     <>
-                      Off <ToggleLeft size={32} className="text-gray-400" />
+                      Off <ToggleLeft size={32} className="dash-muted" />
                     </>
                   )}
                 </button>

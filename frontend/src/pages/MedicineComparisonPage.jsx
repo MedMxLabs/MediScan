@@ -8,10 +8,11 @@ import DashPanel from '../components/dashboard/DashPanel';
 import LoadingState from '../components/dashboard/LoadingState';
 import { compareMedicine, getAlternatives } from '../services/api';
 
-const MedicineComparisonPage = () => {
+const MedicineComparisonPage = ({ publicMode = false }) => {
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
-  const medicineName = searchParams.get('m')?.trim() || '';
+  const medicineName = searchParams.get('m')?.trim() || searchParams.get('q')?.trim() || '';
+  const searchPath = publicMode ? '/search' : '/dashboard/search';
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -64,8 +65,8 @@ const MedicineComparisonPage = () => {
     return (
       <div className="max-w-2xl mx-auto space-y-4">
         <Link
-          to="/dashboard/search"
-          className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-teal"
+          to={searchPath}
+          className="inline-flex items-center gap-2 text-sm dash-muted hover:text-teal"
         >
           <ArrowLeft size={16} /> Back to Search
         </Link>
@@ -77,7 +78,7 @@ const MedicineComparisonPage = () => {
   if (payload.failed_all) {
     return (
       <div className="max-w-2xl mx-auto space-y-4">
-        <Link to="/dashboard/search" className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-teal">
+        <Link to={searchPath} className="inline-flex items-center gap-2 text-sm dash-muted hover:text-teal">
           <ArrowLeft size={16} /> Back to Search
         </Link>
         <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-amber-900 text-sm">
@@ -90,7 +91,7 @@ const MedicineComparisonPage = () => {
   return (
     <PageShell className="max-w-6xl">
       <Link
-        to="/dashboard/search"
+        to={searchPath}
         className="inline-flex items-center gap-2 text-sm font-semibold text-muted hover:text-teal transition-colors"
       >
         <ArrowLeft size={16} /> Back to search
@@ -99,21 +100,28 @@ const MedicineComparisonPage = () => {
         title={payload.medicine_display || medicineName}
         subtitle="Live scrape — verify pack and price on the pharmacy site."
         icon={BarChart3}
+        lightSurface={publicMode}
       />
       {cheapest && (
-        <div className="rounded-2xl border border-teal/25 bg-teal/5 p-5 sm:p-6 flex flex-col sm:flex-row justify-between items-center gap-4">
+        <div className="dash-light-panel rounded-2xl border border-teal/25 bg-teal/5 dark:bg-teal/10 p-5 sm:p-6 flex flex-col sm:flex-row justify-between items-center gap-4">
           <p className="text-sm font-semibold text-teal-dark">Lowest MRP in this result set</p>
           <div className="text-center sm:text-right">
             <p className="text-3xl font-extrabold text-teal tabular-nums">₹{Number(cheapest.price).toFixed(2)}</p>
-            <p className="text-xs text-muted mt-1">at {cheapest.pharmacy_name}</p>
+            <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">at {cheapest.pharmacy_name}</p>
           </div>
         </div>
       )}
 
-      <DashPanel title="Price comparison" noPadding bodyClassName="">
+      <DashPanel
+        title="Price comparison"
+        lightSurface={publicMode}
+        className={publicMode ? 'dna-pattern border-indigo/15' : ''}
+        noPadding
+        bodyClassName=""
+      >
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm whitespace-nowrap">
-            <thead className="bg-gray-50 text-gray-500 font-medium">
+            <thead className="dash-table-head dash-muted font-medium">
               <tr>
                 <th className="px-6 py-4">Pharmacy</th>
                 <th className="px-6 py-4">Pack</th>
@@ -124,13 +132,13 @@ const MedicineComparisonPage = () => {
                 <th className="px-6 py-4 text-right">Buy</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100 bg-white">
+            <tbody className={`divide-y ${publicMode ? 'divide-slate-100' : 'divide-slate-100 dark:divide-slate-700'}`}>
               {prices.map((row, idx) => {
                 const isLow = cheapest && row.pharmacy_name === cheapest.pharmacy_name;
                 const savingsPct = row.savings_percent_vs_lowest;
                 return (
                   <tr key={`${row.pharmacy_name}-${idx}`} className={isLow ? 'bg-teal/10/30' : ''}>
-                    <td className="px-6 py-4 font-medium text-gray-900 flex items-center gap-2">
+                    <td className="px-6 py-4 font-medium dash-text flex items-center gap-2">
                       {row.pharmacy_name}
                       {isLow && (
                         <span className="inline-flex rounded-full bg-teal/10 px-2 py-0.5 text-xs font-medium text-teal-dark">
@@ -138,11 +146,11 @@ const MedicineComparisonPage = () => {
                         </span>
                       )}
                     </td>
-                    <td className="px-6 py-4 text-gray-500">{row.pack_size || '—'}</td>
-                    <td className="px-6 py-4 font-bold text-gray-900">₹{Number(row.price).toFixed(2)}</td>
-                    <td className="px-6 py-4 text-gray-500">{row.unit_price != null ? `₹${row.unit_price}` : '—'}</td>
-                    <td className="px-6 py-4 text-gray-600">{savingsPct != null ? `${savingsPct}%` : '—'}</td>
-                    <td className="px-6 py-4 text-gray-600">{row.availability || '—'}</td>
+                    <td className="px-6 py-4 dash-muted">{row.pack_size || '—'}</td>
+                    <td className="px-6 py-4 font-bold dash-text">₹{Number(row.price).toFixed(2)}</td>
+                    <td className="px-6 py-4 dash-muted">{row.unit_price != null ? `₹${row.unit_price}` : '—'}</td>
+                    <td className="px-6 py-4 dash-muted">{savingsPct != null ? `${savingsPct}%` : '—'}</td>
+                    <td className="px-6 py-4 dash-muted">{row.availability || '—'}</td>
                     <td className="px-6 py-4 text-right">
                       {row.url ? (
                         <a href={row.url} target="_blank" rel="noreferrer noopener">
@@ -170,6 +178,7 @@ const MedicineComparisonPage = () => {
       {generics.length > 0 && (
         <DashPanel
           title="Generic alternatives"
+          lightSurface={publicMode}
           noPadding
           bodyClassName=""
           action={
@@ -178,7 +187,7 @@ const MedicineComparisonPage = () => {
         >
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
-              <thead className="bg-gray-50 text-gray-500 font-medium">
+              <thead className="dash-table-head dash-muted font-medium">
                 <tr>
                   <th className="px-6 py-4">Brand</th>
                   <th className="px-6 py-4">Generic / composition</th>
@@ -186,14 +195,14 @@ const MedicineComparisonPage = () => {
                   <th className="px-6 py-4 text-right">Compare</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100 bg-white">
+              <tbody className={`divide-y ${publicMode ? 'divide-slate-100' : 'divide-slate-100 dark:divide-slate-700'}`}>
                 {generics.map((g) => (
                   <tr key={g.id}>
-                    <td className="px-6 py-4 font-medium text-gray-900">{g.name}</td>
-                    <td className="px-6 py-4 text-gray-500">
+                    <td className="px-6 py-4 font-medium dash-text">{g.name}</td>
+                    <td className="px-6 py-4 dash-muted">
                       {g.generic_name || g.composition || '—'}
                     </td>
-                    <td className="px-6 py-4 text-gray-500">{g.manufacturer || '—'}</td>
+                    <td className="px-6 py-4 dash-muted">{g.manufacturer || '—'}</td>
                     <td className="px-6 py-4 text-right">
                       <Link
                         to={`/dashboard/compare?m=${encodeURIComponent(g.name)}`}
@@ -211,22 +220,22 @@ const MedicineComparisonPage = () => {
       )}
 
       {alternatives.length > 0 && (
-        <DashPanel title="Ranked offers (same query)" noPadding bodyClassName="">
+        <DashPanel title="Ranked offers (same query)" lightSurface={publicMode} noPadding bodyClassName="">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
-              <thead className="bg-gray-50 text-gray-500 font-medium">
+              <thead className="dash-table-head dash-muted font-medium">
                 <tr>
                   <th className="px-6 py-4">Rank</th>
                   <th className="px-6 py-4">Pharmacy</th>
                   <th className="px-6 py-4">Note</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100 bg-white">
+              <tbody className={`divide-y ${publicMode ? 'divide-slate-100' : 'divide-slate-100 dark:divide-slate-700'}`}>
                 {alternatives.map((a) => (
                   <tr key={a.rank}>
                     <td className="px-6 py-4">{a.rank}</td>
                     <td className="px-6 py-4 font-medium">{a.pharmacy_name}</td>
-                    <td className="px-6 py-4 text-gray-500">{a.note}</td>
+                    <td className="px-6 py-4 dash-muted">{a.note}</td>
                   </tr>
                 ))}
               </tbody>

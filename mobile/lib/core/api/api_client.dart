@@ -17,6 +17,10 @@ class ApiClient {
     _dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) async {
+          final clientKey = AppConfig.medscanApiKey.trim();
+          if (clientKey.isNotEmpty) {
+            options.headers['X-Medscan-Api-Key'] = clientKey;
+          }
           final skipAuth = options.extra['skipAuth'] == true;
           if (!skipAuth) {
             final token = await _storage.getToken();
@@ -31,6 +35,37 @@ class ApiClient {
           final cfg = error.requestOptions;
           final path = cfg.path;
           final isAuthRoute = path.contains('/api/auth/');
+          if (response?.statusCode == 401 &&
+              !isAuthRoute &&
+              cfg.extra['_refreshAttempt'] != true) {
+            final refresh = await _storage.getRefreshToken();
+            if (refresh != null && refresh.isNotEmpty) {
+              cfg.extra['_refreshAttempt'] = true;
+              try {
+                final refreshRes = await _dio.post(
+                  '/api/auth/refresh',
+                  options: Options(
+                    headers: {'Authorization': 'Bearer $refresh'},
+                    extra: {'skipAuth': true},
+                  ),
+                );
+                final newToken = refreshRes.data['access_token'] as String?;
+                if (newToken != null && newToken.isNotEmpty) {
+                  await _storage.saveSession(
+                    accessToken: newToken,
+                    refreshToken: refresh,
+                    user: await _storage.getUser(),
+                  );
+                  cfg.headers['Authorization'] = 'Bearer $newToken';
+                  final retry = await _dio.fetch(cfg);
+                  return handler.resolve(retry);
+                }
+              } catch (_) {
+                /* fall through to clear session */
+              }
+            }
+          }
+
           if (response?.statusCode == 401 &&
               !isAuthRoute &&
               cfg.extra['_authRetry'] != true &&

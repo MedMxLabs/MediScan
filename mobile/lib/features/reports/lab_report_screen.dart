@@ -33,9 +33,16 @@ class _LabReportScreenState extends State<LabReportScreen> {
   }
 
   Future<void> _loadSaved() async {
-    final saved = await LocalStore.getLabReports();
+    List<Map<String, dynamic>> merged = [];
+    try {
+      final apiData = await context.read<MedscanApi>().getLabReports();
+      final remote = (apiData['reports'] as List?) ?? [];
+      merged = remote.map((e) => Map<String, dynamic>.from(e as Map)).toList();
+    } catch (_) {
+      merged = await LocalStore.getLabReports();
+    }
     if (!mounted) return;
-    setState(() => _reports = saved);
+    setState(() => _reports = merged);
   }
 
   String _formatFileSize(int? bytes) {

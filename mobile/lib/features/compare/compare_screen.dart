@@ -22,6 +22,7 @@ class CompareScreen extends StatefulWidget {
 class _CompareScreenState extends State<CompareScreen> {
   final _query = TextEditingController();
   Map<String, dynamic>? _data;
+  List<Map<String, dynamic>> _generics = [];
   bool _loading = false;
   String? _error;
 
@@ -47,10 +48,20 @@ class _CompareScreenState extends State<CompareScreen> {
       _error = null;
     });
     try {
-      final data = await context.read<MedscanApi>().compareMedicine(_query.text);
+      final api = context.read<MedscanApi>();
+      final data = await api.compareMedicine(_query.text);
+      List<Map<String, dynamic>> generics = [];
+      try {
+        final alts = await api.getAlternatives(_query.text);
+        final rows = (alts['alternatives'] as List?) ?? [];
+        generics = rows.map((e) => Map<String, dynamic>.from(e as Map)).toList();
+      } catch (_) {
+        generics = [];
+      }
       if (!mounted) return;
       setState(() {
         _data = data;
+        _generics = generics;
         _loading = false;
       });
     } on DioException catch (e) {
@@ -183,6 +194,32 @@ class _CompareScreenState extends State<CompareScreen> {
                       ),
                     );
                   }),
+                  if (_generics.isNotEmpty) ...[
+                    const SizedBox(height: 16),
+                    Text(
+                      'Generic alternatives',
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w700,
+                          ),
+                    ),
+                    const SizedBox(height: 8),
+                    ..._generics.map(
+                      (g) => Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: DarkCard(
+                          onTap: () {
+                            _query.text = g['name']?.toString() ?? '';
+                            _compare();
+                          },
+                          child: Text(
+                            g['name']?.toString() ?? '',
+                            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),

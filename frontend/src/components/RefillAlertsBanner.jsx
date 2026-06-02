@@ -4,9 +4,9 @@ import { Link } from 'react-router-dom';
 import { getRefillAlerts } from '../services/api';
 
 const bucketStyles = {
-  overdue: 'bg-red-50 border-red-200 text-red-800',
-  urgent: 'bg-orange-50 border-orange-200 text-orange-800',
-  soon: 'bg-amber-50 border-amber-200 text-amber-900',
+  overdue: 'bg-red-50 dark:bg-red-950/50 border-red-200 dark:border-red-800 text-red-800 dark:text-red-200',
+  urgent: 'bg-orange-50 dark:bg-orange-950/40 border-orange-200 dark:border-orange-800 text-orange-800 dark:text-orange-200',
+  soon: 'bg-amber-50 dark:bg-amber-950/40 border-amber-200 dark:border-amber-800 text-amber-900 dark:text-amber-200',
 };
 
 const RefillAlertsBanner = () => {
@@ -37,11 +37,11 @@ const RefillAlertsBanner = () => {
   const more = alerts.length - top.length;
 
   return (
-    <div className="rounded-2xl border border-amber-200/80 bg-amber-50/80 backdrop-blur-sm shadow-sm p-4 sm:p-5 flex items-start gap-3">
-      <AlertTriangle className="text-amber-600 shrink-0 mt-0.5" size={20} />
+    <div className="rounded-2xl border border-amber-200/80 dark:border-amber-700/60 bg-amber-50/90 dark:bg-amber-950/30 shadow-sm p-4 sm:p-5 flex items-start gap-3">
+      <AlertTriangle className="text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" size={20} />
       <div className="flex-1">
-        <p className="text-sm font-bold text-navy">Refill alerts</p>
-        <p className="text-xs text-gray-600 mt-0.5">
+        <p className="text-sm font-bold dash-text">Refill alerts</p>
+        <p className="text-xs dash-muted mt-0.5">
           Based on your reminder durations — restock before doses run out.
         </p>
         <ul className="mt-3 space-y-1.5">
@@ -58,10 +58,7 @@ const RefillAlertsBanner = () => {
             </li>
           ))}
         </ul>
-        <Link
-          to="/dashboard/reminders"
-          className="inline-flex items-center gap-1 mt-3 text-[12px] font-bold text-teal hover:underline"
-        >
+        <Link to="/dashboard/reminders" className="inline-flex items-center gap-1 mt-3 text-[12px] dash-link">
           <RefreshCw size={12} /> Update reminders
           {more > 0 ? ` (+${more} more)` : ''}
         </Link>

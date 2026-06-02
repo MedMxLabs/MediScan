@@ -5,6 +5,7 @@ from app.models.price import Price
 from app.models.reminder import Reminder, AdherenceLog
 from app.models.report import LabReport
 from app.models.search_history import SearchHistory
+from app.models.notification import InAppNotification
 
 __all__ = [
     "User",
@@ -17,5 +18,6 @@ __all__ = [
     "AdherenceLog",
     "LabReport",
     "SearchHistory",
+    "InAppNotification",
 ]
 

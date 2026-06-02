@@ -32,7 +32,7 @@ const HeroDashboard = () => (
         </div>
         <div className="flex items-center gap-2 flex-wrap justify-end">
           <Link
-            to="/dashboard/upload"
+            to="/upload"
             className="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 hover:border-teal/40 hover:bg-teal/5 transition-colors"
           >
             <span className="w-8 h-8 rounded-lg bg-teal/10 flex items-center justify-center text-teal shrink-0">

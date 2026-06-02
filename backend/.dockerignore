@@ -8,3 +8,7 @@ __pycache__/
 instance/
 .git/
 probe_*.py
+uploads/
+.pytest_cache/
+tests/
+*.tar.gz

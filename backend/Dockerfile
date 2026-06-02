@@ -3,6 +3,7 @@ FROM mcr.microsoft.com/playwright/python:v1.49.0-jammy
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     tesseract-ocr \
+    tesseract-ocr-eng \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app

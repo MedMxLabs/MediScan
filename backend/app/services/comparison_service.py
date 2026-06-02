@@ -9,6 +9,7 @@ logger = logging.getLogger(__name__)
 
 from app.extensions import db
 from app.models.medicine import SearchCache
+from app.models.medicine import PriceCache
 from app.models.search_history import SearchHistory
 from app.models.price import Price
 from app.services.recommendation_service import affordability_insights, rank_pharmacies_by_unit_price
@@ -54,6 +55,17 @@ def _persist_price_snapshots(normalized: str, prices: list[dict[str, Any]]) -> N
             url=(row.get("url") or "")[:1024],
         )
         db.session.add(p)
+        db.session.add(
+            PriceCache(
+                pharmacy_name=row.get("pharmacy_name") or "",
+                price=float(row.get("price") or 0),
+                unit_price=row.get("unit_price"),
+                pack_size=row.get("pack_size"),
+                discount=row.get("discount"),
+                availability=row.get("availability"),
+                url=(row.get("url") or "")[:1024],
+            )
+        )
 
 
 def search_medicine(
@@ -97,6 +109,12 @@ def search_medicine(
 
     outcome = run_live_scrape(normalized)
     if not outcome.prices:
+        try:
+            from app.scheduler.jobs import queue_scrape_retry
+
+            queue_scrape_retry(normalized, outcome.errors)
+        except Exception:
+            pass
         return (
             {
                 "failed_all": True,
@@ -129,7 +147,12 @@ def search_medicine(
     if user_id is not None:
         try:
             cheapest = outcome.prices[0] if outcome.prices else None
-            summary = {"cheapest": cheapest, "pharmacies": len(outcome.prices)}
+            md = (cheapest or {}).get("medicine_display") or normalized
+            summary = {
+                "cheapest": cheapest,
+                "medicine_display": md,
+                "pharmacies": len(outcome.prices),
+            }
             db.session.add(SearchHistory(user_id=user_id, query=normalized, summary_json=summary))
             db.session.commit()
         except Exception as exc:

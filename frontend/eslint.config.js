@@ -17,5 +17,13 @@ export default defineConfig([
       globals: globals.browser,
       parserOptions: { ecmaFeatures: { jsx: true } },
     },
+    rules: {
+      'react-hooks/set-state-in-effect': 'off',
+      'react-hooks/static-components': 'off',
+    },
+  },
+  {
+    files: ['vite.config.js', 'scripts/**/*.mjs'],
+    languageOptions: { globals: globals.node },
   },
 ])

@@ -5,13 +5,9 @@ from flask import Blueprint, request
 from flask_jwt_extended import get_jwt_identity, jwt_required
 
 from app.extensions import db
-from app.models.prescription import Prescription
-from app.models.report import LabReport
-from app.models.reminder import AdherenceLog, Reminder
-from app.models.search_history import SearchHistory
 from app.models.user import User
-from app.utils.redis_cache import cache_key_dashboard, delete_cache_key
 from app.utils.responses import err, ok
+from app.utils.user_data import purge_user_activity
 
 bp = Blueprint("profile", __name__, url_prefix="/api")
 
@@ -75,17 +71,9 @@ def update_profile():
 @bp.post("/profile/reset-data")
 @jwt_required()
 def reset_user_activity():
-    """Delete all activity data for the current user (searches, prescriptions, reminders, logs, lab uploads)."""
+    """Delete all activity data for the current user."""
     uid = int(get_jwt_identity())
     if not User.query.get(uid):
         return err("User not found", status=404)
-
-    # Order: adherence logs reference reminders
-    AdherenceLog.query.filter_by(user_id=uid).delete(synchronize_session=False)
-    Reminder.query.filter_by(user_id=uid).delete(synchronize_session=False)
-    db.session.query(SearchHistory).filter_by(user_id=uid).delete(synchronize_session=False)
-    LabReport.query.filter_by(user_id=uid).delete(synchronize_session=False)
-    Prescription.query.filter_by(user_id=uid).delete(synchronize_session=False)
-    db.session.commit()
-    delete_cache_key(cache_key_dashboard(uid))
+    purge_user_activity(uid)
     return ok({"reset": True}, message="All activity data cleared.")

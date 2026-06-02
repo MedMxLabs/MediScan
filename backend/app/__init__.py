@@ -12,6 +12,7 @@ from app.config import get_config
 from app.extensions import db, jwt
 from app.utils.logger import configure_logging
 from app.utils.sqlite_schema import patch_sqlite_users_columns
+from app.utils.catalog_seed import seed_medicine_catalog_if_empty
 
 _log = logging.getLogger(__name__)
 
@@ -39,13 +40,11 @@ def create_app(config_name: str | None = None):
     app = Flask(__name__)
     cfg = get_config()
     app.config.from_object(cfg)
-    if config_name == "production" or os.environ.get("FLASK_ENV") == "production":
-        uri = os.environ.get("DATABASE_URL", "")
-        if uri:
-            # SQLAlchemy 2 / Heroku-style postgres URL
-            if uri.startswith("postgres://"):
-                uri = uri.replace("postgres://", "postgresql://", 1)
-            app.config["SQLALCHEMY_DATABASE_URI"] = uri
+    uri = os.environ.get("DATABASE_URL", "").strip()
+    if uri:
+        if uri.startswith("postgres://"):
+            uri = uri.replace("postgres://", "postgresql://", 1)
+        app.config["SQLALCHEMY_DATABASE_URI"] = uri
 
     os.makedirs(app.config["MEDSCAN_UPLOAD_FOLDER"], exist_ok=True)
 
@@ -54,7 +53,7 @@ def create_app(config_name: str | None = None):
     CORS(
         app,
         origins=_cors_origins(),
-        allow_headers=["Content-Type", "Authorization"],
+        allow_headers=["Content-Type", "Authorization", "X-Medscan-Api-Key"],
         methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     )
 
@@ -65,6 +64,30 @@ def create_app(config_name: str | None = None):
     @jwt.invalid_token_loader
     def _jwt_invalid(reason):
         return jsonify({"status": "error", "message": "Invalid token", "detail": reason}), 422
+
+    @app.before_request
+    def _client_api_key_guard():
+        from app.utils.client_api_key import check_client_api_key
+
+        ok, msg = check_client_api_key()
+        if not ok:
+            return jsonify({"status": "error", "message": msg}), 403
+        return None
+
+    @app.before_request
+    def _rate_limit_guard():
+        from flask import request
+
+        from app.utils.rate_limit import check_api_limit
+
+        if not request.path.startswith("/api"):
+            return None
+        if request.path.startswith("/api/health"):
+            return None
+        allowed, msg = check_api_limit()
+        if not allowed:
+            return jsonify({"status": "error", "message": msg}), 429
+        return None
 
     @app.errorhandler(500)
     def _handle_500(exc):
@@ -102,7 +125,17 @@ def create_app(config_name: str | None = None):
     @app.get("/api/health")
     def api_health():
         """Same as /health; frontend and clients call /api/* only."""
-        return jsonify({"status": "ok", "service": "medscan-api"})
+        from app.services.medicine_extract_service import scan_extraction_capabilities
+        from app.services.ocr_service import scan_ocr_capabilities
+
+        return jsonify(
+            {
+                "status": "ok",
+                "service": "medscan-api",
+                "ocr": scan_ocr_capabilities(),
+                "medicine_extraction": scan_extraction_capabilities(),
+            }
+        )
 
     from app.routes import (
         adherence,
@@ -111,6 +144,7 @@ def create_app(config_name: str | None = None):
         dashboard,
         history,
         medicine,
+        notifications,
         pharmacy,
         prescription,
         profile,
@@ -130,6 +164,7 @@ def create_app(config_name: str | None = None):
     app.register_blueprint(chatbot.bp)
     app.register_blueprint(adherence.bp)
     app.register_blueprint(history.bp)
+    app.register_blueprint(notifications.bp)
     app.register_blueprint(profile.bp)
     app.register_blueprint(pharmacy.bp)
     app.register_blueprint(refill.bp)
@@ -137,6 +172,7 @@ def create_app(config_name: str | None = None):
     with app.app_context():
         db.create_all()
         patch_sqlite_users_columns(db)
+        seed_medicine_catalog_if_empty()
 
     try:
         from app.scheduler import init_scheduler

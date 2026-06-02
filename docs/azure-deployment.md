@@ -221,9 +221,9 @@ az webapp config appsettings set \
     JWT_SECRET_KEY="<generate-another-strong-random-string>" \
     JWT_ACCESS_MINUTES=15 \
     JWT_REFRESH_DAYS=7 \
-    OMNIDIMENSION_API_BASE="https://api.omnidimension.ai" \
-    OMNIDIMENSION_API_KEY="<your-key>" \
-    OMNIDIMENSION_MODEL="gpt-4o-mini" \
+    AZURE_OPENAI_API_BASE="https://medmxlabs-openai.openai.azure.com/openai/deployments/gpt-4.1-mini" \
+    AZURE_OPENAI_API_KEY="<your-key>" \
+    AZURE_OPENAI_MODEL="gpt-4.1-mini" \
     CORS_ORIGINS="https://<your-swa-name>.azurestaticapps.net"
 ```
 
@@ -243,10 +243,9 @@ python -c "import secrets; print(secrets.token_urlsafe(48))"
 | `JWT_ACCESS_MINUTES` | No | Access token lifetime (default: 15) |
 | `JWT_REFRESH_DAYS` | No | Refresh token lifetime (default: 7) |
 | `DATABASE_URL` | Yes | PostgreSQL connection string (see Step 5) |
-| `OMNIDIMENSION_API_BASE` | Yes* | OpenAI-compatible API base URL (*required for chatbot) |
-| `OMNIDIMENSION_API_KEY` | Yes* | API bearer token (*required for chatbot) |
-| `OMNIDIMENSION_MODEL` | No | Model name (default: gpt-4o-mini) |
-| `GOOGLE_OAUTH_CLIENT_ID` | No | Google sign-in (optional) |
+| `AZURE_OPENAI_API_BASE` | Yes* | Azure OpenAI deployment base URL (*required for chatbot) |
+| `AZURE_OPENAI_API_KEY` | Yes* | Azure OpenAI API key (*required for chatbot) |
+| `AZURE_OPENAI_MODEL` | No | Deployment name (default: gpt-4.1-mini) |
 | `REDIS_URL` | No | Redis connection string (see Step 6) |
 | `CORS_ORIGINS` | Recommended | Frontend origin(s), comma-separated |
 | `TESSERACT_CMD` | No | Not needed — Tesseract is on PATH inside the Docker image |
@@ -393,7 +392,6 @@ In Azure Portal → Static Web App → **Configuration → Application settings*
 |------|-------|
 | `VITE_API_URL` | `https://medscan-api.azurewebsites.net` |
 | `VITE_OMNIDIMENSION_WIDGET_SECRET` | Your widget secret |
-| `VITE_GOOGLE_CLIENT_ID` | *(optional)* Google OAuth client ID |
 
 Or via CLI:
 
@@ -553,7 +551,6 @@ In GitHub → **Settings → Variables → Actions**, add:
 |----------|-------|
 | `VITE_API_URL` | `https://medscan-api.azurewebsites.net` |
 | `VITE_OMNIDIMENSION_WIDGET_SECRET` | Your widget secret |
-| `VITE_GOOGLE_CLIENT_ID` | *(optional)* |
 
 ---
 
@@ -619,7 +616,7 @@ All other endpoints (auth, dashboard, reminders, adherence, history, profile, ch
 | Medicine search (cached) | Minimal | ~5 MB | <50ms | Redis/DB lookup only |
 | Prescription OCR | Moderate | ~200 MB | 2–5s | Tesseract CPU spike |
 | Lab report analysis | Moderate | ~200 MB | 2–5s | OCR + deterministic parsing |
-| Chatbot | Minimal | ~10 MB | 1–3s | HTTP call to OmniDimension API |
+| Chatbot | Minimal | ~10 MB | 1–3s | HTTP call to Azure OpenAI |
 | Auth / Dashboard / CRUD | Minimal | ~5 MB | <100ms | DB read/write |
 
 ### Tier Comparison — Cost, Capacity, Duration
@@ -823,8 +820,8 @@ az webapp config appsettings set --resource-group $RG --name $APP --settings \
   SECRET_KEY="$(python -c 'import secrets;print(secrets.token_urlsafe(48))')" \
   JWT_SECRET_KEY="$(python -c 'import secrets;print(secrets.token_urlsafe(48))')" \
   DATABASE_URL="postgresql://$PG_USER:$PG_PASS@$PG.postgres.database.azure.com:5432/$DB?sslmode=require" \
-  OMNIDIMENSION_API_BASE="https://api.omnidimension.ai" \
-  OMNIDIMENSION_API_KEY="<your-key>"
+  AZURE_OPENAI_API_BASE="https://medmxlabs-openai.openai.azure.com/openai/deployments/gpt-4.1-mini" \
+  AZURE_OPENAI_API_KEY="<your-key>"
 
 # ── 8. Always on + health check ──
 az webapp config set --resource-group $RG --name $APP --always-on true \

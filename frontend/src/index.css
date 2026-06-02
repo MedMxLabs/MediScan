@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.theme-dark, .theme-dark *));
+
 @theme {
   --color-navy: #0a192f;
   --color-navy-light: #132f4c;
@@ -37,6 +39,293 @@
   a,
   button {
     touch-action: manipulation;
+  }
+}
+
+/* Dashboard semantic surfaces — use across all /dashboard pages */
+@layer components {
+  .theme-dark {
+    --color-muted: #94a3b8;
+  }
+
+  .dash-text {
+    @apply text-navy dark:text-slate-100;
+  }
+
+  .dash-muted {
+    @apply text-muted dark:text-slate-300;
+  }
+
+  /*
+   * Light shell — public + auth pages (never use theme-dark).
+   * Forces readable navy/muted text on light backgrounds.
+   */
+  .light-shell {
+    @apply text-navy;
+    color-scheme: light;
+  }
+
+  .light-shell.auth-shell,
+  .light-shell.public-shell {
+    background-color: transparent;
+  }
+
+  .auth-shell {
+    overscroll-behavior: none;
+  }
+
+  /* Auth login/signup — frosted card on bleed background */
+  .auth-form-card {
+    background: linear-gradient(
+      155deg,
+      color-mix(in srgb, white 78%, transparent) 0%,
+      color-mix(in srgb, white 52%, transparent) 48%,
+      color-mix(in srgb, var(--color-teal) 5%, transparent) 100%
+    );
+    backdrop-filter: blur(28px);
+    -webkit-backdrop-filter: blur(28px);
+    border: 1px solid color-mix(in srgb, white 80%, var(--color-teal) 12%);
+    box-shadow:
+      0 24px 64px -24px color-mix(in srgb, var(--color-navy) 18%, transparent),
+      0 0 0 1px color-mix(in srgb, white 60%, transparent),
+      inset 0 1px 0 color-mix(in srgb, white 90%, transparent);
+  }
+
+  .auth-form-badge {
+    background: linear-gradient(135deg, color-mix(in srgb, var(--color-teal) 12%, white), color-mix(in srgb, var(--color-lime) 10%, white));
+    border: 1px solid color-mix(in srgb, var(--color-teal) 28%, transparent);
+    box-shadow: inset 0 1px 0 color-mix(in srgb, white 80%, transparent);
+  }
+
+  .auth-divider-line {
+    background: linear-gradient(
+      90deg,
+      transparent,
+      color-mix(in srgb, var(--color-teal) 35%, transparent) 50%,
+      transparent
+    );
+    height: 1px;
+  }
+
+  /* Per-route accent tints on the base bleed gradient */
+  .public-shell[data-accent='lime'] .public-bleed-gradient {
+    background: linear-gradient(
+      145deg,
+      color-mix(in srgb, var(--color-lime) 11%, white) 0%,
+      white 38%,
+      color-mix(in srgb, var(--color-teal) 9%, white) 72%,
+      color-mix(in srgb, var(--color-lime) 8%, white) 100%
+    );
+  }
+
+  .public-shell[data-accent='indigo'] .public-bleed-gradient {
+    background: linear-gradient(
+      145deg,
+      color-mix(in srgb, #6366f1 9%, white) 0%,
+      white 40%,
+      color-mix(in srgb, var(--color-teal) 8%, white) 70%,
+      color-mix(in srgb, #818cf8 7%, white) 100%
+    );
+  }
+
+  .public-shell[data-accent='violet'] .public-bleed-gradient {
+    background: linear-gradient(
+      145deg,
+      color-mix(in srgb, #8b5cf6 9%, white) 0%,
+      white 38%,
+      color-mix(in srgb, var(--color-teal) 7%, white) 68%,
+      color-mix(in srgb, var(--color-lime) 9%, white) 100%
+    );
+  }
+
+  .public-shell[data-accent='amber'] .public-bleed-gradient {
+    background: linear-gradient(
+      145deg,
+      color-mix(in srgb, #f59e0b 10%, white) 0%,
+      white 36%,
+      color-mix(in srgb, var(--color-teal) 7%, white) 70%,
+      color-mix(in srgb, #fbbf24 8%, white) 100%
+    );
+  }
+
+  .light-shell .dash-text,
+  .light-shell .dash-surface .dash-text,
+  .light-shell h1,
+  .light-shell h2,
+  .light-shell h3,
+  .light-shell h4 {
+    @apply text-navy;
+  }
+
+  .light-shell .dash-muted,
+  .light-shell .dash-surface .dash-muted {
+    @apply text-muted;
+  }
+
+  .light-shell .dash-surface,
+  .light-shell .dash-inset,
+  .light-shell .dash-inset-dashed {
+    @apply bg-white border-slate-200 text-navy;
+  }
+
+  .light-shell .dash-surface > div:first-child {
+    @apply border-slate-100;
+  }
+
+  .light-shell .dash-code {
+    @apply bg-slate-100 border-slate-200 text-slate-800;
+  }
+
+  .light-shell .dash-table-head {
+    @apply bg-slate-50/90 border-slate-100;
+  }
+
+  .light-shell .dash-row-hover {
+    @apply hover:bg-slate-50/80;
+  }
+
+  .light-shell .dash-btn-secondary {
+    @apply border-slate-200 text-navy bg-white hover:bg-slate-50;
+  }
+
+  .light-shell .dash-list-row {
+    @apply border-slate-200 bg-slate-50/50;
+  }
+
+  .light-shell .dash-link {
+    @apply text-teal;
+  }
+
+  .light-shell .dash-alert-error {
+    @apply bg-red-50 border-red-100 text-red-700;
+  }
+
+  .light-shell .dash-alert-success {
+    @apply bg-teal/10 border-teal/20 text-teal-dark;
+  }
+
+  .light-shell .dash-input {
+    @apply text-navy border-slate-200 bg-white;
+  }
+
+  .light-shell .dash-input-readonly {
+    @apply text-muted border-slate-200 bg-slate-50;
+  }
+
+  .light-shell .dash-form-label {
+    @apply text-muted;
+  }
+
+  .light-shell label {
+    @apply text-navy;
+  }
+
+  .light-shell input,
+  .light-shell textarea,
+  .light-shell select {
+    @apply text-navy bg-white border-slate-200;
+  }
+
+  .light-shell tbody {
+    @apply divide-slate-100;
+  }
+
+  .dash-surface {
+    @apply bg-white dark:bg-slate-800/95 border border-slate-200 dark:border-slate-600/80 shadow-sm;
+  }
+
+  .dash-link {
+    @apply text-teal dark:text-teal font-bold hover:underline;
+  }
+
+  .dash-list-row {
+    @apply rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50/50 dark:bg-slate-900/40 px-4 py-3;
+  }
+
+  .dash-inset {
+    @apply bg-white dark:bg-slate-900/45 border border-slate-200 dark:border-slate-700 rounded-2xl;
+  }
+
+  .dash-inset-dashed {
+    @apply bg-white dark:bg-slate-900/45 border border-dashed border-slate-300 dark:border-slate-600 rounded-2xl;
+  }
+
+  .dash-code {
+    @apply bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-600 text-slate-800 dark:text-slate-100;
+  }
+
+  .dash-table-head {
+    @apply bg-slate-50/90 dark:bg-slate-800/90 border-slate-100 dark:border-slate-700;
+  }
+
+  .dash-row-hover {
+    @apply hover:bg-slate-50/80 dark:hover:bg-slate-800/50;
+  }
+
+  .dash-alert-error {
+    @apply bg-red-50 dark:bg-red-950/40 border border-red-100 dark:border-red-900/60 text-red-700 dark:text-red-300;
+  }
+
+  .dash-alert-success {
+    @apply bg-teal/10 dark:bg-teal/15 border border-teal/20 dark:border-teal/35 text-teal-dark dark:text-teal;
+  }
+
+  .dash-btn-secondary {
+    @apply border border-slate-200 dark:border-slate-600 text-navy dark:text-slate-200 bg-white dark:bg-slate-800/60 hover:bg-slate-50 dark:hover:bg-slate-800;
+  }
+
+  .dash-input {
+    @apply w-full px-4 py-3 text-sm font-medium text-navy dark:text-slate-100 border border-slate-200 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-teal/20 focus:border-teal outline-none transition-all shadow-sm bg-white dark:bg-slate-900/60;
+  }
+
+  .dash-input-readonly {
+    @apply w-full px-4 py-3 text-sm font-medium text-muted dark:text-slate-400 border border-slate-200 dark:border-slate-600 rounded-xl outline-none shadow-sm bg-slate-50 dark:bg-slate-800/50 cursor-default;
+  }
+
+  .dash-form-label {
+    @apply block text-[13px] font-bold text-muted dark:text-slate-400;
+  }
+
+  .theme-dark .dot-grid {
+    background-image: radial-gradient(circle, color-mix(in srgb, var(--color-teal) 8%, transparent) 1px, transparent 1px);
+    background-size: 24px 24px;
+  }
+
+  /*
+   * Light panels inside dark dashboard — keep light backgrounds, force dark text.
+   * (dash-text / theme-dark --color-muted are tuned for dark surfaces otherwise.)
+   */
+  .theme-dark .dash-light-panel,
+  .theme-dark .bg-brand-gradient-soft {
+    color-scheme: light;
+    --color-muted: #64748b;
+  }
+
+  .theme-dark .dash-light-panel .dash-text,
+  .theme-dark .bg-brand-gradient-soft .dash-text {
+    @apply text-navy;
+  }
+
+  .theme-dark .dash-light-panel .dash-muted,
+  .theme-dark .dash-light-panel .text-muted,
+  .theme-dark .bg-brand-gradient-soft .dash-muted,
+  .theme-dark .bg-brand-gradient-soft .text-muted {
+    color: #64748b;
+  }
+
+  .theme-dark .dash-light-panel h1,
+  .theme-dark .dash-light-panel h2,
+  .theme-dark .dash-light-panel h3,
+  .theme-dark .dash-light-panel h4,
+  .theme-dark .dash-light-panel p,
+  .theme-dark .dash-light-panel li,
+  .theme-dark .dash-light-panel label {
+    @apply text-navy;
+  }
+
+  .theme-dark .dash-light-panel .text-muted,
+  .theme-dark .dash-light-panel .dash-muted {
+    color: #64748b;
   }
 }
 

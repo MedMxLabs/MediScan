@@ -8,9 +8,11 @@ const initialState = {
     monthlySavings: 0,
   },
   adherenceTrend: [],
-  savingsAnalytics: [],
   recentSearches: [],
   remindersPreview: [],
+  medicinesToday: [],
+  cheapestPicks: [],
+  todayProgress: {},
   loading: false,
   error: null,
 };
@@ -22,9 +24,11 @@ const dashboardSlice = createSlice({
     setDashboardData: (state, action) => {
       state.widgets = action.payload.widgets || state.widgets;
       state.adherenceTrend = action.payload.adherenceTrend || state.adherenceTrend;
-      state.savingsAnalytics = action.payload.savingsAnalytics || state.savingsAnalytics;
       state.recentSearches = action.payload.recentSearches || [];
       state.remindersPreview = action.payload.remindersPreview || [];
+      state.medicinesToday = action.payload.medicinesToday || [];
+      state.cheapestPicks = action.payload.cheapestPicks || [];
+      state.todayProgress = action.payload.todayProgress || {};
     },
     setLoading: (state, action) => {
       state.loading = action.payload;

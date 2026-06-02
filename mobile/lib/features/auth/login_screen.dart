@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/back_navigation.dart';
+import '../../core/config.dart';
 import '../../core/l10n_ext.dart';
 import '../../core/theme.dart';
 import '../../providers/auth_provider.dart';
@@ -40,6 +42,29 @@ class _LoginScreenState extends State<LoginScreen> {
           ? 'Invalid email or password. Create an account if you are new.'
           : msg;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(friendly)));
+    }
+  }
+
+  Future<void> _googleSignIn() async {
+    if (AppConfig.googleClientId.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Google sign-in not configured (set GOOGLE_CLIENT_ID at build time).')),
+      );
+      return;
+    }
+    final auth = context.read<AuthProvider>();
+    try {
+      final google = GoogleSignIn(serverClientId: AppConfig.googleClientId, scopes: ['email']);
+      final account = await google.signIn();
+      final authData = await account?.authentication;
+      final idToken = authData?.idToken;
+      if (idToken == null) return;
+      final ok = await auth.loginWithGoogle(idToken);
+      if (!mounted) return;
+      if (ok) context.go('/home');
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
     }
   }
 
@@ -104,6 +129,18 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     const SizedBox(height: 16),
                     GradientButton(label: l10n.loginButton, onPressed: _submit, loading: auth.loading),
+                    if (AppConfig.googleClientId.isNotEmpty) ...[
+                      const SizedBox(height: 12),
+                      OutlinedButton(
+                        onPressed: auth.loading ? null : _googleSignIn,
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: Colors.white,
+                          side: BorderSide(color: Colors.white.withValues(alpha: 0.25)),
+                          minimumSize: const Size(double.infinity, 48),
+                        ),
+                        child: const Text('Continue with Google'),
+                      ),
+                    ],
                     const SizedBox(height: 28),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,

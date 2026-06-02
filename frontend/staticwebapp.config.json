@@ -1,7 +1,7 @@
 {
   "navigationFallback": {
     "rewrite": "/index.html",
-    "exclude": ["/assets/*", "/downloads/*"]
+    "exclude": ["/assets/*", "/downloads/*", "*.{css,js,png,jpg,jpeg,gif,svg,ico,woff,woff2}"]
   },
   "routes": [
     {
@@ -9,12 +9,14 @@
       "allowedRoles": ["anonymous"]
     }
   ],
-  "platform": {
-    "apiRuntime": "node:20"
-  },
   "globalHeaders": {
     "X-Content-Type-Options": "nosniff",
     "X-Frame-Options": "DENY",
-    "Referrer-Policy": "strict-origin-when-cross-origin"
+    "Referrer-Policy": "strict-origin-when-cross-origin",
+    "Permissions-Policy": "geolocation=(self), camera=(), microphone=()"
+  },
+  "mimeTypes": {
+    ".json": "application/json",
+    ".woff2": "font/woff2"
   }
 }

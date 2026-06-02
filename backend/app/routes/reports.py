@@ -12,6 +12,7 @@ from app.extensions import db
 from app.models.report import LabReport
 from app.services import ai_service, ocr_service
 from app.services import report_analysis_service
+from app.utils.responses import ok
 
 bp = Blueprint("reports", __name__, url_prefix="/api/reports")
 
@@ -28,9 +29,20 @@ def _analyze_upload():
         return jsonify({"status": "error", "message": "empty file"}), 400
 
     fname = secure_filename(f.filename or "labs") or "labs"
-    text, ocr_note = ocr_service.extract_document_text(raw, fname)
+    ocr_result = ocr_service.extract_document(raw, fname)
+    text = ocr_result.text
     if not text.strip():
-        return jsonify({"status": "error", "message": "OCR produced no text", "data": {"detail": ocr_note or ""}}), 422
+        return jsonify(
+            {
+                "status": "error",
+                "message": "OCR produced no text",
+                "data": {
+                    "detail": ocr_result.error or "",
+                    "ocr_engine": ocr_result.engine,
+                    "ocr_capabilities": ocr_service.scan_ocr_capabilities(),
+                },
+            }
+        ), 422
 
     rows = report_analysis_service.analyze_lab_text(text)
     enriched = report_analysis_service.enrich_rows(rows)
@@ -62,9 +74,55 @@ def _analyze_upload():
             "data": {
                 "report_id": lr.id,
                 "extracted_rows": enriched,
+                "extracted_text": text[:8000],
+                "extracted_text_preview": text[:1200],
                 "insights": insights,
-                "ocr_note": ocr_note,
+                "ocr_note": ocr_result.note,
+                "ocr_engine": ocr_result.engine,
+                "ocr_pipeline": ocr_result.pipeline,
             },
+        }
+    )
+
+
+@bp.get("")
+@jwt_required()
+def list_reports():
+    uid = int(get_jwt_identity())
+    rows = (
+        LabReport.query.filter_by(user_id=uid)
+        .order_by(LabReport.created_at.desc())
+        .limit(50)
+        .all()
+    )
+    return ok(
+        {
+            "reports": [
+                {
+                    "id": r.id,
+                    "extracted_rows": r.extracted_values or [],
+                    "insights": r.analysis_result or "",
+                    "created_at": r.created_at.isoformat(),
+                }
+                for r in rows
+            ]
+        }
+    )
+
+
+@bp.get("/<int:report_id>")
+@jwt_required()
+def get_report(report_id: int):
+    uid = int(get_jwt_identity())
+    r = LabReport.query.filter_by(id=report_id, user_id=uid).first()
+    if not r:
+        return jsonify({"status": "error", "message": "Report not found"}), 404
+    return ok(
+        {
+            "id": r.id,
+            "extracted_rows": r.extracted_values or [],
+            "insights": r.analysis_result or "",
+            "created_at": r.created_at.isoformat(),
         }
     )
 

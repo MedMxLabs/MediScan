@@ -10,6 +10,15 @@ class MedscanApi {
 
   Dio get _dio => _client.dio;
 
+  Future<Map<String, dynamic>> exchangeSupabaseSession(String accessToken) async {
+    final res = await _dio.post(
+      '/api/auth/supabase',
+      data: {'access_token': accessToken},
+      options: Options(extra: {'skipAuth': true}),
+    );
+    return Map<String, dynamic>.from(res.data as Map);
+  }
+
   Future<Map<String, dynamic>> login(String email, String password) async {
     final res = await _dio.post(
       '/api/auth/login',
@@ -213,6 +222,16 @@ class MedscanApi {
 
   Future<Map<String, dynamic>> getRefillAlerts() async {
     final res = await _dio.get('/api/refill/alerts');
+    return Map<String, dynamic>.from(_client.unwrap(res) as Map);
+  }
+
+  Future<Map<String, dynamic>> getAlternatives(String name) async {
+    final res = await _dio.get('/api/alternatives', queryParameters: {'name': name.trim()});
+    return Map<String, dynamic>.from(_client.unwrap(res) as Map);
+  }
+
+  Future<Map<String, dynamic>> getLabReports() async {
+    final res = await _dio.get('/api/reports');
     return Map<String, dynamic>.from(_client.unwrap(res) as Map);
   }
 

@@ -21,6 +21,7 @@ import Testimonials from '../components/landing/Testimonials';
 import FAQ from '../components/landing/FAQ';
 import LandingFooter from '../components/landing/LandingFooter';
 import LandingBleedBackground from '../components/landing/LandingBleedBackground';
+import BackedByMicrosoft from '../components/BackedByMicrosoft';
 
 const fadeUp = {
   hidden: { opacity: 0, y: 28 },
@@ -103,12 +104,12 @@ const LandingPage = () => {
           >
             <div className="grid lg:grid-cols-2 gap-10 lg:gap-12 xl:gap-14 2xl:gap-16 items-center">
               <div className="min-w-0">
-                <motion.div
-                  variants={fadeUp}
-                  className="inline-flex items-center gap-2.5 px-4 py-2.5 rounded-full bg-white/90 border border-teal/25 text-xs font-bold uppercase tracking-wider text-teal-dark mb-8 shadow-sm"
-                >
-                  <Sparkles size={14} className="text-lime" />
-                  AI-powered healthcare intelligence
+                <motion.div variants={fadeUp} className="flex flex-wrap items-center gap-3 mb-8">
+                  <BackedByMicrosoft pill />
+                  <div className="inline-flex items-center gap-2.5 px-4 py-2.5 rounded-full bg-white/90 border border-teal/25 text-xs font-bold uppercase tracking-wider text-teal-dark shadow-sm">
+                    <Sparkles size={14} className="text-lime" />
+                    AI-powered healthcare intelligence
+                  </div>
                 </motion.div>
 
                 <motion.h1
@@ -129,7 +130,7 @@ const LandingPage = () => {
                 </motion.p>
 
                 <motion.div variants={fadeUp} className="mt-10 flex flex-col sm:flex-row flex-wrap gap-4">
-                  <Link to="/dashboard/search">
+                  <Link to="/search">
                     <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
                       <Button variant="primary" size="lg" className="w-full sm:w-auto gap-2 shadow-brand">
                         <Search size={18} />
@@ -137,7 +138,7 @@ const LandingPage = () => {
                       </Button>
                     </motion.div>
                   </Link>
-                  <Link to="/dashboard/upload">
+                  <Link to="/upload">
                     <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
                       <Button
                         variant="outline"

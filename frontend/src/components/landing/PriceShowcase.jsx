@@ -41,7 +41,7 @@ const PriceShowcase = () => (
             This is what a real search looks like — pulled when you hit compare, not from a static spreadsheet we
             updated last quarter.
           </p>
-          <Link to="/dashboard/search" className="inline-block mt-6 sm:mt-8 w-full sm:w-auto">
+          <Link to="/search" className="inline-block mt-6 sm:mt-8 w-full sm:w-auto">
             <Button variant="primary" size="lg" className="gap-2 w-full sm:w-auto">
               Search a medicine <ArrowRight size={18} />
             </Button>

@@ -46,5 +46,54 @@ def affordability_insights(prices: list[dict[str, Any]]) -> dict[str, Any]:
 
 
 def suggest_alternatives(medicine_name: str, composition_hint: str | None = None) -> list[dict[str, Any]]:
-    """Legacy hook — returns empty; use rank_pharmacies_by_unit_price with scrape results instead."""
-    return []
+    """Catalog matches by composition or generic name (same logic as /api/alternatives)."""
+    from app.models.medicine import MedicineCatalog
+
+    name = (medicine_name or "").strip()
+    if not name:
+        return []
+
+    seed = MedicineCatalog.query.filter(MedicineCatalog.name.ilike(f"%{name}%")).first()
+    composition = composition_hint or (seed.composition if seed else None)
+    generic = seed.generic_name if seed else None
+    items: list[dict[str, Any]] = []
+
+    if composition:
+        rows = (
+            MedicineCatalog.query.filter(MedicineCatalog.composition.ilike(f"%{composition}%"))
+            .limit(10)
+            .all()
+        )
+        for r in rows:
+            if seed and r.id == seed.id:
+                continue
+            items.append(
+                {
+                    "id": r.id,
+                    "name": r.name,
+                    "generic_name": r.generic_name,
+                    "composition": r.composition,
+                    "manufacturer": r.manufacturer,
+                    "match_basis": "composition",
+                }
+            )
+    if not items and generic:
+        rows = (
+            MedicineCatalog.query.filter(MedicineCatalog.generic_name.ilike(f"%{generic}%"))
+            .limit(10)
+            .all()
+        )
+        for r in rows:
+            if seed and r.id == seed.id:
+                continue
+            items.append(
+                {
+                    "id": r.id,
+                    "name": r.name,
+                    "generic_name": r.generic_name,
+                    "composition": r.composition,
+                    "manufacturer": r.manufacturer,
+                    "match_basis": "generic_name",
+                }
+            )
+    return items

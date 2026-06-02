@@ -41,13 +41,31 @@ _PROXY_URL = os.environ.get("SCRAPER_PROXY_URL", "").strip()
 #  Shared helpers
 # ═══════════════════════════════════════════════════════════════
 
+def _unit_price_from_pack(price: float, pack: str) -> float | None:
+    """Derive per-tablet/capsule price when pack size mentions a count."""
+    if not pack or not price:
+        return None
+    m = re.search(
+        r"(\d+)\s*(?:tablets?|tabs?|capsules?|caps?|strips?|units?)\b",
+        pack,
+        re.I,
+    )
+    if not m:
+        m = re.search(r"(?:pack\s*of|contains?)\s*(\d+)", pack, re.I)
+    if m:
+        count = int(m.group(1))
+        if count > 0:
+            return round(price / count, 2)
+    return None
+
+
 def _make_result(pharmacy: str, name: str, price: float, url: str, pack: str = "") -> dict[str, Any]:
     return {
         "pharmacy_name": pharmacy,
         "medicine_display": name,
         "pack_size": pack,
         "price": price,
-        "unit_price": None,
+        "unit_price": _unit_price_from_pack(price, pack),
         "discount": "",
         "availability": "See pharmacy site",
         "url": url[:1024],
@@ -654,11 +672,48 @@ async def _run_httpx_scrapers(query: str, prices: list, errors: list) -> None:
     await asyncio.gather(*(run(l, f) for l, f in HTTPX_SCRAPERS))
 
 
-async def scrape_all_live_async(normalized_query: str, headless: bool = True) -> ScrapeOutcome:
-    prices_out: list[dict[str, Any]] = []
-    errors: list[dict[str, str]] = []
+_PW_READY: bool | None = None
+_PW_SKIP_MSG = "Playwright Chromium not installed. Run: python -m playwright install chromium"
 
-    httpx_task = asyncio.create_task(_run_httpx_scrapers(normalized_query, prices_out, errors))
+
+def _playwright_chromium_ready() -> bool:
+    """Return True when Playwright's Chromium binary is present on disk."""
+    global _PW_READY
+    if _PW_READY is not None:
+        return _PW_READY
+    if os.environ.get("SKIP_PLAYWRIGHT", "").lower() in ("1", "true", "yes"):
+        _PW_READY = False
+        return False
+    try:
+        from playwright.sync_api import sync_playwright
+
+        with sync_playwright() as pw:
+            exe = pw.chromium.executable_path
+            _PW_READY = bool(exe and os.path.isfile(exe))
+    except Exception as exc:
+        logger.warning("Playwright availability check failed: %s", exc)
+        _PW_READY = False
+    return bool(_PW_READY)
+
+
+def _normalize_playwright_error(exc: BaseException) -> str:
+    msg = str(exc)
+    if "Executable doesn't exist" in msg or "playwright install" in msg.lower():
+        return _PW_SKIP_MSG
+    return msg
+
+
+async def _run_playwright_scrapers(
+    normalized_query: str,
+    prices_out: list[dict[str, Any]],
+    errors: list[dict[str, str]],
+    *,
+    headless: bool,
+) -> None:
+    if not _playwright_chromium_ready():
+        for label, _ in PW_SCRAPERS:
+            errors.append({"pharmacy": label, "error": _PW_SKIP_MSG})
+        return
 
     sem = asyncio.Semaphore(MAX_CONCURRENT)
 
@@ -674,7 +729,7 @@ async def scrape_all_live_async(normalized_query: str, headless: bool = True) ->
                 raise
             except Exception as exc:
                 logger.warning("%s: %s", label, exc)
-                errors.append({"pharmacy": label, "error": str(exc)})
+                errors.append({"pharmacy": label, "error": _normalize_playwright_error(exc)})
             finally:
                 try:
                     await page.close()
@@ -690,42 +745,68 @@ async def scrape_all_live_async(normalized_query: str, headless: bool = True) ->
         if parsed.password:
             proxy_cfg["password"] = parsed.password
 
-    stealth_pw = _STEALTH.use_async(async_playwright())
-    async with stealth_pw as pw:
-        browser = await pw.chromium.launch(
-            headless=headless,
-            args=["--disable-blink-features=AutomationControlled", "--no-sandbox",
-                  "--disable-dev-shm-usage", "--disable-gpu"],
-            proxy=proxy_cfg,
-        )
-        context = await browser.new_context(
-            user_agent=random.choice(_USER_AGENTS),
-            locale="en-IN",
-            viewport={"width": 1366, "height": 896},
-            extra_http_headers={
-                "Accept-Language": "en-IN,en;q=0.9",
-                "sec-ch-ua": '"Chromium";v="147", "Google Chrome";v="147", "Not=A?Brand";v="24"',
-                "sec-ch-ua-mobile": "?0",
-                "sec-ch-ua-platform": '"Windows"',
-            },
-        )
-        try:
-            label_for_task: dict[asyncio.Task, str] = {}
-            for label, fn in PW_SCRAPERS:
-                t = asyncio.create_task(run_pw(label, fn, context))
-                label_for_task[t] = label
-            done, pending = await asyncio.wait(label_for_task.keys(), timeout=TOTAL_SCRAPE_TIMEOUT)
-            for t in pending:
-                t.cancel()
-                errors.append({"pharmacy": label_for_task.get(t, "?"), "error": f"Timed out ({TOTAL_SCRAPE_TIMEOUT}s)"})
-            if pending:
-                logger.info("PW timeout: %d done, %d cancelled", len(done), len(pending))
-                await asyncio.gather(*pending, return_exceptions=True)
-        finally:
-            await context.close()
-            await browser.close()
+    try:
+        stealth_pw = _STEALTH.use_async(async_playwright())
+        async with stealth_pw as pw:
+            browser = await pw.chromium.launch(
+                headless=headless,
+                args=[
+                    "--disable-blink-features=AutomationControlled",
+                    "--no-sandbox",
+                    "--disable-dev-shm-usage",
+                    "--disable-gpu",
+                ],
+                proxy=proxy_cfg,
+            )
+            context = await browser.new_context(
+                user_agent=random.choice(_USER_AGENTS),
+                locale="en-IN",
+                viewport={"width": 1366, "height": 896},
+                extra_http_headers={
+                    "Accept-Language": "en-IN,en;q=0.9",
+                    "sec-ch-ua": '"Chromium";v="147", "Google Chrome";v="147", "Not=A?Brand";v="24"',
+                    "sec-ch-ua-mobile": "?0",
+                    "sec-ch-ua-platform": '"Windows"',
+                },
+            )
+            try:
+                label_for_task: dict[asyncio.Task, str] = {}
+                for label, fn in PW_SCRAPERS:
+                    t = asyncio.create_task(run_pw(label, fn, context))
+                    label_for_task[t] = label
+                done, pending = await asyncio.wait(label_for_task.keys(), timeout=TOTAL_SCRAPE_TIMEOUT)
+                for t in pending:
+                    t.cancel()
+                    errors.append(
+                        {
+                            "pharmacy": label_for_task.get(t, "?"),
+                            "error": f"Timed out ({TOTAL_SCRAPE_TIMEOUT}s)",
+                        }
+                    )
+                if pending:
+                    logger.info("PW timeout: %d done, %d cancelled", len(done), len(pending))
+                    await asyncio.gather(*pending, return_exceptions=True)
+            finally:
+                await context.close()
+                await browser.close()
+    except Exception as exc:
+        err = _normalize_playwright_error(exc)
+        logger.warning("Playwright scrapers skipped: %s", err)
+        for label, _ in PW_SCRAPERS:
+            errors.append({"pharmacy": label, "error": err})
 
-    await httpx_task
+
+async def scrape_all_live_async(normalized_query: str, headless: bool = True) -> ScrapeOutcome:
+    prices_out: list[dict[str, Any]] = []
+    errors: list[dict[str, str]] = []
+
+    httpx_task = asyncio.create_task(_run_httpx_scrapers(normalized_query, prices_out, errors))
+    pw_task = asyncio.create_task(
+        _run_playwright_scrapers(normalized_query, prices_out, errors, headless=headless)
+    )
+
+    await asyncio.gather(httpx_task, pw_task)
+
     prices_out.sort(key=lambda r: r.get("price", 0))
     return ScrapeOutcome(prices=prices_out, errors=errors)
 
@@ -742,3 +823,9 @@ def run_live_scrape(normalized_query: str, *, headless: bool | None = None) -> S
             return loop.run_until_complete(scrape_all_live_async(normalized_query, headless=gh))
         finally:
             loop.close()
+    except Exception as exc:
+        logger.exception("run_live_scrape failed for %r", normalized_query)
+        return ScrapeOutcome(
+            prices=[],
+            errors=[{"pharmacy": "scraper", "error": _normalize_playwright_error(exc)}],
+        )

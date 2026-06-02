@@ -5,7 +5,7 @@ import PageShell from '../components/dashboard/PageShell';
 import PageHeader from '../components/dashboard/PageHeader';
 import DashPanel from '../components/dashboard/DashPanel';
 
-const AiAssistantPage = () => {
+const AiAssistantPage = ({ publicMode = false }) => {
   const [messages, setMessages] = useState([
     {
       id: 1,
@@ -54,10 +54,20 @@ const AiAssistantPage = () => {
         title="AI Health Assistant"
         subtitle="Informational only — not a substitute for your doctor."
         icon={MessageSquare}
+        lightSurface={publicMode}
       />
 
-      <DashPanel className="flex-1 flex flex-col min-h-[28rem] lg:min-h-[32rem]" noPadding bodyClassName="flex flex-col flex-1 min-h-0 p-0">
-        <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-5 bg-slate-50/50 min-h-0">
+      <DashPanel
+        lightSurface={publicMode}
+        className={`flex-1 flex flex-col min-h-[28rem] lg:min-h-[32rem]${publicMode ? ' dna-pattern border-violet/15' : ''}`}
+        noPadding
+        bodyClassName="flex flex-col flex-1 min-h-0 p-0"
+      >
+        <div
+          className={`flex-1 overflow-y-auto p-4 sm:p-6 space-y-5 min-h-0 ${
+            publicMode ? 'bg-slate-50/50' : 'bg-slate-50/50 dark:bg-slate-900/30'
+          }`}
+        >
           {messages.map((msg) => (
             <div
               key={msg.id}
@@ -75,8 +85,10 @@ const AiAssistantPage = () => {
                   msg.sender === 'user'
                     ? 'bg-navy text-white rounded-tr-md'
                     : msg.isError
-                      ? 'bg-red-50 text-red-800 border border-red-100 rounded-tl-md'
-                      : 'bg-white text-navy border border-slate-200 rounded-tl-md shadow-sm'
+                      ? publicMode
+                        ? 'bg-red-50 text-red-800 border border-red-100 rounded-tl-md'
+                        : 'bg-red-50 dark:bg-red-950/40 text-red-800 dark:text-red-300 border border-red-100 dark:border-red-900 rounded-tl-md'
+                      : 'dash-surface dash-text rounded-tl-md shadow-sm'
                 }`}
               >
                 {msg.isError && <AlertCircle size={14} className="inline mr-1.5 -mt-0.5" />}
@@ -89,7 +101,7 @@ const AiAssistantPage = () => {
               <div className="w-9 h-9 rounded-full bg-brand-gradient text-white flex items-center justify-center shrink-0">
                 <Bot size={16} />
               </div>
-              <div className="px-4 py-3 rounded-2xl bg-white border border-slate-200 rounded-tl-md flex gap-1.5">
+              <div className="px-4 py-3 rounded-2xl dash-surface rounded-tl-md flex gap-1.5">
                 <span className="w-2 h-2 bg-teal/50 rounded-full animate-bounce" />
                 <span className="w-2 h-2 bg-teal/50 rounded-full animate-bounce [animation-delay:0.15s]" />
                 <span className="w-2 h-2 bg-teal/50 rounded-full animate-bounce [animation-delay:0.3s]" />
@@ -99,14 +111,20 @@ const AiAssistantPage = () => {
           <div ref={messagesEndRef} />
         </div>
 
-        <div className="p-4 sm:p-5 border-t border-slate-100 bg-white shrink-0">
+        <div
+          className={`p-4 sm:p-5 border-t dash-surface shrink-0 ${
+            publicMode ? 'border-slate-100' : 'border-slate-100 dark:border-slate-700'
+          }`}
+        >
           <form onSubmit={handleSend} className="relative flex items-center">
             <input
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder="Ask about medicines, doses, or lab terms…"
-              className="w-full pl-4 pr-14 py-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal/30 focus:border-teal text-sm text-navy"
+              className={`dash-input py-3.5 pl-4 pr-14 ${
+                publicMode ? 'bg-slate-50' : 'bg-slate-50 dark:bg-slate-900/50'
+              }`}
               disabled={isLoading}
             />
             <button
@@ -118,7 +136,7 @@ const AiAssistantPage = () => {
               <Send size={18} />
             </button>
           </form>
-          <p className="text-center text-xs text-muted mt-2">AI can make mistakes. Consult a doctor for medical decisions.</p>
+          <p className="text-center text-xs dash-muted mt-2">AI can make mistakes. Consult a doctor for medical decisions.</p>
         </div>
       </DashPanel>
     </PageShell>

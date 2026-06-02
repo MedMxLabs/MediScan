@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import json
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from flask import Blueprint, request
 from flask_jwt_extended import get_jwt_identity, jwt_required
@@ -41,28 +41,58 @@ def _build_dashboard(uid: int):
     total_rx = Prescription.query.filter_by(user_id=uid).count()
     tracked = Reminder.query.filter_by(user_id=uid, status="active").count()
     day_start = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+    day_end = day_start + timedelta(days=1)
     doses_today = (
         AdherenceLog.query.filter_by(user_id=uid).filter(AdherenceLog.taken_at >= day_start).count()
     )
+    medicines_today = [
+        {
+            "id": r.id,
+            "medicine_name": r.medicine_name,
+            "dose": r.dose,
+            "next_trigger": r.next_trigger.isoformat() if r.next_trigger else None,
+        }
+        for r in upcoming
+        if r.next_trigger and day_start <= r.next_trigger < day_end
+    ]
     logs_all = AdherenceLog.query.filter_by(user_id=uid).limit(400).all()
     taken = sum(1 for x in logs_all if x.status == "taken")
     missed = sum(1 for x in logs_all if x.status == "missed")
-    denom = taken + missed
+    skipped = sum(1 for x in logs_all if x.status == "skipped")
+    denom = taken + missed + skipped
     adherence_pct = round(100.0 * taken / denom, 1) if denom else 0.0
+
+    today_logs = [x for x in logs_all if x.taken_at >= day_start and x.taken_at < day_end]
+    today_taken = sum(1 for x in today_logs if x.status == "taken")
+    today_missed = sum(1 for x in today_logs if x.status == "missed")
+    today_skipped = sum(1 for x in today_logs if x.status == "skipped")
 
     recent = (
         db.session.query(SearchHistory).filter_by(user_id=uid).order_by(SearchHistory.created_at.desc()).limit(8).all()
     )
 
-    # Monthly savings estimate from recent search summaries (best-effort)
+    # Monthly savings estimate + cheapest picks from recent search summaries
     savings_hint = 0.0
+    cheapest_picks: list[dict] = []
     for s in recent:
         summ = _summary_as_dict(s.summary_json)
         ch = summ.get("cheapest") if isinstance(summ.get("cheapest"), dict) else {}
         try:
             savings_hint += float(ch.get("price") or 0) * 0.05
         except (TypeError, ValueError):
-            continue
+            pass
+        if ch and ch.get("pharmacy_name") and len(cheapest_picks) < 6:
+            cheapest_picks.append(
+                {
+                    "query": s.query,
+                    "medicine": summ.get("medicine_display") or s.query,
+                    "pharmacy_name": ch.get("pharmacy_name"),
+                    "price": ch.get("price"),
+                    "unit_price": ch.get("unit_price"),
+                    "url": ch.get("url"),
+                    "searched_at": s.created_at.isoformat() if s.created_at else None,
+                }
+            )
 
     return {
         "reminders_preview": [
@@ -90,8 +120,14 @@ def _build_dashboard(uid: int):
             }
             for x in recent
         ],
-        "medicines_today": [],
-        "adherence_preview": {"taken": taken, "missed": missed},
+        "medicines_today": medicines_today,
+        "cheapest_picks": cheapest_picks,
+        "adherence_preview": {"taken": taken, "missed": missed, "skipped": skipped},
+        "today_progress": {
+            "taken": today_taken,
+            "missed": today_missed,
+            "skipped": today_skipped,
+        },
     }
 
 

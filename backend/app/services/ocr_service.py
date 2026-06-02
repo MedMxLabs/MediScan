@@ -1,95 +1,216 @@
-"""OpenCV preprocessing + Tesseract OCR; PDF text + first-page raster fallback via PyMuPDF."""
+"""
+Multi-engine document OCR for prescriptions and lab reports.
+
+Pipeline:
+  Azure Document Intelligence (prebuilt-read) when configured
+  PDF  → PyMuPDF embedded text → pdfplumber → Azure DI → page raster → OCR chain
+  Image → Azure DI → OpenCV preprocess → Tesseract → RapidOCR
+"""
 from __future__ import annotations
 
-import io
 import os
-from typing import Tuple
+from dataclasses import dataclass
 
 import numpy as np
-from PIL import Image
 
-try:
-    import cv2
-except ImportError:
-    cv2 = None
+from app.services import document_intelligence_service as azure_di
+from app.services import ocr_engines as engines
 
-try:
-    import fitz  # PyMuPDF
-except ImportError:
-    fitz = None
+MIN_USABLE_TEXT = int(os.environ.get("MEDSCAN_OCR_MIN_CHARS", "12"))
 
 
-def preprocess_numpy(arr: np.ndarray) -> np.ndarray:
-    if cv2 is None:
-        return arr
-    gray = cv2.cvtColor(arr, cv2.COLOR_RGB2GRAY)
-    blur = cv2.GaussianBlur(gray, (3, 3), 0)
-    _, th = cv2.threshold(blur, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
-    return cv2.cvtColor(th, cv2.COLOR_GRAY2RGB)
+def normalize_ocr_text(text: str) -> str:
+    """Fix common OCR spacing issues before NLP / lab parsing."""
+    import re
+
+    t = text or ""
+    t = re.sub(r"([A-Za-z])(\d)", r"\1 \2", t)
+    t = re.sub(r"(\d)(mg|ml|gm|mcg|iu|g)\b", r"\1 \2", t, flags=re.I)
+    t = re.sub(r"[ \t]+", " ", t)
+    return t.strip()
 
 
-def image_bytes_to_rgb(data: bytes) -> np.ndarray:
-    im = Image.open(io.BytesIO(data)).convert("RGB")
-    return np.array(im)
+@dataclass
+class DocumentOcrResult:
+    text: str
+    engine: str = "none"
+    pipeline: str = ""
+    error: str | None = None
+    stages: list[str] | None = None
+
+    @property
+    def note(self) -> str | None:
+        if self.error:
+            return self.error
+        if self.engine and self.engine != "none":
+            parts = [f"engine={self.engine}"]
+            if self.pipeline:
+                parts.append(f"pipeline={self.pipeline}")
+            return "; ".join(parts)
+        return None
 
 
-def _ocr_pil(pil: Image.Image) -> Tuple[str, str | None]:
+def scan_ocr_capabilities() -> dict:
+    caps = engines.scan_capabilities()
+    caps.update(azure_di.scan_capability())
+    caps["ready"] = (
+        caps.get("azure_document_intelligence")
+        or caps.get("rapidocr")
+        or caps.get("tesseract")
+        or caps.get("pymupdf")
+    )
+    return caps
+
+
+def _merge_text(*chunks: str) -> str:
+    seen: set[str] = set()
+    lines: list[str] = []
+    for chunk in chunks:
+        for ln in (chunk or "").splitlines():
+            s = ln.strip()
+            if not s or s in seen:
+                continue
+            seen.add(s)
+            lines.append(s)
+    return "\n".join(lines).strip()
+
+
+def _is_usable(text: str) -> bool:
+    return len((text or "").strip()) >= MIN_USABLE_TEXT
+
+
+def _try_azure_di(data: bytes, filename: str, stages: list[str]) -> DocumentOcrResult | None:
+    if not azure_di.is_available():
+        return None
+    stages.append("azure_prebuilt_read")
+    di = azure_di.analyze_document(data, filename)
+    if di.text and _is_usable(di.text):
+        return DocumentOcrResult(
+            text=normalize_ocr_text(di.text),
+            engine=di.engine,
+            pipeline="azure_read",
+            stages=stages.copy(),
+        )
+    if di.error:
+        stages.append(f"azure_error:{di.error[:80]}")
+    return None
+
+
+def ocr_rgb_array(arr: np.ndarray) -> DocumentOcrResult:
+    result = engines.ocr_image_array(arr)
+    if result.text:
+        return DocumentOcrResult(
+            text=normalize_ocr_text(result.text),
+            engine=result.engine,
+            pipeline="image_ocr",
+            stages=["opencv", result.engine],
+        )
+    return DocumentOcrResult(
+        text="",
+        engine=result.engine or "none",
+        pipeline="image_ocr",
+        error=result.error or "OCR produced no text",
+        stages=["opencv", result.engine or "none"],
+    )
+
+
+def extract_text_from_image_bytes(image_bytes: bytes, filename: str = "") -> DocumentOcrResult:
+    stages: list[str] = []
+    azure_result = _try_azure_di(image_bytes, filename, stages)
+    if azure_result:
+        return azure_result
+
     try:
-        import pytesseract
-    except ImportError:
-        return "", "pytesseract not installed"
+        arr = engines.bytes_to_rgb_array(image_bytes)
+    except ValueError as exc:
+        return DocumentOcrResult(
+            text="",
+            error=str(exc),
+            pipeline="image_ocr",
+            stages=stages + ["invalid_image"],
+        )
 
-    tesseract_cmd = os.environ.get("TESSERACT_CMD")
-    if tesseract_cmd:
-        pytesseract.pytesseract.tesseract_cmd = tesseract_cmd
-
-    try:
-        text = pytesseract.image_to_string(pil, lang=os.environ.get("TESSERACT_LANG", "eng"))
-        return (text or "").strip(), None
-    except Exception as exc:  # noqa: BLE001
-        return "", str(exc)
-
-
-def extract_text_from_image_bytes(image_bytes: bytes) -> tuple[str, str | None]:
-    arr = image_bytes_to_rgb(image_bytes)
-    processed = preprocess_numpy(arr)
-    pil = Image.fromarray(processed)
-    return _ocr_pil(pil)
+    local = ocr_rgb_array(arr)
+    local.stages = stages + (local.stages or [])
+    return local
 
 
-def extract_text_from_pdf_bytes(data: bytes) -> tuple[str, str | None]:
-    if fitz is None:
-        return "", "PyMuPDF (pymupdf) not installed"
-    try:
-        doc = fitz.open(stream=data, filetype="pdf")
-    except Exception as exc:  # noqa: BLE001
-        return "", f"Cannot open PDF: {exc}"
+def extract_text_from_pdf_bytes(data: bytes, filename: str = "") -> DocumentOcrResult:
+    stages: list[str] = []
+    embedded_parts: list[str] = []
 
-    chunks: list[str] = []
-    for i in range(min(len(doc), 5)):
-        chunks.append(doc[i].get_text() or "")
-    embedded = "\n".join(chunks).strip()
-    if len(embedded) > 40:
-        return embedded, None
+    pm = engines.extract_pdf_embedded_pymupdf(data)
+    stages.append(pm.engine)
+    if pm.text:
+        embedded_parts.append(pm.text)
 
-    if len(doc) < 1:
-        return "", "Empty PDF"
-    try:
-        pix = doc[0].get_pixmap(dpi=220, alpha=False)
-        png_bytes = pix.tobytes("png")
-    except Exception as exc:  # noqa: BLE001
-        return "", f"PDF rasterize failed: {exc}"
-    return extract_text_from_image_bytes(png_bytes)
+    pl = engines.extract_pdf_embedded_pdfplumber(data)
+    if pl.engine not in stages:
+        stages.append(pl.engine)
+    if pl.text:
+        embedded_parts.append(pl.text)
+
+    merged = _merge_text(*embedded_parts)
+    if _is_usable(merged):
+        if pm.text and pl.text:
+            engine = "pdf_embedded"
+        elif pm.text:
+            engine = "pymupdf_embedded"
+        else:
+            engine = "pdfplumber_embedded"
+        return DocumentOcrResult(
+            text=normalize_ocr_text(merged),
+            engine=engine,
+            pipeline="pdf_text",
+            stages=stages,
+        )
+
+    azure_result = _try_azure_di(data, filename, stages)
+    if azure_result:
+        return azure_result
+
+    ocr_chunks: list[str] = []
+    used_engine = "none"
+    last_err: str | None = None
+    for idx, arr in enumerate(engines.rasterize_pdf_pages(data)):
+        stages.append(f"page_{idx}_raster")
+        page_result = ocr_rgb_array(arr)
+        stages.extend(page_result.stages or [])
+        if page_result.text:
+            ocr_chunks.append(page_result.text)
+            used_engine = page_result.engine
+        if page_result.error:
+            last_err = page_result.error
+
+    ocr_merged = _merge_text(*ocr_chunks)
+    if _is_usable(ocr_merged):
+        return DocumentOcrResult(
+            text=normalize_ocr_text(ocr_merged),
+            engine=used_engine,
+            pipeline="pdf_ocr",
+            stages=stages,
+        )
+
+    return DocumentOcrResult(
+        text="",
+        engine=used_engine,
+        pipeline="pdf_ocr",
+        error=last_err or pm.error or "PDF OCR produced no text",
+        stages=stages,
+    )
 
 
-def extract_document_text(data: bytes, filename: str = "") -> tuple[str, str | None]:
-    """
-    PDF (embedded text or OCR on rendered page) or image OCR. No synthetic prescription text.
-    """
+def extract_document(data: bytes, filename: str = "") -> DocumentOcrResult:
     if not data:
-        return "", "empty file"
+        return DocumentOcrResult(text="", error="empty file")
     fn = (filename or "").lower()
     is_pdf = data[:5] == b"%PDF-" or data[:4] == b"%PDF" or fn.endswith(".pdf")
     if is_pdf:
-        return extract_text_from_pdf_bytes(data)
-    return extract_text_from_image_bytes(data)
+        return extract_text_from_pdf_bytes(data, filename)
+    return extract_text_from_image_bytes(data, filename)
+
+
+def extract_document_text(data: bytes, filename: str = "") -> tuple[str, str | None]:
+    """Backward-compatible helper returning (text, note)."""
+    result = extract_document(data, filename)
+    return result.text, result.note or result.error

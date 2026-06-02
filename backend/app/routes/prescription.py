@@ -1,4 +1,4 @@
-"""Prescription upload, OCR + NLP parsing."""
+"""Prescription upload — OCR + AI medicine-name extraction (prices on demand via /api/compare)."""
 from __future__ import annotations
 
 import hashlib
@@ -11,10 +11,9 @@ from werkzeug.utils import secure_filename
 
 from app.extensions import db
 from app.models.prescription import Prescription
-from app.services import nlp_service, ocr_service
-from app.services.scraper_service import run_live_scrape
+from app.services import ocr_service
+from app.services.medicine_extract_service import extract_medicine_names
 from app.utils.redis_cache import cache_key_ocr, get_cache, set_cache
-from app.utils.validators import normalize_medicine_query
 
 bp = Blueprint("prescription", __name__, url_prefix="/api/prescription")
 
@@ -52,17 +51,23 @@ def _run_upload():
         return jsonify({"status": "success", "data": cached}), 200
 
     fname = secure_filename(f.filename or "rx") or "rx"
-    text, err = ocr_service.extract_document_text(raw, fname)
+    ocr_result = ocr_service.extract_document(raw, fname)
+    text = ocr_result.text
     if not text.strip():
         return jsonify(
             {
                 "status": "error",
                 "message": "OCR produced no text",
-                "data": {"detail": err or "Configure Tesseract / PyMuPDF."},
+                "data": {
+                    "detail": ocr_result.error or "Install Tesseract or use RapidOCR (included in requirements).",
+                    "ocr_engine": ocr_result.engine,
+                    "ocr_capabilities": ocr_service.scan_ocr_capabilities(),
+                },
             }
         ), 422
 
-    medicines = nlp_service.parse_medicines_from_text(text)
+    extracted = extract_medicine_names(text)
+    medicines = extracted.medicines
 
     folder = _ensure_upload_folder()
     ext = os.path.splitext(fname)[1].lower()
@@ -81,27 +86,15 @@ def _run_upload():
     db.session.add(rec)
     db.session.commit()
 
-    comparisons = []
-    for m in medicines[:10]:
-        nq = normalize_medicine_query(m.get("name") or "")
-        if not nq:
-            continue
-        oc = run_live_scrape(nq)
-        comparisons.append(
-            {
-                "medicine": m,
-                "prices": oc.prices,
-                "scrape_errors": oc.errors,
-                "comparison_ok": len(oc.prices) > 0,
-            }
-        )
-
     payload = {
         "prescription_id": rec.id,
         "extracted_text": text[:8000],
         "medicines": medicines,
-        "comparisons": comparisons,
-        "ocr_note": err,
+        "medicine_names": extracted.medicine_names,
+        "extraction_engine": extracted.extraction_engine,
+        "ocr_note": ocr_result.note,
+        "ocr_engine": ocr_result.engine,
+        "ocr_pipeline": ocr_result.pipeline,
         "cache_hit": False,
     }
     set_cache(ck, {k: v for k, v in payload.items() if k != "cache_hit"})

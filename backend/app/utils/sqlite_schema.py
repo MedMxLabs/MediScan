@@ -9,6 +9,7 @@ logger = logging.getLogger(__name__)
 
 # Columns on User that may be missing on older medscan.db files
 _USER_ALTER: list[tuple[str, str]] = [
+    ("supabase_id", "VARCHAR(36)"),
     ("name", "VARCHAR(255)"),
     ("phone", "VARCHAR(32)"),
     ("date_of_birth", "VARCHAR(16)"),

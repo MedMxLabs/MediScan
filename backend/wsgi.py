@@ -1,13 +1,9 @@
 """WSGI entrypoint for Gunicorn, uWSGI, and other production servers."""
 from __future__ import annotations
 
-from pathlib import Path
+from load_env import load_app_env
 
-from dotenv import load_dotenv
-
-# Resolve .env relative to this file so imports work regardless of process cwd
-_backend_dir = Path(__file__).resolve().parent
-load_dotenv(_backend_dir / ".env")
+load_app_env()
 
 from app import create_app
 

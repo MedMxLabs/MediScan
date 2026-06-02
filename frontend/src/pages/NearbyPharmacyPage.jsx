@@ -77,12 +77,8 @@ const NearbyPharmacyPage = () => {
           {pos ? 'Update location' : 'Use my location'}
         </Button>
         <div className="flex flex-col">
-          <label className="text-[12px] font-bold text-gray-500 mb-1">Radius</label>
-          <select
-            value={radius}
-            onChange={(e) => setRadius(Number(e.target.value))}
-            className="px-4 py-2.5 border border-gray-200 rounded-xl text-sm bg-white"
-          >
+          <label className="dash-form-label mb-1">Radius</label>
+          <select value={radius} onChange={(e) => setRadius(Number(e.target.value))} className="dash-input py-2.5">
             <option value={1000}>1 km</option>
             <option value={2000}>2 km</option>
             <option value={5000}>5 km</option>
@@ -98,7 +94,7 @@ const NearbyPharmacyPage = () => {
       </DashPanel>
 
       {err && (
-        <div className="rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-800">
+        <div className="rounded-xl dash-alert-error px-4 py-3 text-sm">
           {err}
         </div>
       )}
@@ -119,14 +115,11 @@ const NearbyPharmacyPage = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {results.map((p) => (
-          <div
-            key={p.id}
-            className="rounded-2xl border border-slate-200/90 bg-white/95 backdrop-blur-sm shadow-sm p-5 flex flex-col hover-lift"
-          >
+          <div key={p.id} className="dash-surface rounded-2xl shadow-sm p-5 flex flex-col hover-lift">
             <div className="flex items-start justify-between gap-3">
               <div>
-                <h3 className="font-bold text-navy">{p.name}</h3>
-                <p className="text-xs text-gray-500 mt-0.5">{metres(p.distance_m)} away</p>
+                <h3 className="font-bold dash-text">{p.name}</h3>
+                <p className="text-xs dash-muted mt-0.5">{metres(p.distance_m)} away</p>
               </div>
               <a
                 href={p.directions_url}
@@ -138,21 +131,21 @@ const NearbyPharmacyPage = () => {
               </a>
             </div>
             {p.address && (
-              <p className="text-sm text-gray-600 mt-2 flex items-start gap-1.5">
-                <MapPin size={14} className="text-gray-400 mt-0.5 shrink-0" />
+              <p className="text-sm dash-muted mt-2 flex items-start gap-1.5">
+                <MapPin size={14} className="opacity-60 mt-0.5 shrink-0" />
                 <span>{p.address}</span>
               </p>
             )}
             {p.phone && (
-              <p className="text-sm text-gray-600 mt-1 flex items-center gap-1.5">
-                <Phone size={14} className="text-gray-400" />
-                <a href={`tel:${p.phone}`} className="hover:underline">
+              <p className="text-sm dash-muted mt-1 flex items-center gap-1.5">
+                <Phone size={14} className="opacity-60" />
+                <a href={`tel:${p.phone}`} className="hover:underline dash-text">
                   {p.phone}
                 </a>
               </p>
             )}
             {p.opening_hours && (
-              <p className="text-xs text-gray-500 mt-2">Hours: {p.opening_hours}</p>
+              <p className="text-xs dash-muted mt-2">Hours: {p.opening_hours}</p>
             )}
             <a
               href={p.osm_url}
@@ -167,13 +160,13 @@ const NearbyPharmacyPage = () => {
       </div>
 
       {!loading && pos && results.length === 0 && (
-        <div className="text-center text-sm text-gray-500 py-12 border border-dashed rounded-2xl">
+        <div className="text-center text-sm dash-muted py-12 dash-inset-dashed">
           No pharmacies returned in this radius. Try increasing the radius.
         </div>
       )}
 
       {!pos && (
-        <div className="text-center text-sm text-gray-500 py-12 border border-dashed rounded-2xl">
+        <div className="text-center text-sm dash-muted py-12 dash-inset-dashed">
           Enable location to find pharmacies nearby.
         </div>
       )}

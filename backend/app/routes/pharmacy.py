@@ -90,3 +90,91 @@ def nearby():
         )
     items.sort(key=lambda r: r["distance_m"])
     return ok({"center": {"lat": lat, "lng": lng}, "radius_m": radius, "results": items})
+
+
+# PMBJP / Jan Aushadhi Kendra sample coordinates (future: dedicated PMBJP API)
+_JAN_AUSHADHI_SAMPLES = [
+    {"name": "Jan Aushadhi Kendra — Sample Store A", "lat_offset": 0.004, "lng_offset": -0.003},
+    {"name": "Jan Aushadhi Kendra — Sample Store B", "lat_offset": -0.005, "lng_offset": 0.002},
+    {"name": "Jan Aushadhi Kendra — Sample Store C", "lat_offset": 0.002, "lng_offset": 0.006},
+]
+
+
+@bp.get("/jan-aushadhi/nearby")
+@jwt_required(optional=True)
+def jan_aushadhi_nearby():
+    """
+    Jan Aushadhi locator (future feature scaffold).
+    Returns PMBJP-style kendras near lat/lng plus any OSM nodes tagged jan_aushadhi.
+    """
+    try:
+        lat = float(request.args.get("lat", ""))
+        lng = float(request.args.get("lng", ""))
+    except ValueError:
+        return err("lat and lng query params required", status=400)
+    radius = max(500, min(int(request.args.get("radius", 5000)), 15_000))
+
+    results: list[dict] = []
+    for i, sample in enumerate(_JAN_AUSHADHI_SAMPLES):
+        slat = lat + sample["lat_offset"]
+        slng = lng + sample["lng_offset"]
+        dist = round(_haversine_m(lat, lng, slat, slng))
+        if dist <= radius:
+            results.append(
+                {
+                    "id": f"sample-{i}",
+                    "name": sample["name"],
+                    "lat": slat,
+                    "lng": slng,
+                    "distance_m": dist,
+                    "type": "jan_aushadhi",
+                    "future_feature": True,
+                    "directions_url": f"https://www.google.com/maps/dir/?api=1&destination={slat},{slng}",
+                    "note": "Sample PMBJP locator — replace with official Jan Aushadhi API when available.",
+                }
+            )
+
+    # Also try OSM for real tagged pharmacies (best-effort)
+    import requests
+
+    query = f"""
+    [out:json][timeout:20];
+    (
+      node["healthcare"="pharmacy"]["operator"~"Jan Aushadhi|PMBJP",i](around:{radius},{lat},{lng});
+      node["name"~"Jan Aushadhi",i](around:{radius},{lat},{lng});
+    );
+    out center 15;
+    """
+    try:
+        r = requests.post(_OVERPASS_URL, data={"data": query}, timeout=15)
+        r.raise_for_status()
+        for el in r.json().get("elements", [])[:15]:
+            plat = el.get("lat") or (el.get("center") or {}).get("lat")
+            plng = el.get("lon") or (el.get("center") or {}).get("lon")
+            if plat is None or plng is None:
+                continue
+            tags = el.get("tags") or {}
+            results.append(
+                {
+                    "id": el.get("id"),
+                    "name": tags.get("name") or "Jan Aushadhi Kendra",
+                    "lat": float(plat),
+                    "lng": float(plng),
+                    "distance_m": round(_haversine_m(lat, lng, float(plat), float(plng))),
+                    "type": "jan_aushadhi",
+                    "address": tags.get("addr:full") or tags.get("addr:street") or "",
+                    "directions_url": f"https://www.google.com/maps/dir/?api=1&destination={plat},{plng}",
+                }
+            )
+    except Exception as exc:
+        logger.debug("jan aushadhi overpass skipped: %s", exc)
+
+    results.sort(key=lambda x: x["distance_m"])
+    return ok(
+        {
+            "center": {"lat": lat, "lng": lng},
+            "radius_m": radius,
+            "future_feature": True,
+            "results": results[:20],
+        }
+    )
