@@ -14,9 +14,11 @@ Mobile may still use legacy endpoints until migrated.
 
 | Setting | Local dev | Production |
 |---------|-----------|--------------|
-| Site URL | `http://localhost:5173` | `https://icy-pond-06a17d300.7.azurestaticapps.net` |
-| Redirect URLs | `http://localhost:5173/auth/callback` | `https://icy-pond-06a17d300.7.azurestaticapps.net/auth/callback` |
-| | `http://localhost:5173/reset-password` | `https://…/reset-password` |
+| **Site URL** | `http://localhost:5173` | `https://icy-pond-06a17d300.7.azurestaticapps.net` |
+| **Redirect URLs** | `http://localhost:5173/auth/callback` | `https://icy-pond-06a17d300.7.azurestaticapps.net/auth/callback` |
+| | `http://localhost:5173/reset-password` | `https://icy-pond-06a17d300.7.azurestaticapps.net/reset-password` |
+
+> **Google redirects to `localhost:3000`?** Your Supabase **Site URL** is wrong (often `http://localhost:3000`). Change **Site URL** to your live SWA URL above and add the production `/auth/callback` to **Redirect URLs**. Remove `localhost:3000` unless you actually run the app on port 3000.
 
 ### Enable Google (fixes `Unsupported provider: provider is not enabled`)
 

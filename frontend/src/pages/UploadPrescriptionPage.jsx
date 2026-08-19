@@ -61,6 +61,7 @@ const UploadPrescriptionPage = ({ publicMode = false }) => {
   const [comparing, setComparing] = useState({});
 
   const fileInputRef = useRef(null);
+  const cameraInputRef = useRef(null);
 
 
 
@@ -240,14 +241,13 @@ const UploadPrescriptionPage = ({ publicMode = false }) => {
   const extractionLabels = {
     smart_nlp: 'Smart filter (Rx patterns + medicine catalog)',
     'smart_nlp+catalog_compact': 'Smart filter + OCR catalog recovery',
-    'smart_nlp+llm': 'Smart filter + AI assist',
-    'azure_openai+smart_nlp': 'Azure OpenAI filter + smart scan',
-    azure_openai: 'Azure OpenAI medicine filter',
+    'smart_nlp+llm': 'Smart filter + AI accuracy pass',
+    'smart_nlp+catalog_compact+llm': 'Smart filter + catalog + AI pass',
+    llm_filter: 'AI medicine filter',
     combination_formulation: 'Combination formulation detection',
     'catalog_compact+combination': 'OCR catalog + combination merge',
     'smart_nlp+catalog_compact+combination': 'Smart scan + combination merge',
     catalog_compact: 'OCR catalog recovery',
-    llm: 'AI medicine extraction',
   };
   const extractionLabel =
     extractionLabels[result?.extraction_engine] ||
@@ -314,6 +314,22 @@ const UploadPrescriptionPage = ({ publicMode = false }) => {
 
             />
 
+            <input
+
+              type="file"
+
+              ref={cameraInputRef}
+
+              onChange={handleFileChange}
+
+              accept="image/*"
+
+              capture="environment"
+
+              className="hidden"
+
+            />
+
             {!file ? (
 
               <>
@@ -328,23 +344,49 @@ const UploadPrescriptionPage = ({ publicMode = false }) => {
 
                 <p className="text-sm dash-muted mb-6">or</p>
 
-                <Button
+                <div className="flex flex-col sm:flex-row gap-3 w-full max-w-xs">
 
-                  variant="outline"
+                  <Button
 
-                  onClick={(e) => {
+                    variant="outline"
 
-                    e.stopPropagation();
+                    className="min-h-11 flex-1"
 
-                    fileInputRef.current?.click();
+                    onClick={(e) => {
 
-                  }}
+                      e.stopPropagation();
 
-                >
+                      fileInputRef.current?.click();
 
-                  Choose File
+                    }}
 
-                </Button>
+                  >
+
+                    Choose file
+
+                  </Button>
+
+                  <Button
+
+                    variant="outline"
+
+                    className="min-h-11 flex-1 sm:hidden"
+
+                    onClick={(e) => {
+
+                      e.stopPropagation();
+
+                      cameraInputRef.current?.click();
+
+                    }}
+
+                  >
+
+                    Take photo
+
+                  </Button>
+
+                </div>
 
                 <p className="text-xs dash-muted mt-6">JPG, PNG, PDF · max 10 MB</p>
 

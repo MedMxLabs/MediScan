@@ -1,31 +1,47 @@
-"""Chatbot — Azure OpenAI with deterministic FAQ fallback."""
+"""MedMx help assistant — rule-based FAQ (no external LLM)."""
 from __future__ import annotations
-
-import logging
-
-import requests
-
-from app.services.ai_service import LLMConfigurationError, chat_completion, llm_is_configured
-
-logger = logging.getLogger(__name__)
 
 _FAQ_KEYWORDS: tuple[tuple[tuple[str, ...], str], ...] = (
     (
-        ("price", "compare", "pharmacy"),
-        "Use Search Medicine to compare live prices across pharmacies. Results come from real storefront pages at query time.",
+        ("price", "compare", "pharmacy", "cheaper", "mrp"),
+        "Use Search Medicine to compare live prices across Indian pharmacies. "
+        "Results come from real storefront pages at query time — verify pack size before buying.",
     ),
     (
-        ("reminder", "adherence"),
-        "Add reminders under Reminders; log doses to track adherence on your dashboard.",
+        ("reminder", "adherence", "dose", "schedule"),
+        "Add medicines under Reminders, then log doses to track adherence on your dashboard.",
     ),
     (
-        ("prescription", "ocr"),
-        "Upload a prescription image or PDF under Upload Prescription — OCR extracts medicine lines without inventing drugs.",
+        ("prescription", "ocr", "upload", "scan"),
+        "Open Upload Prescription and attach a photo or PDF. OCR extracts medicine lines; "
+        "you can compare prices from the results.",
     ),
     (
-        ("lab", "report"),
-        "Lab Report Analysis parses biomarkers from uploads and compares them to reference intervals stored in MedScan.",
+        ("lab", "report", "biomarker", "blood", "hb", "creatinine"),
+        "Use Lab Reports to upload a report. MedMx parses common markers and compares them "
+        "to reference intervals — informational only, not a diagnosis.",
     ),
+    (
+        ("jan aushadhi", "pmbjp", "kendra"),
+        "The Jan Aushadhi locator is coming soon. Check the sidebar for updates.",
+    ),
+    (
+        ("login", "sign in", "account", "password"),
+        "Sign in from the login page with email/password or Google. "
+        "Use Profile & Settings to manage your account.",
+    ),
+    (
+        ("side effect", "interaction", "safe", "dosage"),
+        "MedMx does not provide clinical advice. For side effects or drug interactions, "
+        "consult your doctor or pharmacist. Use Search Medicine to compare prices only.",
+    ),
+)
+
+_DEFAULT_REPLY = (
+    "I'm the MedMx help guide — ask about medicine search, prescription upload, reminders, "
+    "or lab reports.\n\n"
+    "Examples: “How do I compare prices?”, “Upload prescription”, “Track my doses”.\n\n"
+    "Informational only — not a substitute for professional medical care."
 )
 
 
@@ -37,61 +53,12 @@ def faq_fallback(message: str) -> str | None:
     return None
 
 
-def _llm_unavailable_message(exc: Exception | None = None) -> str:
-    if isinstance(exc, requests.HTTPError) and exc.response is not None:
-        code = exc.response.status_code
-        if code == 429:
-            return (
-                "Azure OpenAI rate limit reached (429 Too Many Requests). "
-                "Your deployment has a low tokens-per-minute quota — wait a minute and try again, "
-                "or raise TPM in Azure Portal → medmxlabs-openai → gpt-4.1-mini deployment → Update."
-            )
-        if code in (401, 403):
-            return (
-                "Azure OpenAI rejected the API key (401/403). "
-                "Check AZURE_OPENAI_API_KEY in backend/.env matches Key 1 from Azure Portal."
-            )
-        if code == 404:
-            return (
-                "Azure OpenAI deployment not found (404). "
-                "Confirm AZURE_OPENAI_API_BASE uses your exact deployment name (gpt-4.1-mini)."
-            )
-        try:
-            detail = exc.response.json().get("error", {}).get("message", "")
-        except Exception:  # noqa: BLE001
-            detail = ""
-        if detail:
-            return f"Azure OpenAI error ({code}): {detail}"
-        return f"Azure OpenAI request failed (HTTP {code}). Try again in a moment."
-
-    if not llm_is_configured():
-        return (
-            "MedScan assistant requires Azure OpenAI (AZURE_OPENAI_*). "
-            "Until then, try Search Medicine or Upload Prescription for structured flows."
-        )
-    return "Azure OpenAI is temporarily unavailable. Please try again in a minute."
-
-
 def complete_chat(messages: list[dict[str, str]], user_context: str | None = None) -> tuple[str, bool]:
-    """
-    Returns (reply_text, from_llm).
-    """
-    llm_error: Exception | None = None
-    if llm_is_configured():
-        try:
-            return chat_completion(messages, user_context=user_context), True
-        except LLMConfigurationError as exc:
-            llm_error = exc
-        except requests.RequestException as exc:
-            llm_error = exc
-            logger.warning("Azure OpenAI chat failed: %s", exc)
+    """Returns (reply_text, from_llm). from_llm is always False."""
+    del user_context  # reserved for future personalization without LLM
     last_user = ""
     for m in reversed(messages):
         if m.get("role") == "user":
-            last_user = m.get("content") or ""
+            last_user = (m.get("content") or "").strip()
             break
-    fb = faq_fallback(last_user)
-    unavailable = _llm_unavailable_message(llm_error)
-    if fb:
-        return fb + f"\n\n({unavailable})", False
-    return unavailable, False
+    return faq_fallback(last_user) or _DEFAULT_REPLY, False

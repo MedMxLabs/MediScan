@@ -19,7 +19,6 @@ def _flag(ok: bool) -> str:
 
 
 def main() -> int:
-    from app.services.ai_service import llm_is_configured
     from app.utils.client_api_key import client_api_keys_configured
     from app.services.supabase_auth_service import is_configured as supabase_configured
     from app.services.document_intelligence_service import is_available as azure_di_ready
@@ -45,9 +44,11 @@ def main() -> int:
     print("\n[Medicine extraction]")
     print(f"  Smart NLP .............. OK")
     print(f"  Catalog compact ........ OK (split OCR recovery)")
-    print(f"  LLM fallback enabled ... {_flag(extract.get('llm_fallback_enabled'))}")
-    print(f"  LLM API configured ..... {_flag(extract.get('llm_configured'))}")
     print(f"  Catalog terms .......... {extract.get('catalog_terms', 0)}")
+    print(f"  LLM filter ............. {_flag(extract.get('llm_medicine_filter'))}")
+    if extract.get("llm_medicine_filter"):
+        print(f"  LLM provider ........... {extract.get('llm_provider', '')}")
+        print(f"  LLM model .............. {extract.get('llm_model', '')}")
 
     print("\n[Supabase Auth (web)]")
     print(f"  Configured ............. {_flag(supabase_configured())}")
@@ -66,8 +67,6 @@ def main() -> int:
     print(f"  backend/.env ............. {'found' if backend_env.is_file() else 'not found'}")
 
     todo: list[str] = []
-    if not llm_is_configured():
-        todo.append("Set AZURE_OPENAI_API_KEY (and AZURE_OPENAI_API_BASE from your deployment URL)")
     if not azure_di_ready():
         if not azure.get("azure_di_configured"):
             todo.append(
@@ -76,6 +75,11 @@ def main() -> int:
             )
         else:
             todo.append("Azure DI keys set but disabled — set MEDSCAN_AZURE_OCR=1")
+    if not extract.get("llm_medicine_filter"):
+        todo.append(
+            "Optional: set MEDSCAN_LLM_MEDICINE_FILTER=1 + DEEPSEEK_API_KEY or OPENAI_API_KEY "
+            "for smarter medicine filtering from messy OCR"
+        )
     if not ocr.get("tesseract") and not ocr.get("rapidocr") and not azure_di_ready():
         todo.append("Install Tesseract or ensure rapidocr-onnxruntime is installed")
 

@@ -196,10 +196,10 @@ def _load_catalog() -> dict[str, str]:
 
 
 def scan_extraction_capabilities() -> dict[str, Any]:
-    from app.services.ai_service import ai_medicine_fallback_enabled, llm_is_configured
+    from app.services.llm_client import scan_llm_capability
 
     catalog = _load_catalog()
-    return {
+    caps = {
         "engine": "smart_nlp",
         "methods": [
             "rx_lines",
@@ -207,14 +207,13 @@ def scan_extraction_capabilities() -> dict[str, Any]:
             "drug_strength_lines",
             "catalog_match",
             "catalog_compact",
-            "azure_openai_filter",
         ],
         "catalog_terms": len(catalog),
         "ready": True,
         "strict_mode": True,
-        "llm_fallback_enabled": ai_medicine_fallback_enabled(),
-        "llm_configured": llm_is_configured(),
     }
+    caps.update(scan_llm_capability())
+    return caps
 
 
 def _normalize_name(raw: str) -> str:
@@ -307,15 +306,24 @@ def _catalog_match(name: str, full_text: str) -> str | None:
     return None
 
 
+# Common generic suffixes when not in catalog/hint list
+_PHARMA_SUFFIX_RE = re.compile(
+    r"(?i)(?:mycin|cillin|azole|prazole|olol|sartan|pril|dipine|statin|"
+    r"fenac|olone|azine|pam|zepam|tidine|prazole|gliptin|formin|"
+    r"paracetamol|amoxicillin|azithromycin|metformin|insulin)$"
+)
+
+
 def _has_drug_signal(name: str, line: str = "") -> bool:
     blob = f"{name} {line}"
     if _DRUG_HINT_RE.search(blob):
         return True
-    if _RX_PREFIX_RE.search(line) or _RX_INLINE_RE.search(line):
+    if _catalog_match(name, line) or _catalog_match(name, blob):
         return True
-    if _STRENGTH_RE.search(line) and re.search(r"[a-zA-Z]{4,}", name):
-        return True
-    if _catalog_match(name, line):
+    # Tab/Cap + strength is not enough — name must look like a drug, not random OCR text
+    if _STRENGTH_RE.search(line or blob) and (
+        _PHARMA_SUFFIX_RE.search(name.strip()) or _DRUG_HINT_RE.search(name)
+    ):
         return True
     return False
 
@@ -790,75 +798,6 @@ def _extract_from_catalog_compact(text: str) -> list[str]:
     return found
 
 
-def _accept_llm_candidate(name: str, full_text: str) -> str | None:
-    """Validate a name returned by Azure OpenAI — stricter than free text, looser than Rx-line rules."""
-    clean = _normalize_name(name)
-    if not clean or len(clean) < 3 or len(clean) > 140:
-        return None
-    if _is_junk_text(clean):
-        return None
-
-    cat = _catalog_match(clean, full_text)
-    if cat:
-        return cat
-
-    if _has_drug_signal(clean, full_text):
-        return clean
-
-    lower_doc = full_text.lower()
-    compact_doc = re.sub(r"[^a-z0-9]", "", lower_doc)
-    clean_lower = clean.lower()
-    clean_compact = re.sub(r"[^a-z0-9]", "", clean_lower)
-    if (
-        clean_lower in lower_doc
-        or (len(clean_compact) >= 5 and clean_compact in compact_doc)
-    ) and re.search(r"[a-zA-Z]{4,}", clean):
-        word_count = len(clean.split())
-        if word_count <= 4 or ("+" in clean and word_count <= 16):
-            return clean
-    return None
-
-
-def _validate_llm_candidates(candidates: list[str], full_text: str) -> list[str]:
-    accepted: list[str] = []
-    for raw in candidates:
-        if not raw or not isinstance(raw, str):
-            continue
-        hit = _accept_llm_candidate(raw, full_text)
-        if hit:
-            accepted.append(hit)
-            continue
-        for line in full_text.splitlines():
-            line_hit = _accept_name(raw, line, full_text)
-            if line_hit:
-                accepted.append(line_hit)
-                break
-    return accepted
-
-
-def _should_use_llm_filter(text: str, names: list[str]) -> bool:
-    from app.services.ai_service import ai_medicine_fallback_enabled, llm_is_configured
-
-    if not ai_medicine_fallback_enabled() or not llm_is_configured():
-        return False
-    if names:
-        return True
-    return bool(_document_has_rx_context(text) or _DRUG_HINT_RE.search(text))
-
-
-def _merge_llm_with_nlp(llm_names: list[str], nlp_names: list[str], full_text: str) -> list[str]:
-    merged = list(llm_names)
-    seen = {n.lower() for n in merged}
-    for n in nlp_names:
-        key = n.lower()
-        if key in seen:
-            continue
-        if _accept_name(n, n, full_text):
-            merged.append(n)
-            seen.add(key)
-    return _dedupe(merged)
-
-
 def _extract_smart_nlp(text: str) -> MedicineExtractResult:
     """Return medicine names only — strict filter, no document headers or patient info."""
     if not text or not text.strip():
@@ -886,7 +825,7 @@ def _extract_smart_nlp(text: str) -> MedicineExtractResult:
 
 
 def extract_medicine_names(text: str) -> MedicineExtractResult:
-    """Return medicine names — smart_nlp + catalog compact, filtered by Azure OpenAI when configured."""
+    """Smart NLP + catalog compact; optional LLM filter when MEDSCAN_LLM_MEDICINE_FILTER=1."""
     if not text or not text.strip():
         return MedicineExtractResult(medicines=[], medicine_names=[], extraction_engine="none")
 
@@ -904,20 +843,28 @@ def extract_medicine_names(text: str) -> MedicineExtractResult:
             elif engine == "none":
                 engine = "catalog_compact"
 
-    if _should_use_llm_filter(text, names):
-        from app.services.ai_service import extract_medicine_names_from_ocr_text
+    llm_names = None
+    try:
+        from app.services.medicine_llm_filter import extract_medicines_via_llm
 
-        llm_raw = extract_medicine_names_from_ocr_text(text, candidates=names or None)
-        llm_valid = _validate_llm_candidates(llm_raw, text)
-        if llm_valid:
-            had_nlp = bool(names)
-            names = _merge_llm_with_nlp(llm_valid, names, text)
-            if had_nlp and engine not in ("none",):
-                engine = "azure_openai+smart_nlp"
-            else:
-                engine = "azure_openai"
-        elif not names and llm_raw:
-            logger.warning("Azure OpenAI returned medicines but none passed validation")
+        llm_names = extract_medicines_via_llm(text)
+    except Exception as exc:
+        logger.warning("LLM medicine filter skipped: %s", exc)
+
+    if llm_names is not None:
+        mode = os.environ.get("MEDSCAN_LLM_MEDICINE_MODE", "merge").strip().lower()
+        if mode == "llm_primary" and llm_names:
+            names = llm_names
+            engine = "llm_filter"
+        elif mode == "llm_only":
+            names = llm_names
+            engine = "llm_filter" if llm_names else "none"
+        elif llm_names:
+            names = _dedupe(names + llm_names)
+            if engine == "none":
+                engine = "llm_filter"
+            elif "llm" not in engine:
+                engine = f"{engine}+llm"
 
     names, medicines = _finalize_medicines(names, text)
     if combinations := [m for m in medicines if m.get("kind") == "combination"]:

@@ -22,6 +22,7 @@ import AiAssistantPage from './pages/AiAssistantPage';
 import ProfileSettingsPage from './pages/ProfileSettingsPage';
 import NearbyPharmacyPage from './pages/NearbyPharmacyPage';
 import JanAushadhiPage from './pages/JanAushadhiPage';
+import PwaShell from './components/pwa/PwaShell';
 
 function PublicSearch() {
   return (
@@ -60,6 +61,7 @@ function App() {
 
   return (
     <BrowserRouter>
+      <PwaShell />
       <Routes>
         <Route path="/" element={<LandingPage />} />
 

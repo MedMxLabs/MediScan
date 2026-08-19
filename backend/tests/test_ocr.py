@@ -55,9 +55,9 @@ def test_medicine_name_extraction_filters_junk():
     assert result.extraction_engine in (
         "smart_nlp",
         "none",
-        "azure_openai",
-        "azure_openai+smart_nlp",
         "smart_nlp+catalog_compact",
+        "smart_nlp+combination",
+        "combination_formulation",
     )
 
 
@@ -205,29 +205,6 @@ def test_azure_di_used_when_configured(monkeypatch):
     assert "paracetamol" in result.text.lower()
 
 
-def test_llm_medicine_filter_validates_candidates(monkeypatch):
-    from app.services import ai_service
-    from app.services import medicine_extract_service as mes
-
-    monkeypatch.setenv("AZURE_OPENAI_API_BASE", "https://example.com")
-    monkeypatch.setenv("AZURE_OPENAI_API_KEY", "test-key")
-    monkeypatch.setenv("MEDSCAN_AI_MEDICINE_FALLBACK", "1")
-    monkeypatch.setattr(mes, "_should_use_llm_filter", lambda _t, _n: True)
-
-    def fake_llm(_ocr_text, *, candidates=None):
-        return ["Paracetamol", "Chief Complaint", "Anjali Sinha"]
-
-    monkeypatch.setattr(ai_service, "extract_medicine_names_from_ocr_text", fake_llm)
-    monkeypatch.setattr(ai_service, "llm_is_configured", lambda: True)
-
-    text = "Tab Paracetamol 650mg 1-0-1 for 5 days"
-    result = mes.extract_medicine_names(text)
-    names = [n.lower() for n in result.medicine_names]
-    assert any("paracetamol" in n for n in names), names
-    assert not any("chief" in n or "anjali" in n for n in names)
-    assert "azure_openai" in result.extraction_engine
-
-
 def test_combination_topical_gel_extracts_single_formulation():
     from app.services import medicine_extract_service as mes
 
@@ -253,11 +230,10 @@ def test_combination_topical_gel_extracts_single_formulation():
     assert any("volini" in b.lower() for b in (med.get("brand_equivalents") or []))
 
 
-def test_combination_collapse_partial_catalog_hits(monkeypatch):
+def test_combination_collapse_partial_catalog_hits():
     from app.services import medicine_extract_service as mes
 
     mes._CATALOG_LOOKUP = None
-    monkeypatch.setattr(mes, "_should_use_llm_filter", lambda _t, _n: False)
     result = mes.extract_medicine_names(
         "Tab Diclofenac Diethylamine Linseed Oil Methyl Salicylate Menthol Capsaicin Gel 1.16% BD"
     )
@@ -266,11 +242,10 @@ def test_combination_collapse_partial_catalog_hits(monkeypatch):
     assert not any(n.lower() == "diclofenac" for n in result.medicine_names)
 
 
-def test_fdc_montelukast_levocetirizine_merged(monkeypatch):
+def test_fdc_montelukast_levocetirizine_merged():
     from app.services import medicine_extract_service as mes
 
     mes._CATALOG_LOOKUP = None
-    monkeypatch.setattr(mes, "_should_use_llm_filter", lambda _t, _n: False)
     result = mes.extract_medicine_names(
         "Montelukast 10 mg and Levocetirizine 5 mg Oral Tablet HS"
     )
@@ -283,11 +258,10 @@ def test_fdc_montelukast_levocetirizine_merged(monkeypatch):
     assert any("montair" in b.lower() for b in (med.get("brand_equivalents") or []))
 
 
-def test_full_prescription_five_medicines(monkeypatch):
+def test_full_prescription_five_medicines():
     from app.services import medicine_extract_service as mes
 
     mes._CATALOG_LOOKUP = None
-    monkeypatch.setattr(mes, "_should_use_llm_filter", lambda _t, _n: False)
     text = """
     Tab Azithromycin 500 mg OD for 3 days
     Montelukast 10 mg and Levocetirizine 5 mg Oral Tablet HS
@@ -309,11 +283,10 @@ def test_full_prescription_five_medicines(monkeypatch):
     assert any("rabeprazole" in n and "domperidone" in n for n in names_lower)
 
 
-def test_numbered_fdc_lines_not_duplicated(monkeypatch):
+def test_numbered_fdc_lines_not_duplicated():
     from app.services import medicine_extract_service as mes
 
     mes._CATALOG_LOOKUP = None
-    monkeypatch.setattr(mes, "_should_use_llm_filter", lambda _t, _n: False)
     text = """
     1. Tab Azithromycin 500 mg OD
     2. MONTELUKAST 10 MG + LEVOCETIRIZINE 5 MG ORAL TABLET, Single Tab
@@ -337,3 +310,35 @@ def test_invalid_image_returns_error_not_crash():
     result = extract_document(b"not-an-image", "bad.png")
     assert not result.text.strip()
     assert result.error
+
+
+def test_llm_filter_merges_and_rejects_junk(monkeypatch):
+    from app.services.medicine_extract_service import extract_medicine_names
+
+    monkeypatch.setenv("MEDSCAN_LLM_MEDICINE_FILTER", "1")
+    monkeypatch.setenv("DEEPSEEK_API_KEY", "test-key")
+    monkeypatch.setenv("MEDSCAN_LLM_PROVIDER", "deepseek")
+
+    def fake_chat(system, user, timeout=45.0):
+        del system, timeout
+        assert "Paracetamol" in user
+        return {
+            "medicines": [
+                "Paracetamol 650mg",
+                "Anjali Sinha",
+                "Cap Amoxicillin 500mg",
+            ]
+        }
+
+    monkeypatch.setattr("app.services.llm_client.chat_json", fake_chat)
+
+    text = """
+    Patient Anjali Sinha
+    Tab Paracetamol 650mg BD for 5 days
+    """
+    result = extract_medicine_names(text)
+    names = [n.lower() for n in result.medicine_names]
+    assert any("paracetamol" in n for n in names)
+    assert any("amoxicillin" in n for n in names)
+    assert not any("anjali" in n for n in names)
+    assert "llm" in result.extraction_engine

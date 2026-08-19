@@ -94,8 +94,6 @@ class _UploadPrescriptionScreenState extends State<UploadPrescriptionScreen> {
     const labels = {
       'smart_nlp': 'Smart filter',
       'smart_nlp+catalog_compact': 'Smart filter + OCR recovery',
-      'azure_openai': 'Azure OpenAI filter',
-      'azure_openai+smart_nlp': 'Azure OpenAI + smart filter',
       'catalog_compact+combination': 'Catalog + combination merge',
       'combination_formulation': 'Combination detection',
     };
@@ -163,7 +161,7 @@ class _UploadPrescriptionScreenState extends State<UploadPrescriptionScreen> {
                 ),
                 const SizedBox(height: 24),
                 const AiBanner(
-                  text: 'Same backend as web — Azure OpenAI filters medicines and finds combination formulations.',
+                  text: 'Same backend as web — smart scan extracts medicines and detects combination formulations.',
                 ),
                 if (_error != null) ...[
                   const SizedBox(height: 16),

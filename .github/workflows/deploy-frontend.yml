@@ -48,8 +48,10 @@ jobs:
         working-directory: frontend
         env:
           VITE_API_URL: ${{ vars.VITE_API_URL }}
+          VITE_MEDSCAN_API_KEY: ${{ secrets.VITE_MEDSCAN_API_KEY }}
+          VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
           VITE_OMNIDIMENSION_WIDGET_SECRET: ${{ vars.VITE_OMNIDIMENSION_WIDGET_SECRET }}
-          VITE_GOOGLE_CLIENT_ID: ${{ vars.VITE_GOOGLE_CLIENT_ID }}
         run: npm run build
 
       - name: Deploy to Azure Static Web Apps

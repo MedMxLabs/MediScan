@@ -1,4 +1,4 @@
-"""AI assistant — Azure OpenAI chat completions."""
+"""AI assistant — rule-based MedMx help guide."""
 from __future__ import annotations
 
 from flask import Blueprint, jsonify, request

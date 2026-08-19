@@ -42,11 +42,6 @@ def main() -> int:
         "JWT_SECRET_KEY",
         "DATABASE_URL",
         "MEDSCAN_CLIENT_API_KEYS",
-        "AZURE_OPENAI_API_BASE",
-        "AZURE_OPENAI_API_KEY",
-        "AZURE_OPENAI_MODEL",
-        "AZURE_OPENAI_API_VERSION",
-        "MEDSCAN_AI_MEDICINE_FALLBACK",
         "AZURE_DOCUMENT_INTELLIGENCE_ENDPOINT",
         "AZURE_DOCUMENT_INTELLIGENCE_KEY",
         "CORS_ORIGINS",
@@ -60,8 +55,6 @@ def main() -> int:
     ]
     azure_keys = [
         "MEDSCAN_CLIENT_API_KEYS",
-        "AZURE_OPENAI_API_KEY",
-        "AZURE_OPENAI_API_BASE",
         "SECRET_KEY",
         "JWT_SECRET_KEY",
         "DATABASE_URL",

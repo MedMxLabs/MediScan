@@ -1,10 +1,12 @@
 """
-Multi-engine document OCR for prescriptions and lab reports.
+Document text extraction for prescriptions and lab reports.
+
+Azure is used ONLY for OCR (Azure Document Intelligence prebuilt-read).
+Medicine parsing, chatbot, and lab insights run locally — no Azure OpenAI.
 
 Pipeline:
-  Azure Document Intelligence (prebuilt-read) when configured
-  PDF  → PyMuPDF embedded text → pdfplumber → Azure DI → page raster → OCR chain
-  Image → Azure DI → OpenCV preprocess → Tesseract → RapidOCR
+  Image → Azure DI (when configured) → local Tesseract/RapidOCR fallback
+  PDF   → embedded text (PyMuPDF/pdfplumber) → Azure DI → local page OCR fallback
 """
 from __future__ import annotations
 
@@ -17,6 +19,11 @@ from app.services import document_intelligence_service as azure_di
 from app.services import ocr_engines as engines
 
 MIN_USABLE_TEXT = int(os.environ.get("MEDSCAN_OCR_MIN_CHARS", "12"))
+
+
+def _azure_only_mode() -> bool:
+    flag = os.environ.get("MEDSCAN_OCR_AZURE_ONLY", "0").strip().lower()
+    return flag in ("1", "true", "yes", "on")
 
 
 def normalize_ocr_text(text: str) -> str:
@@ -53,6 +60,7 @@ class DocumentOcrResult:
 def scan_ocr_capabilities() -> dict:
     caps = engines.scan_capabilities()
     caps.update(azure_di.scan_capability())
+    caps["azure_only_mode"] = _azure_only_mode()
     caps["ready"] = (
         caps.get("azure_document_intelligence")
         or caps.get("rapidocr")
@@ -120,6 +128,16 @@ def extract_text_from_image_bytes(image_bytes: bytes, filename: str = "") -> Doc
     if azure_result:
         return azure_result
 
+    if _azure_only_mode() and azure_di.scan_capability().get("azure_di_configured"):
+        err = stages[-1] if stages else "Azure Document Intelligence returned no text"
+        return DocumentOcrResult(
+            text="",
+            engine="azure_document_intelligence",
+            pipeline="azure_read",
+            error=f"Azure OCR required but failed: {err}",
+            stages=stages,
+        )
+
     try:
         arr = engines.bytes_to_rgb_array(image_bytes)
     except ValueError as exc:
@@ -168,6 +186,16 @@ def extract_text_from_pdf_bytes(data: bytes, filename: str = "") -> DocumentOcrR
     azure_result = _try_azure_di(data, filename, stages)
     if azure_result:
         return azure_result
+
+    if _azure_only_mode() and azure_di.scan_capability().get("azure_di_configured"):
+        err = next((s for s in reversed(stages) if s.startswith("azure_error:")), "no text")
+        return DocumentOcrResult(
+            text="",
+            engine="azure_document_intelligence",
+            pipeline="azure_read",
+            error=f"Azure OCR required but failed: {err.replace('azure_error:', '', 1)}",
+            stages=stages,
+        )
 
     ocr_chunks: list[str] = []
     used_engine = "none"

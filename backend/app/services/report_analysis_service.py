@@ -1,9 +1,9 @@
-"""Lab report analysis — wraps OCR + rule-based markers + optional LLM."""
+"""Lab report analysis — OCR + rule-based markers + plain-language summary."""
 from __future__ import annotations
 
 from typing import Any
 
-from app.services import ai_service, report_service
+from app.services import report_service
 
 
 def analyze_lab_text(raw: str) -> list[dict[str, Any]]:
@@ -43,5 +43,28 @@ def enrich_rows(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
     return out
 
 
+def _deterministic_lab_insights(rows: list[dict[str, Any]]) -> str:
+    lines: list[str] = []
+    for r in rows:
+        nm = str(r.get("name", "")).strip()
+        val = r.get("value")
+        flag = str(r.get("flag", "")).strip()
+        rl, rh = r.get("ref_low"), r.get("ref_high")
+        unit = str(r.get("unit", "") or "").strip()
+        if flag == "normal":
+            lines.append(f"{nm}: {val} {unit} is within stated reference {rl}–{rh} {unit}.".strip())
+        elif flag == "high":
+            lines.append(f"{nm}: {val} {unit} is above reference {rl}–{rh} {unit}.".strip())
+        elif flag == "low":
+            lines.append(f"{nm}: {val} {unit} is below reference {rl}–{rh} {unit}.".strip())
+    if not lines:
+        return ""
+    disclaimer = (
+        "This summary compares extracted values to reference intervals stored in MedMx — not a diagnosis. "
+        "Discuss results with your clinician."
+    )
+    return "\n".join(lines) + "\n\n" + disclaimer
+
+
 def insights_plain_language(rows: list[dict[str, Any]]) -> str:
-    return ai_service.lab_insights_plain_language(rows)
+    return _deterministic_lab_insights(rows)

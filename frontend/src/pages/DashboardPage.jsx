@@ -620,13 +620,13 @@ const DashboardPage = () => {
 
                   <MessageSquare size={18} className="text-teal" />
 
-                  AI Health Assistant
+                  Help Assistant
 
                 </h3>
 
                 <p className="text-sm dash-muted mt-2 leading-relaxed">
 
-                  Ask about medicines, side effects, or lab results — informational only.
+                  Get quick answers about search, prescriptions, reminders, and lab reports.
 
                 </p>
 

@@ -47,7 +47,7 @@
 ## Known limitations
 
 - **Scraping:** If all pharmacies fail, UI shows API error (no fabricated prices).
-- **LLM:** Chat needs `AZURE_OPENAI_*` on the server; otherwise backend may return FAQ fallback text.
+- **Help assistant:** Rule-based FAQ at `/api/chatbot` (no external LLM).
 - **Google OAuth (web):** Handled via Supabase Auth (Google provider must be enabled in Supabase dashboard).
 
 ## Build

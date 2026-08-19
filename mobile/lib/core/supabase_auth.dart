@@ -5,6 +5,9 @@ import 'config.dart';
 
 bool _initialized = false;
 bool _available = false;
+String _initMessage =
+    'Supabase auth is required. Pass SUPABASE_URL and SUPABASE_ANON_KEY via dart-define, '
+    'or point API_BASE_URL at a backend with Supabase configured.';
 
 /// Load Supabase from dart-define or GET /api/auth/supabase/config on the MedScan API.
 Future<bool> ensureSupabase() async {
@@ -19,6 +22,10 @@ Future<bool> ensureSupabase() async {
         BaseOptions(
           baseUrl: AppConfig.apiBaseUrl,
           connectTimeout: AppConfig.defaultTimeout,
+          headers: {
+            if (AppConfig.medscanApiKey.trim().isNotEmpty)
+              'X-Medscan-Api-Key': AppConfig.medscanApiKey.trim(),
+          },
         ),
       );
       final res = await dio.get('/api/auth/supabase/config');
@@ -26,8 +33,15 @@ Future<bool> ensureSupabase() async {
       if (data is Map && data['enabled'] == true) {
         url = '${data['url'] ?? ''}'.trim();
         anon = '${data['anon_key'] ?? ''}'.trim();
+      } else {
+        _initMessage =
+            'Backend at ${AppConfig.apiBaseUrl} has Supabase disabled. '
+            'Set SUPABASE_URL, SUPABASE_ANON_KEY, and SUPABASE_JWT_SECRET on the API.';
       }
-    } catch (_) {
+    } catch (e) {
+      _initMessage =
+          'Could not reach ${AppConfig.apiBaseUrl}/api/auth/supabase/config. '
+          'Check API_BASE_URL, start the backend, or pass SUPABASE_URL + SUPABASE_ANON_KEY via dart-define.';
       _initialized = true;
       _available = false;
       return false;
@@ -40,11 +54,21 @@ Future<bool> ensureSupabase() async {
     return false;
   }
 
-  await Supabase.initialize(url: url, anonKey: anon);
-  _initialized = true;
-  _available = true;
-  return true;
+  try {
+    await Supabase.initialize(url: url, anonKey: anon);
+    _initMessage = '';
+    _initialized = true;
+    _available = true;
+    return true;
+  } catch (e) {
+    _initMessage = 'Supabase init failed: $e';
+    _initialized = true;
+    _available = false;
+    return false;
+  }
 }
+
+String supabaseInitMessage() => _initMessage;
 
 bool get isSupabaseReady => _available;
 

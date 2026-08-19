@@ -10,7 +10,7 @@ from werkzeug.utils import secure_filename
 
 from app.extensions import db
 from app.models.report import LabReport
-from app.services import ai_service, ocr_service
+from app.services import ocr_service
 from app.services import report_analysis_service
 from app.utils.responses import ok
 
@@ -53,7 +53,7 @@ def _analyze_upload():
             "from this document."
         )
     else:
-        insights = report_analysis_service.insights_plain_language(rows) or ai_service.lab_insights_plain_language(rows)
+        insights = report_analysis_service.insights_plain_language(rows)
 
     folder = os.path.abspath(current_app.config["MEDSCAN_UPLOAD_FOLDER"])
     os.makedirs(folder, exist_ok=True)

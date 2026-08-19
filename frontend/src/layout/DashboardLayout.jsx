@@ -33,7 +33,7 @@ const NAV_PRIMARY = [
   { name: 'Lab Reports', href: '/dashboard/reports', icon: FileText },
   { name: 'Nearby Pharmacies', href: '/dashboard/pharmacies', icon: MapPin },
   { name: 'Jan Aushadhi', href: '/dashboard/jan-aushadhi', icon: MapPin },
-  { name: 'AI Assistant', href: '/dashboard/assistant', icon: MessageSquare },
+  { name: 'Help Assistant', href: '/dashboard/assistant', icon: MessageSquare },
 ];
 
 const NAV_SECONDARY = [{ name: 'Profile & Settings', href: '/dashboard/profile', icon: Settings }];
@@ -142,7 +142,7 @@ const DashboardLayout = () => {
       )}
 
       <div className="flex-1 flex flex-col min-w-0 min-h-0">
-        <header className="h-14 sm:h-16 shrink-0 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between px-4 sm:px-6 lg:px-8">
+        <header className="h-14 sm:h-16 shrink-0 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between px-4 sm:px-6 lg:px-8 pt-[env(safe-area-inset-top)] min-h-[calc(3.5rem+env(safe-area-inset-top))] sm:min-h-[calc(4rem+env(safe-area-inset-top))]">
           <div className="flex items-center gap-3 min-w-0">
             <button
               type="button"
@@ -174,7 +174,7 @@ const DashboardLayout = () => {
           </div>
         </header>
 
-        <main className="dash-main flex-1 overflow-y-auto overflow-x-hidden p-4 sm:p-6 lg:p-8 bg-slate-50 dark:bg-navy bg-gradient-to-br from-slate-50 via-white to-teal/[0.04] dark:from-navy dark:via-[#0f2744] dark:to-[#0a192f] dot-grid">
+        <main className="dash-main flex-1 overflow-y-auto overflow-x-hidden p-4 sm:p-6 lg:p-8 pb-[max(1rem,env(safe-area-inset-bottom))] bg-slate-50 dark:bg-navy bg-gradient-to-br from-slate-50 via-white to-teal/[0.04] dark:from-navy dark:via-[#0f2744] dark:to-[#0a192f] dot-grid overscroll-y-contain">
           <Outlet />
         </main>
       </div>

@@ -100,10 +100,21 @@ class ApiClient {
   }
 
   String errorMessage(DioException e) {
+    final status = e.response?.statusCode;
     final data = e.response?.data;
     if (data is Map) {
       return (data['message'] ?? data['error'] ?? e.message)?.toString() ??
           'Request failed';
+    }
+    if (status == 404) {
+      return 'API route not found ($status). The server may be outdated — update the MedScan API.';
+    }
+    if (data is String) {
+      final trimmed = data.trim();
+      if (trimmed.length <= 240) return trimmed;
+      if (trimmed.toLowerCase().contains('not found')) {
+        return 'API route not found. Check API_BASE_URL and server version.';
+      }
     }
     return e.message ?? 'Network error';
   }

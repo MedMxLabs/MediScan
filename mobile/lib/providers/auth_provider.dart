@@ -81,21 +81,24 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> _requireSupabaseAuth() async {
+    if (await sb.ensureSupabase()) {
+      _supabaseActive = true;
+      return;
+    }
+    throw Exception(sb.supabaseInitMessage());
+  }
+
   Future<bool> login(String email, String password) async {
     _loading = true;
     _error = null;
     notifyListeners();
     try {
       await _storage.clear();
-      if (await sb.ensureSupabase()) {
-        _supabaseActive = true;
-        await _loginViaSupabase(
-          () => sb.signInWithEmailPassword(email, password),
-        );
-      } else {
-        final data = await _api.login(email, password);
-        await _saveFromAuthResponse(data);
-      }
+      await _requireSupabaseAuth();
+      await _loginViaSupabase(
+        () => sb.signInWithEmailPassword(email, password),
+      );
       _loading = false;
       notifyListeners();
       return true;
@@ -113,22 +116,11 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
     try {
       await _storage.clear();
-      if (_supabaseActive || await sb.ensureSupabase()) {
-        _error = 'Use email/password or configure Google in Supabase OAuth for mobile.';
-        _loading = false;
-        notifyListeners();
-        return false;
-      }
-      final res = await _client.dio.post(
-        '/api/auth/google-login',
-        data: {'credential': idToken},
-        options: Options(extra: {'skipAuth': true}),
-      );
-      final data = Map<String, dynamic>.from(res.data as Map);
-      await _saveFromAuthResponse(data);
+      _error =
+          'Google sign-in on mobile uses Supabase OAuth. Enable Google in your Supabase project, then use email/password or configure the OAuth flow.';
       _loading = false;
       notifyListeners();
-      return true;
+      return false;
     } catch (e) {
       _error = _formatError(e);
       _loading = false;
@@ -143,16 +135,10 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
     try {
       await _storage.clear();
-      if (await sb.ensureSupabase()) {
-        _supabaseActive = true;
-        await _loginViaSupabase(
-          () => sb.signUpWithEmailPassword(email, password),
-        );
-      } else {
-        await _api.register(email, password);
-        final data = await _api.login(email, password);
-        await _saveFromAuthResponse(data);
-      }
+      await _requireSupabaseAuth();
+      await _loginViaSupabase(
+        () => sb.signUpWithEmailPassword(email, password),
+      );
       _loading = false;
       notifyListeners();
       return true;

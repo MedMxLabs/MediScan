@@ -1,6 +1,6 @@
 # MedScan
 
-Medicine price comparison for India (**MedScan PRD v1.0** alongside `../MedScan_PRD_v1.0.docx`): **live** Chromium (Playwright) scraping of search results across twelve storefronts—no fabricated prices—plus OCR (Tesseract / PyMuPDF), JWT-backed features, and an OpenAI-compatible chat endpoint.
+Medicine price comparison for India (**MedScan PRD v1.0** alongside `../MedScan_PRD_v1.0.docx`): **live** Chromium (Playwright) scraping of search results across twelve storefronts—no fabricated prices—plus OCR (Tesseract / PyMuPDF), JWT-backed features, and a rule-based help assistant.
 
 ## End-to-end stack
 
@@ -8,8 +8,9 @@ Medicine price comparison for India (**MedScan PRD v1.0** alongside `../MedScan_
 | --- | --- |
 | **Scraping** | Parallel headless Chromium sessions; normalised query → first valid INR + product link per pharmacy. Failures are returned per source; HTTP **502** if every source fails. |
 | **OCR / PDF** | Images: OpenCV preprocess + Tesseract. PDFs: embedded text or first-page raster + OCR via **PyMuPDF**. Empty OCR → **422** (no fake prescription text). |
-| **LLM** | **Required** for `/api/chatbot/query` (set `AZURE_OPENAI_API_BASE` + `AZURE_OPENAI_API_KEY`). Lab report "insights" use structured reference comparison first; optional LLM wrap when keys are set. |
-| **Frontend** | React + Vite + Tailwind; surfaces scrape errors, 502 all-fail state, and 503 when chat API is not configured. |
+| **Help assistant** | Rule-based FAQ at `/api/chatbot` — medicine search, prescriptions, reminders, lab reports. |
+| **Lab insights** | Reference-interval comparison from parsed biomarkers — no external LLM. |
+| **Frontend** | React + Vite + Tailwind; surfaces scrape errors and 502 all-fail state. |
 | **Mobile** | Flutter app in `mobile/` — same Flask API, JWT auth, all core features. See [`mobile/README.md`](mobile/README.md). |
 
 ## Prerequisites
@@ -41,15 +42,11 @@ npm install
 npm run dev
 ```
 
-Copy **`.env.example`** to **`.env`** and set at least:
-
-- `AZURE_OPENAI_API_BASE` — Azure OpenAI deployment URL (includes `/openai/deployments/<name>`).
-- `AZURE_OPENAI_API_KEY` — Azure OpenAI key.
-- `AZURE_OPENAI_MODEL` — deployment name (e.g. `gpt-4.1-mini`).
+Copy **`.env.example`** to **`.env`** and set Supabase, client API key, and OCR options as needed (see `docs/API_KEYS.md`).
 
 ## Docker (local)
 
-`docker compose up --build` uses the Playwright-based API image so Chromium is available in the container. Set `AZURE_OPENAI_*` for chat and medicine LLM fallback.
+`docker compose up --build` uses the Playwright-based API image so Chromium is available in the container.
 
 ## Azure Deployment
 

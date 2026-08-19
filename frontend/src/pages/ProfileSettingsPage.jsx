@@ -4,12 +4,13 @@ import { getProfile, updateProfile } from '../services/api';
 import { applyTheme } from '../utils/theme';
 import { saveWebNotifyPref } from '../utils/reminderNotifications';
 import { updateProfile as updateReduxProfile } from '../store/slices/authSlice';
-import { Settings } from 'lucide-react';
+import { Settings, Download, Check } from 'lucide-react';
 import PageShell from '../components/dashboard/PageShell';
 import PageHeader from '../components/dashboard/PageHeader';
 import DashPanel from '../components/dashboard/DashPanel';
 import LoadingState from '../components/dashboard/LoadingState';
 import Button from '../components/ui/Button';
+import usePwaInstall from '../hooks/usePwaInstall';
 
 const tabs = ['Profile', 'Preferences', 'Notifications'];
 
@@ -31,6 +32,7 @@ const emptyProfile = {
 const ProfileSettingsPage = () => {
   const dispatch = useDispatch();
   const reduxUser = useSelector((s) => s.auth.user);
+  const { canInstall, install, isStandalone } = usePwaInstall();
   const [activeTab, setActiveTab] = useState('Profile');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -258,6 +260,29 @@ const ProfileSettingsPage = () => {
               <Button type="button" onClick={savePreferences} disabled={saving}>
                 {saving ? 'Saving…' : 'Save preferences'}
               </Button>
+
+              <div className="border-t border-slate-100 dark:border-slate-700 pt-6 mt-2">
+                <h3 className="text-[16px] font-bold dash-text mb-1">Install app</h3>
+                <p className="text-sm dash-muted mb-4">
+                  Add MedMx LABS to your home screen for faster access and an app-like experience.
+                </p>
+                {isStandalone ? (
+                  <span className="inline-flex items-center gap-2 rounded-xl border border-teal/20 bg-teal/10 px-4 py-2.5 text-sm font-semibold text-teal-dark dark:text-teal">
+                    <Check size={16} /> App installed
+                  </span>
+                ) : canInstall ? (
+                  <Button type="button" onClick={() => install()}>
+                    <span className="inline-flex items-center gap-2">
+                      <Download size={16} /> Install MedMx LABS
+                    </span>
+                  </Button>
+                ) : (
+                  <p className="text-sm dash-muted">
+                    Open the browser menu and choose <strong>Install app</strong> / <strong>Add to Home screen</strong>.
+                    On iPhone, use Share → Add to Home Screen.
+                  </p>
+                )}
+              </div>
             </div>
           )}
 

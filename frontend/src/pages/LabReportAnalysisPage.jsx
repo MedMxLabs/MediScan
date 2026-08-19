@@ -92,7 +92,7 @@ const LabReportAnalysisPage = () => {
     <PageShell className="max-w-6xl">
       <PageHeader
         title="Lab report analysis"
-        subtitle="Upload PDFs or images — biomarkers, reference ranges, and plain-language insights."
+        subtitle="Upload PDFs or images — biomarkers, reference ranges, and a structured summary."
         icon={FileText}
       />
 

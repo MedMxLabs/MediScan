@@ -9,7 +9,7 @@ const AiAssistantPage = ({ publicMode = false }) => {
   const [messages, setMessages] = useState([
     {
       id: 1,
-      text: "Hello! I'm your MedMx LABS AI Health Assistant. Ask me anything about medicines, side-effects, or health queries.",
+      text: "Hello! I'm the MedMx help guide. Ask how to search medicines, upload prescriptions, use reminders, or read lab reports.",
       sender: 'ai',
     },
   ]);
@@ -51,8 +51,8 @@ const AiAssistantPage = ({ publicMode = false }) => {
   return (
     <PageShell className="max-w-4xl flex flex-col min-h-[calc(100dvh-8rem)]">
       <PageHeader
-        title="AI Health Assistant"
-        subtitle="Informational only — not a substitute for your doctor."
+        title="Help Assistant"
+        subtitle="Quick answers about MedMx features — informational only, not medical advice."
         icon={MessageSquare}
         lightSurface={publicMode}
       />

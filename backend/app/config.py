@@ -12,10 +12,6 @@ class BaseConfig:
         "MEDSCAN_UPLOAD_FOLDER", os.path.join(os.path.dirname(__file__), "..", "..", "uploads")
     )
     MAX_CONTENT_LENGTH = 16 * 1024 * 1024
-    # Azure OpenAI (chatbot, lab insights, medicine LLM fallback)
-    AZURE_OPENAI_API_BASE = os.environ.get("AZURE_OPENAI_API_BASE", "").rstrip("/")
-    AZURE_OPENAI_API_KEY = os.environ.get("AZURE_OPENAI_API_KEY", "")
-    AZURE_OPENAI_MODEL = os.environ.get("AZURE_OPENAI_MODEL", "gpt-4.1-mini")
     GOOGLE_OAUTH_CLIENT_ID = os.environ.get("GOOGLE_OAUTH_CLIENT_ID", "")
     GOOGLE_OAUTH_CLIENT_SECRET = os.environ.get("GOOGLE_OAUTH_CLIENT_SECRET", "")
     REDIS_URL = os.environ.get("REDIS_URL", "")

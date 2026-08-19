@@ -38,16 +38,6 @@ Setup guide: [SUPABASE_AUTH.md](./SUPABASE_AUTH.md)
 | `JWT_REFRESH_DAYS` | Refresh token TTL | Default `7` |
 | `MEDSCAN_CLIENT_API_KEYS` | Client app gate (`X-Medscan-Api-Key`) | `python scripts/generate_client_api_key.py` |
 
-### Azure OpenAI (backend only — never in mobile)
-
-| Variable | Purpose |
-|----------|---------|
-| `AZURE_OPENAI_API_BASE` | Deployment URL (includes deployment name) |
-| `AZURE_OPENAI_API_KEY` | Azure OpenAI resource key |
-| `AZURE_OPENAI_MODEL` | e.g. `gpt-4.1-mini` |
-| `AZURE_OPENAI_API_VERSION` | e.g. `2024-08-01-preview` |
-| `MEDSCAN_AI_MEDICINE_FALLBACK` | `1` = LLM filters prescription medicines |
-
 ### Azure Document Intelligence (backend, optional)
 
 | Variable | Purpose |
@@ -56,6 +46,20 @@ Setup guide: [SUPABASE_AUTH.md](./SUPABASE_AUTH.md)
 | `AZURE_DOCUMENT_INTELLIGENCE_KEY` | Resource key |
 | `AZURE_DOCUMENT_INTELLIGENCE_MODEL` | e.g. `prebuilt-read` |
 | `MEDSCAN_AZURE_OCR` | `1` to prefer Azure DI when configured |
+
+### LLM medicine filter (backend, optional — messy OCR accuracy)
+
+| Variable | Purpose |
+|----------|---------|
+| `MEDSCAN_LLM_MEDICINE_FILTER` | `1` to enable LLM extraction pass |
+| `MEDSCAN_LLM_PROVIDER` | `deepseek`, `openai`, or `azure` |
+| `MEDSCAN_LLM_MEDICINE_MODE` | `merge` (default), `llm_primary`, or `llm_only` |
+| `DEEPSEEK_API_KEY` | DeepSeek API key |
+| `DEEPSEEK_MODEL` | e.g. `deepseek-chat` |
+| `OPENAI_API_KEY` | OpenAI API key |
+| `AZURE_OPENAI_API_BASE` + `AZURE_OPENAI_API_KEY` | Azure OpenAI deployment |
+
+OCR stays on Azure Document Intelligence (or Tesseract). LLM is **only** used to filter medicine names from OCR text.
 
 ### Frontend (Vite — baked into build)
 
@@ -140,10 +144,19 @@ npm run build
 ## Azure CLI — set backend app settings
 
 ```powershell
+# Client API key
 az webapp config appsettings set -g rg-medscan -n medscan-api --settings `
-  MEDSCAN_CLIENT_API_KEYS="<your-client-key>" `
-  AZURE_OPENAI_API_KEY="<azure-openai-key>" `
-  AZURE_OPENAI_API_BASE="<deployment-url>"
+  MEDSCAN_CLIENT_API_KEYS="<your-client-key>"
+
+# Option C — Azure OpenAI medicine filter (paste your key; do not commit)
+az webapp config appsettings set -g rg-medscan -n medscan-api --settings `
+  MEDSCAN_LLM_MEDICINE_FILTER=1 `
+  MEDSCAN_LLM_PROVIDER=azure `
+  MEDSCAN_LLM_MEDICINE_MODE=merge `
+  AZURE_OPENAI_API_BASE="https://medmxlabs-openai.openai.azure.com/openai/deployments/gpt-4.1-mini" `
+  AZURE_OPENAI_API_KEY="<your-azure-openai-key>" `
+  AZURE_OPENAI_MODEL=gpt-4.1-mini `
+  AZURE_OPENAI_API_VERSION=2024-08-01-preview
 ```
 
 ---

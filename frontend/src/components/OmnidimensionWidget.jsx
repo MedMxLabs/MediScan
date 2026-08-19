@@ -4,7 +4,7 @@ const SCRIPT_ID = 'omnidimension-web-widget';
 
 /**
  * Loads https://omnidim.io/web_widget.js when VITE_OMNIDIMENSION_WIDGET_SECRET is set.
- * This is separate from backend AZURE_OPENAI_* (used for /api/chatbot).
+ * Optional third-party floating widget (VITE_OMNIDIMENSION_WIDGET_SECRET).
  */
 export default function OmnidimensionWidget() {
   useEffect(() => {

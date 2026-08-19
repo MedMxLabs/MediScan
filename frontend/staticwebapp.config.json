@@ -1,7 +1,14 @@
 {
   "navigationFallback": {
     "rewrite": "/index.html",
-    "exclude": ["/assets/*", "/downloads/*", "*.{css,js,png,jpg,jpeg,gif,svg,ico,woff,woff2}"]
+    "exclude": [
+      "/assets/*",
+      "/downloads/*",
+      "/sw.js",
+      "/workbox-*.js",
+      "/manifest.webmanifest",
+      "*.{css,js,png,jpg,jpeg,gif,svg,ico,woff,woff2,webmanifest}"
+    ]
   },
   "routes": [
     {
@@ -17,6 +24,7 @@
   },
   "mimeTypes": {
     ".json": "application/json",
+    ".webmanifest": "application/manifest+json",
     ".woff2": "font/woff2"
   }
 }

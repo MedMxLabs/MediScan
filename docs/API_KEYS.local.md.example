@@ -19,11 +19,6 @@ copy docs\API_KEYS.local.md.example docs\API_KEYS.local.md
 | `JWT_SECRET_KEY` | |
 | `DATABASE_URL` | |
 | `MEDSCAN_CLIENT_API_KEYS` | |
-| `AZURE_OPENAI_API_BASE` | |
-| `AZURE_OPENAI_API_KEY` | |
-| `AZURE_OPENAI_MODEL` | `gpt-4.1-mini` |
-| `AZURE_OPENAI_API_VERSION` | `2024-08-01-preview` |
-| `MEDSCAN_AI_MEDICINE_FALLBACK` | `1` |
 | `AZURE_DOCUMENT_INTELLIGENCE_ENDPOINT` | |
 | `AZURE_DOCUMENT_INTELLIGENCE_KEY` | |
 | `GOOGLE_OAUTH_CLIENT_ID` | |
@@ -60,8 +55,6 @@ Portal: **rg-medscan** → **medscan-api** → Configuration → Application set
 | Setting | Value |
 |---------|-------|
 | `MEDSCAN_CLIENT_API_KEYS` | |
-| `AZURE_OPENAI_API_KEY` | |
-| `AZURE_OPENAI_API_BASE` | |
 | `SECRET_KEY` | |
 | `JWT_SECRET_KEY` | |
 | `DATABASE_URL` | |
@@ -81,4 +74,3 @@ Portal: **rg-medscan** → **medscan-api** → Configuration → Application set
 ## Notes
 
 - Rotate keys if they were ever pasted in chat, screenshots, or a public repo.
-- Azure OpenAI keys stay on the server only — never embed in mobile or frontend source.
