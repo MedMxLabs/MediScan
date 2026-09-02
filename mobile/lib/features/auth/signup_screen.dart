@@ -7,6 +7,7 @@ import '../../core/theme.dart';
 import '../../providers/auth_provider.dart';
 import '../../widgets/ui_components.dart';
 import '../landing/medmx_logo.dart';
+import 'google_sign_in_button.dart';
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
@@ -46,6 +47,23 @@ class _SignupScreenState extends State<SignupScreen> {
     }
   }
 
+  Future<void> _googleSignIn() async {
+    final auth = context.read<AuthProvider>();
+    if (!auth.supabaseActive) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Supabase Auth is not configured on this API.')),
+      );
+      return;
+    }
+    final ok = await auth.loginWithGoogle();
+    if (!mounted) return;
+    if (ok) {
+      context.go('/home');
+    } else if (auth.error != null) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(auth.error!)));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
@@ -77,6 +95,21 @@ class _SignupScreenState extends State<SignupScreen> {
                 style: TextStyle(color: Colors.white.withValues(alpha: 0.6)),
               ),
               const SizedBox(height: 32),
+              if (auth.supabaseActive) ...[
+                GoogleSignInButton(onPressed: _googleSignIn, loading: auth.loading),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Expanded(child: Divider(color: Colors.white.withValues(alpha: 0.2))),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      child: Text('or', style: TextStyle(color: Colors.white.withValues(alpha: 0.5))),
+                    ),
+                    Expanded(child: Divider(color: Colors.white.withValues(alpha: 0.2))),
+                  ],
+                ),
+                const SizedBox(height: 16),
+              ],
               DarkTextField(
                 controller: _email,
                 hint: 'Email',

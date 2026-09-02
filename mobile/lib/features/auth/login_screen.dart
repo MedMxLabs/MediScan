@@ -1,15 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_sign_in/google_sign_in.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/back_navigation.dart';
-import '../../core/config.dart';
 import '../../core/l10n_ext.dart';
 import '../../core/theme.dart';
 import '../../providers/auth_provider.dart';
 import '../../widgets/ui_components.dart';
 import '../landing/medmx_logo.dart';
+import 'google_sign_in_button.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -46,25 +45,19 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _googleSignIn() async {
-    if (AppConfig.googleClientId.isEmpty) {
+    final auth = context.read<AuthProvider>();
+    if (!auth.supabaseActive) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Google sign-in not configured (set GOOGLE_CLIENT_ID at build time).')),
+        const SnackBar(content: Text('Supabase Auth is not configured on this API.')),
       );
       return;
     }
-    final auth = context.read<AuthProvider>();
-    try {
-      final google = GoogleSignIn(serverClientId: AppConfig.googleClientId, scopes: ['email']);
-      final account = await google.signIn();
-      final authData = await account?.authentication;
-      final idToken = authData?.idToken;
-      if (idToken == null) return;
-      final ok = await auth.loginWithGoogle(idToken);
-      if (!mounted) return;
-      if (ok) context.go('/home');
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
+    final ok = await auth.loginWithGoogle();
+    if (!mounted) return;
+    if (ok) {
+      context.go('/home');
+    } else if (auth.error != null) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(auth.error!)));
     }
   }
 
@@ -109,6 +102,21 @@ class _LoginScreenState extends State<LoginScreen> {
                 delay: const Duration(milliseconds: 200),
                 child: Column(
                   children: [
+                    if (auth.supabaseActive) ...[
+                      GoogleSignInButton(onPressed: _googleSignIn, loading: auth.loading),
+                      const SizedBox(height: 16),
+                      Row(
+                        children: [
+                          Expanded(child: Divider(color: Colors.white.withValues(alpha: 0.2))),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 12),
+                            child: Text('or', style: TextStyle(color: Colors.white.withValues(alpha: 0.5))),
+                          ),
+                          Expanded(child: Divider(color: Colors.white.withValues(alpha: 0.2))),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                    ],
                     DarkTextField(
                       controller: _email,
                       hint: l10n.loginEmail,
@@ -129,18 +137,6 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     const SizedBox(height: 16),
                     GradientButton(label: l10n.loginButton, onPressed: _submit, loading: auth.loading),
-                    if (AppConfig.googleClientId.isNotEmpty) ...[
-                      const SizedBox(height: 12),
-                      OutlinedButton(
-                        onPressed: auth.loading ? null : _googleSignIn,
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: Colors.white,
-                          side: BorderSide(color: Colors.white.withValues(alpha: 0.25)),
-                          minimumSize: const Size(double.infinity, 48),
-                        ),
-                        child: const Text('Continue with Google'),
-                      ),
-                    ],
                     const SizedBox(height: 28),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,

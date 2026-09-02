@@ -110,17 +110,17 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
-  Future<bool> loginWithGoogle(String idToken) async {
+  Future<bool> loginWithGoogle() async {
     _loading = true;
     _error = null;
     notifyListeners();
     try {
       await _storage.clear();
-      _error =
-          'Google sign-in on mobile uses Supabase OAuth. Enable Google in your Supabase project, then use email/password or configure the OAuth flow.';
+      await _requireSupabaseAuth();
+      await _loginViaSupabase(sb.signInWithGoogle);
       _loading = false;
       notifyListeners();
-      return false;
+      return true;
     } catch (e) {
       _error = _formatError(e);
       _loading = false;

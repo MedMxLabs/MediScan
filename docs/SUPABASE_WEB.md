@@ -17,6 +17,7 @@ Mobile may still use legacy endpoints until migrated.
 | **Site URL** | `http://localhost:5173` | `https://icy-pond-06a17d300.7.azurestaticapps.net` |
 | **Redirect URLs** | `http://localhost:5173/auth/callback` | `https://icy-pond-06a17d300.7.azurestaticapps.net/auth/callback` |
 | | `http://localhost:5173/reset-password` | `https://icy-pond-06a17d300.7.azurestaticapps.net/reset-password` |
+| | `com.medmxlabs.medscan://login-callback` | *(mobile app — Android/iOS)* |
 
 > **Google redirects to `localhost:3000`?** Your Supabase **Site URL** is wrong (often `http://localhost:3000`). Change **Site URL** to your live SWA URL above and add the production `/auth/callback` to **Redirect URLs**. Remove `localhost:3000` unless you actually run the app on port 3000.
 

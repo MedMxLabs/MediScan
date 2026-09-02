@@ -6,9 +6,10 @@ class AppConfig {
     defaultValue: 'http://10.0.2.2:5000',
   );
 
-  static const googleClientId = String.fromEnvironment(
-    'GOOGLE_CLIENT_ID',
-    defaultValue: '',
+  /// Supabase OAuth return URL — add to Supabase Auth redirect URLs.
+  static const oauthRedirectUrl = String.fromEnvironment(
+    'SUPABASE_OAUTH_REDIRECT',
+    defaultValue: 'com.medmxlabs.medscan://login-callback',
   );
 
   /// Matches backend MEDSCAN_CLIENT_API_KEYS — sent as X-Medscan-Api-Key on every request.

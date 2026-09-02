@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:dio/dio.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -105,4 +107,44 @@ Future<String> signUpWithEmailPassword(String email, String password) async {
 Future<void> signOutSupabase() async {
   if (!_available) return;
   await Supabase.instance.client.auth.signOut();
+}
+
+/// Google via Supabase OAuth (same provider as web) — returns Supabase access token.
+Future<String> signInWithGoogle() async {
+  if (!await ensureSupabase()) {
+    throw Exception('Supabase is not configured');
+  }
+
+  final auth = Supabase.instance.client.auth;
+  final completer = Completer<String>();
+  late StreamSubscription<AuthState> sub;
+
+  sub = auth.onAuthStateChange.listen((data) {
+    final token = data.session?.accessToken;
+    if (data.event == AuthChangeEvent.signedIn && token != null && token.isNotEmpty) {
+      sub.cancel();
+      if (!completer.isCompleted) completer.complete(token);
+    }
+  });
+
+  try {
+    await auth.signInWithOAuth(
+      OAuthProvider.google,
+      redirectTo: AppConfig.oauthRedirectUrl,
+      authScreenLaunchMode: LaunchMode.externalApplication,
+    );
+  } catch (e) {
+    await sub.cancel();
+    rethrow;
+  }
+
+  try {
+    return await completer.future.timeout(
+      const Duration(minutes: 5),
+      onTimeout: () => throw Exception('Google sign-in timed out or was cancelled'),
+    );
+  } catch (e) {
+    await sub.cancel();
+    rethrow;
+  }
 }

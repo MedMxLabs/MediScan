@@ -59,13 +59,25 @@ When both are set, Login / Signup / Forgot password use Supabase automatically.
 
 ## 4. Mobile (Flutter)
 
-```yaml
-# pubspec.yaml — add:
-# supabase_flutter: ^2.9.0
+Mobile uses the **same Supabase Auth flow as web**: email/password or Google OAuth → Supabase session → `POST /api/auth/supabase` → MedScan JWT.
+
+**Supabase dashboard → Authentication → URL configuration → Redirect URLs** — add:
+
+```
+com.medmxlabs.medscan://login-callback
 ```
 
+Run against production API (Supabase config is loaded from `GET /api/auth/supabase/config` automatically):
+
 ```powershell
-flutter pub add supabase_flutter
+cd mobile
+flutter pub get
+flutter run --dart-define=API_BASE_URL=https://medscan-api.azurewebsites.net
+```
+
+Optional overrides:
+
+```powershell
 flutter run `
   --dart-define=API_BASE_URL=https://medscan-api.azurewebsites.net `
   --dart-define=MEDSCAN_API_KEY=your-client-key `
@@ -73,7 +85,11 @@ flutter run `
   --dart-define=SUPABASE_ANON_KEY=eyJ...
 ```
 
-After `Supabase.initialize`, sign in with the SDK, then `POST /api/auth/supabase` with the session access token (same as web).
+Release APK:
+
+```powershell
+flutter build apk --release --dart-define=API_BASE_URL=https://medscan-api.azurewebsites.net
+```
 
 ## 5. Production (Azure)
 

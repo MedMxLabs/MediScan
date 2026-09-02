@@ -22,11 +22,31 @@ _USER_ALTER: list[tuple[str, str]] = [
 ]
 
 
-def patch_sqlite_users_columns(db) -> None:
-    if db.engine.dialect.name != "sqlite":
+def _ensure_supabase_id(db, insp) -> None:
+    cols = {c["name"] for c in insp.get_columns("users")}
+    if "supabase_id" in cols:
         return
+    ddl = "VARCHAR(36)"
+    try:
+        with db.engine.begin() as conn:
+            conn.execute(text(f"ALTER TABLE users ADD COLUMN supabase_id {ddl}"))
+        indexes = {i["name"] for i in insp.get_indexes("users")}
+        if "ix_users_supabase_id" not in indexes:
+            with db.engine.begin() as conn:
+                conn.execute(text("CREATE UNIQUE INDEX ix_users_supabase_id ON users (supabase_id)"))
+        logger.info("%s migrated users.supabase_id", db.engine.dialect.name)
+    except Exception as exc:
+        logger.warning("%s migrate users.supabase_id failed: %s", db.engine.dialect.name, exc)
+
+
+def patch_sqlite_users_columns(db) -> None:
     insp = inspect(db.engine)
     if not insp.has_table("users"):
+        return
+    if db.engine.dialect.name == "postgresql":
+        _ensure_supabase_id(db, insp)
+        return
+    if db.engine.dialect.name != "sqlite":
         return
     for col, ddl in _USER_ALTER:
         cols = {c["name"] for c in insp.get_columns("users")}
