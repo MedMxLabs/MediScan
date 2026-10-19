@@ -63,7 +63,7 @@ Why: a scrape used to tie up one of only two gunicorn workers for up to two minu
 
 ### Deploy checklist
 
-1. Deploy the backend.  new indexes by itself.
+1. Deploy the backend. On startup it creates `scrape_jobs` and the new indexes by itself.
 2. Optional, once: `alembic stamp 003_scrape_jobs` against prod so Alembic history matches.
 3. Deploy the web app and publish the new APK straight after.
 4. For Play Store builds, create `mobile/android/key.properties` first.
@@ -72,5 +72,5 @@ Why: a scrape used to tie up one of only two gunicorn workers for up to two minu
 ### Known gaps
 
 - The Supabase SDK still loads at web boot (could be lazy).
-- The lab-report "drop it here" box loOn startup it creates `scrape_jobs` and theoks like a drop target but only supports clicking to pick a file.
+- The lab-report "drop it here" box looks like a drop target but only supports clicking to pick a file.
 - CI builds the APK with only `API_BASE_URL` and `MEDSCAN_API_KEY`. That's fine, because the app fetches Supabase config from the backend.
