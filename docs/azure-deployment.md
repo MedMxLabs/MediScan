@@ -507,11 +507,15 @@ Two workflow files are provided in `.github/workflows/`:
 
 ### 10.1 Backend — `deploy-backend.yml`
 
-Triggers on push to `main` when `backend/**` files change. Builds the Docker image, pushes to ACR, deploys to App Service, and runs a health check.
+**Manual only** (`workflow_dispatch`). Builds the Docker image, pushes to ACR, deploys to App Service, and runs a health check. Does not run on push (keeps GitHub + Azure quiet — see [COST.md](COST.md)).
 
 ### 10.2 Frontend — `deploy-frontend.yml`
 
-Triggers on push to `main` when `frontend/**` files change. Builds the Vite app with environment variables and deploys to Azure Static Web Apps.
+**Manual only** (`workflow_dispatch`). Builds the Vite app (+ optional APK), then deploys to Azure Static Web Apps.
+
+### 10.2b CI — `ci.yml`
+
+Runs on pull requests (free on public repos): backend pytest, frontend lint/build, Flutter analyze/test. No Azure deploy.
 
 ### 10.3 Set up GitHub Secrets
 

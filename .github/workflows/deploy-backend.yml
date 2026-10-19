@@ -1,11 +1,9 @@
 name: Deploy Backend to Azure App Service
 
+# Manual only — avoids Azure spend on every push/PR merge.
+# Run from Actions → Deploy Backend → Run workflow when you intentionally deploy.
 on:
-  push:
-    branches: [main]
-    paths:
-      - "backend/**"
-      - ".github/workflows/deploy-backend.yml"
+  workflow_dispatch:
 
 env:
   ACR_NAME: acrmedscan

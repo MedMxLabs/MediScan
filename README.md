@@ -168,6 +168,8 @@ Protected routes need a Bearer token. Prod may also want `X-Medscan-Api-Key` on 
 
 ## Docs
 
+Wiki (contributor map): [`MediScan/wiki`](https://github.com/MedMxLabs/MediScan/wiki) — source pages in [`wiki/`](wiki/).
+
 Start at [`docs/README.md`](docs/README.md). Quick picks:
 
 - [`docs/architecture.md`](docs/architecture.md) — how the pieces fit, diagrams
@@ -175,6 +177,7 @@ Start at [`docs/README.md`](docs/README.md). Quick picks:
 - [`docs/api-reference.md`](docs/api-reference.md) — every route
 - [`docs/backend.md`](docs/backend.md) / [`frontend.md`](docs/frontend.md) / [`mobile.md`](docs/mobile.md) — per-app guides
 - [`docs/azure-deployment.md`](docs/azure-deployment.md) — Azure + startup credits
+- [`docs/COST.md`](docs/COST.md) — keep GitHub at $0
 - [`docs/API_KEYS.md`](docs/API_KEYS.md) — env vars
 - [`docs/SUPABASE_AUTH.md`](docs/SUPABASE_AUTH.md) — auth
 - [`docs/changelog.md`](docs/changelog.md) — what changed

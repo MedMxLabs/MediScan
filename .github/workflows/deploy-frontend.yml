@@ -1,12 +1,8 @@
 name: Deploy Frontend to Azure Static Web Apps
 
+# Manual only — keeps GitHub Actions + Azure quiet on routine pushes/PRs.
+# Actions → Deploy Frontend → Run workflow when you intentionally ship.
 on:
-  push:
-    branches: [main]
-    paths:
-      - "frontend/**"
-      - "mobile/**"
-      - ".github/workflows/deploy-frontend.yml"
   workflow_dispatch:
 
 jobs:

@@ -80,7 +80,7 @@ Web and mobile both use Supabase Auth, then `POST /api/auth/supabase` for MedSca
 - One concern per PR when you can. Docs-only and refactor-only PRs are fine.
 - If the PR changes routes, update [`docs/api-reference.md`](docs/api-reference.md). Bigger behaviour shifts get a note in [`docs/changelog.md`](docs/changelog.md).
 
-CI deploys `main` to Azure. Don't merge broken search/OCR/auth flows.
+PR **CI** (`ci.yml`) runs tests only — free on this public repo. Azure deploys are **manual** (`workflow_dispatch`); maintainers ship when ready. Don't merge broken search/OCR/auth flows. See [`docs/COST.md`](docs/COST.md).
 
 ## Issues and ideas
 
