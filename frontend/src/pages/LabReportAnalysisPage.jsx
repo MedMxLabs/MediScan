@@ -27,6 +27,7 @@ const LabReportAnalysisPage = () => {
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
   const [result, setResult] = useState(null);
+  const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef(null);
   const { data: past, error: pastError } = useAsync(getLabReports, [result]);
   const pastReports = (!pastError && past?.reports) || [];
@@ -49,8 +50,7 @@ const LabReportAnalysisPage = () => {
 
   const pickFile = () => fileInputRef.current?.click();
 
-  const onFile = (e) => {
-    const f = e.target.files?.[0];
+  const acceptFile = (f) => {
     if (!f) return;
     const msg = validate(f);
     if (msg) {
@@ -60,6 +60,30 @@ const LabReportAnalysisPage = () => {
     setFile(f);
     setError('');
     setResult(null);
+  };
+
+  const onFile = (e) => {
+    acceptFile(e.target.files?.[0]);
+    // Permit choosing the same file again after removing it or fixing validation.
+    e.target.value = '';
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'copy';
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e) => {
+    // Avoid flicker while the pointer moves between children of the dropzone.
+    if (e.currentTarget.contains(e.relatedTarget)) return;
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setIsDragging(false);
+    acceptFile(e.dataTransfer.files?.[0]);
   };
 
   const onUpload = async () => {
@@ -100,7 +124,10 @@ const LabReportAnalysisPage = () => {
             tabIndex={file ? undefined : 0}
             aria-label={file ? undefined : 'Choose a lab report file (JPG, PNG or PDF, max 10 MB)'}
             onKeyDown={file ? undefined : (e) => activateOnEnterOrSpace(e, pickFile)}
-            className="dash-inset-dashed flex-1 min-h-[280px] p-8 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors"
+            className={`dash-inset-dashed flex-1 min-h-[280px] p-8 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors ${isDragging ? 'border-teal bg-teal/10' : ''}`}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
             onClick={pickFile}
           >
             <input
