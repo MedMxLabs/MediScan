@@ -15,6 +15,7 @@ Start with [architecture](architecture.md) if you're new. Everything else is ref
 | [SUPABASE_WEB.md](SUPABASE_WEB.md) | Web-specific Supabase setup (redirect URLs, Google) |
 | [azure-deployment.md](azure-deployment.md) | Full Azure walkthrough (App Service, SWA, ACR, Postgres) |
 | [COST.md](COST.md) | Keep GitHub at **$0** (Free plan, public repos, manual deploys) |
+| [GITHUB_ACTIONS.md](GITHUB_ACTIONS.md) | What each workflow does (CI free, deploys manual) |
 | [changelog.md](changelog.md) | What changed in each big round of work + deploy notes |
 
 GitHub Wiki (short contributor map; sync from repo `wiki/`): [MediScan wiki](https://github.com/MedMxLabs/MediScan/wiki).

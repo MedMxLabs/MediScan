@@ -1,6 +1,10 @@
 # MedScan (MedMx Labs)
 
-**License:** [MIT](LICENSE) · **Status:** [in development](#status) · **PRs:** [welcome](CONTRIBUTING.md)
+[![CI](https://github.com/MedMxLabs/MediScan/actions/workflows/ci.yml/badge.svg)](https://github.com/MedMxLabs/MediScan/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![PRs welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
+
+**License:** [MIT](LICENSE) · **Status:** [in development](#status) · **PRs:** [welcome](CONTRIBUTING.md) · **GitHub cost:** [$0](docs/COST.md)
 
 **MedMx Labs** is a company building healthcare tools for India. **MedScan** is our product — medicine price comparison, prescription / lab OCR, reminders, and adherence tracking.
 
