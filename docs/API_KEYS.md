@@ -75,9 +75,11 @@ OCR stays on Azure Document Intelligence (or Tesseract). LLM is **only** used to
 |--------|---------|------------|
 | `API_BASE_URL` | Backend base URL | Production API URL |
 | `MEDSCAN_API_KEY` | `X-Medscan-Api-Key` header | `MEDSCAN_CLIENT_API_KEYS` |
-| `GOOGLE_CLIENT_ID` | Google sign-in (app) | `GOOGLE_OAUTH_CLIENT_ID` |
+| `SUPABASE_URL` | Supabase project (optional) | Backend `SUPABASE_URL`, fetched from `/api/auth/supabase/config` if blank |
+| `SUPABASE_ANON_KEY` | Supabase public key (optional) | Backend `SUPABASE_ANON_KEY`, same fallback |
+| `SUPABASE_OAUTH_REDIRECT` | Google sign-in deep link | Supabase redirect allow-list (default `com.medmxlabs.medscan://login-callback`) |
 
-User login after client key: **JWT** in `Authorization: Bearer <access_token>` (web: via Supabase Auth + `/api/auth/supabase`; mobile: via `/api/auth/login`).
+User login after client key: **JWT** in `Authorization: Bearer <access_token>`. Both web and mobile get it by signing in with Supabase Auth and then calling `POST /api/auth/supabase`.
 
 ### Infrastructure & deploy (not in app runtime)
 

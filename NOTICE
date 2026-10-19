@@ -1,0 +1,14 @@
+MedScan (MedMx Labs)
+Copyright (c) 2026 MedMx Labs
+
+Licensed under the MIT License. See LICENSE.
+
+DISCLAIMER
+----------
+MedScan is informational software only. It is not a medical device and does not
+provide medical advice, diagnosis, or treatment. Always consult a qualified
+clinician. Do not use this software as a substitute for professional care.
+
+Pharmacy price data is obtained by querying third-party websites. Operators are
+responsible for complying with those sites' terms of service and applicable law.
+The authors assume no liability for scraping, pricing accuracy, or downstream use.

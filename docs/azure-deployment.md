@@ -3,7 +3,7 @@
 **Target:** Microsoft Azure for Startups (free credits program)
 **Backend:** Azure App Service (Linux, Docker container)
 **Frontend:** Azure Static Web Apps
-**Last updated:** 2026-05-19
+**Last updated:** 2026-10-19
 
 ---
 
@@ -303,7 +303,7 @@ az webapp config appsettings set \
 
 ### 5.5 Run initial migration
 
-The app calls `db.create_all()` on startup, which creates all tables automatically. For subsequent schema changes, use Alembic:
+The app calls `db.create_all()` on startup, then `schema_patch` adds any missing columns and indexes, so normal deploys need no manual migration step. If you want Alembic to track the existing DB, stamp it once (`alembic stamp 003_scrape_jobs`). After that, use Alembic for schema changes:
 
 ```bash
 # From local machine with DATABASE_URL pointing to Azure PG
@@ -441,7 +441,7 @@ az webapp config appsettings set \
 ### 8.2 Verify the connection
 
 1. Open the Static Web App URL in your browser.
-2. Try searching for a medicine — the frontend should call `https://medscan-api.azurewebsites.net/api/search-medicine`.
+2. Try searching for a medicine. The frontend should call `https://medscan-api.azurewebsites.net/api/search-medicine` (a new medicine gives `202`, then `/api/scrape-jobs/<id>` polls).
 3. Check the browser console for CORS errors. If present, verify `CORS_ORIGINS` is set correctly.
 
 ---
@@ -580,15 +580,15 @@ Azure Portal → App Service → **Deployment Center → Logs** for container pu
 
 ### Understanding the Bottleneck
 
-The heaviest operation is **medicine search**, which launches Playwright (headless Chromium). From `scraper_service.py`:
+The heaviest operation is a **fresh medicine search**. It's handled by `app/services/scraper_service/`:
 
-- **12 scrapers** run in parallel (1mg, PharmEasy, Netmeds, Apollo, TrueMeds, MedPlus, Flipkart, Amazon, SastaSundar, Medkart, Bajaj Health, Mankind)
-- Each scraper opens a **separate Chromium page** in one shared browser context via `asyncio.gather`
-- Per-page timeout: **60s** (`set_default_timeout(60000)`) / navigation: **75s**
-- **Peak RAM per search: ~2.5–3.5 GB** (1 Chromium process + 12 concurrent tabs)
-- Average scrape duration: **45–75 seconds**
+- **6 pharmacies** scraped in parallel: PharmEasy, Netmeds, TrueMeds and MedPlus over plain HTTP (httpx), and 1mg and Apollo in headless Chromium (Playwright).
+- One Chromium process with **2 pages**, so peak RAM is **~0.8–1.2 GB per scrape**.
+- One overall deadline (`SCRAPER_TIMEOUT_SECS`, default 120s). Usually **15–40 seconds**.
 
-The Dockerfile runs **`gunicorn -w 2`** (2 sync workers), so only **2 requests** can be processed concurrently — a single scrape blocks one worker for the full duration.
+Scrapes run as **background jobs**: the API answers right away with `202` and the client polls `/api/scrape-jobs/<id>`. So a slow scrape never holds an HTTP request. The Dockerfile runs `gunicorn -w 2 --threads 4` (8 request slots), and each worker runs at most `SCRAPER_MAX_CONCURRENT_JOBS` (default 2) scrapes at once. Extra jobs queue on that limit.
+
+> The scenario numbers below were estimated for the older design (12 Chromium tabs per search, blocking workers). With the current design, each tier handles roughly 2–3× more fresh scrapes. Treat them as a conservative ceiling.
 
 ### Caching Drastically Reduces Chromium Load
 
@@ -606,7 +606,7 @@ All other endpoints (auth, dashboard, reminders, adherence, history, profile, ch
 
 | Endpoint | CPU | RAM | Duration | Notes |
 |----------|-----|-----|----------|-------|
-| Medicine search (fresh) | High | ~3 GB | 45–75s | 12 parallel Chromium tabs |
+| Medicine search (fresh) | High | ~1 GB | 15–40s | Background job: 4 HTTP + 2 Chromium scrapers |
 | Medicine search (cached) | Minimal | ~5 MB | <50ms | Redis/DB lookup only |
 | Prescription OCR | Moderate | ~200 MB | 2–5s | Tesseract CPU spike |
 | Lab report analysis | Moderate | ~200 MB | 2–5s | OCR + deterministic parsing |
@@ -732,7 +732,7 @@ Common causes:
 
 ### Playwright/Chromium crashes
 
-The Docker image already includes all Chromium dependencies. If you see sandbox errors, ensure the Dockerfile has `--no-sandbox` in the Chromium launch args (already present in `scraper_service.py`).
+The Docker image already includes all Chromium dependencies. If you see sandbox errors, ensure `--no-sandbox` is in the Chromium launch args (already present in `scraper_service/runner.py`). To run without Chromium at all, set `SKIP_PLAYWRIGHT=1` (you lose 1mg and Apollo).
 
 ### Database connection refused
 

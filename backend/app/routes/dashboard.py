@@ -11,7 +11,7 @@ from app.extensions import db
 from app.models.prescription import Prescription
 from app.models.reminder import AdherenceLog, Reminder
 from app.models.search_history import SearchHistory
-from app.services.comparison_service import search_medicine
+from app.services.comparison_service import PENDING, search_medicine
 from app.utils.logger import get_logger
 from app.utils.redis_cache import cache_key_dashboard, get_cache, set_cache
 from app.utils.responses import err, ok
@@ -162,6 +162,8 @@ def dashboard_compare_preview():
     if not recent:
         return ok(None)
     payload, code, _msg = search_medicine(recent.query, user_id=None)
+    if code == PENDING:
+        return ok(payload, status=PENDING)
     if code:
         return ok({"error": "compare_failed", "detail": payload})
     return ok(payload)

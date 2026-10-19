@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security vulnerability
+    url: https://github.com/MedMxLabs/MediScan/security/advisories/new
+    about: Report security issues privately — do not file a public issue.
+  - name: Docs & setup help
+    url: https://github.com/MedMxLabs/MediScan/blob/main/docs/development.md
+    about: Local setup, env vars, and common breakages.

@@ -1,0 +1,46 @@
+name: Feature request
+description: Suggest an improvement or new capability
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: Describe the **user problem** first. Implementation ideas are welcome after that.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What are you trying to do that is hard or impossible today?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: How might we solve it? Keep it concrete.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - API (backend)
+        - Web (frontend)
+        - Android (mobile)
+        - Auth / Supabase
+        - Scrapers / search
+        - OCR / prescriptions / lab reports
+        - Docs / DX / other
+    validations:
+      required: true
+  - type: checkboxes
+    id: medical
+    attributes:
+      label: Scope note
+      options:
+        - label: This is not asking MedScan to give medical advice, diagnose, or replace a clinician
+          required: true

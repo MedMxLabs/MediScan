@@ -16,9 +16,15 @@ dist-ssr/
 
 # Environment & secrets
 .env
-backend/.env
-frontend/.env
+**/.env
+**/.env.*
+!**/.env.example
 docs/API_KEYS.local.md
+**/key.properties
+**/*.jks
+**/*.keystore
+**/google-services.json
+**/GoogleService-Info.plist
 
 # Databases
 *.db

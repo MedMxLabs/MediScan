@@ -19,7 +19,7 @@ sequenceDiagram
 
 - **Supabase** stores users and handles passwords / OAuth.
 - **MedScan `users` table** links `supabase_id` → local `id` for your data.
-- **Web** uses Supabase Auth exclusively. **Mobile** may still use legacy `/api/auth/login` endpoints until migrated.
+- **Web and mobile** both use Supabase Auth exclusively. The legacy `/api/auth/login` / `register` endpoints have been removed.
 
 ## 1. Create a Supabase project
 

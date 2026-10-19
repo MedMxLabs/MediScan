@@ -1,18 +1,30 @@
 # MedScan (MedMx Labs)
 
-Medicine price comparison, prescription / lab OCR, reminders, and adherence tracking for India.
+**License:** [MIT](LICENSE) · **Status:** [in development](#status) · **PRs:** [welcome](CONTRIBUTING.md)
 
-Web + Flutter app, Flask API. Hosted on Azure. We're in **[Microsoft for Startups](https://www.microsoft.com/startups)** and use Azure credits from that program to run production.
+**MedMx Labs** is a company building healthcare tools for India. **MedScan** is our product — medicine price comparison, prescription / lab OCR, reminders, and adherence tracking.
 
-Org: [github.com/MedMxLabs](https://github.com/MedMxLabs)
+We're still in **active development**. APIs, UI, and scrapers can change without notice. Expect rough edges.
 
-This is informational tooling only — not medical advice.
+Web + Flutter app, Flask API. Hosted on Azure. MedMx Labs is **backed by [Microsoft for Startups](https://www.microsoft.com/startups)** — we use Azure credits from that program to run staging / production.
+
+Org: [github.com/MedMxLabs](https://github.com/MedMxLabs) · Repo: [MedMxLabs/MediScan](https://github.com/MedMxLabs/MediScan)
+
+This is informational tooling only — not medical advice. See [NOTICE](NOTICE).
+
+**Open source** under the [MIT License](LICENSE). Contributions welcome — start with [CONTRIBUTING.md](CONTRIBUTING.md) and the [Code of Conduct](CODE_OF_CONDUCT.md). Security reports: [SECURITY.md](SECURITY.md).
 
 ---
 
-## Microsoft for Startups
+## Status
 
-MedMx Labs got into Microsoft for Startups so we can run MedScan on Azure without eating the whole cloud bill ourselves.
+MedScan is a **work in progress**. Features land and get reworked as we figure out what sticks. Don't treat the live URLs as a finished product.
+
+---
+
+## Backed by Microsoft for Startups
+
+MedMx Labs is backed by Microsoft for Startups. That gets us Azure credits and cloud runway so we can run MedScan without eating the whole bill ourselves.
 
 What we actually use:
 
@@ -53,7 +65,7 @@ Cost / SKU notes and how long credits last are in [`docs/azure-deployment.md`](d
 backend/     Flask API, scrapers, OCR, reminders
 frontend/    React + Vite + Tailwind
 mobile/      Flutter app (see mobile/README.md)
-docs/        Azure, API keys, Supabase
+docs/        architecture, API, per-app guides, Azure, keys, Supabase
 .github/     deploy workflows
 ```
 
@@ -139,7 +151,8 @@ Workflows under `.github/workflows/`. Full walkthrough: [`docs/azure-deployment.
 | --- | --- |
 | `GET /health` | alive? |
 | `POST /api/auth/supabase` | Supabase token → our JWT |
-| `GET /api/search-medicine` | price search |
+| `GET /api/search-medicine` | price search (new medicine → `202`, poll the job) |
+| `GET /api/scrape-jobs/<id>` | is that scrape done yet? |
 | `GET /api/compare` | search + ranking |
 | `POST /api/upload-prescription` | OCR Rx |
 | `POST /api/report-analysis` | lab report |
@@ -155,10 +168,26 @@ Protected routes need a Bearer token. Prod may also want `X-Medscan-Api-Key` on 
 
 ## Docs
 
+Start at [`docs/README.md`](docs/README.md). Quick picks:
+
+- [`docs/architecture.md`](docs/architecture.md) — how the pieces fit, diagrams
+- [`docs/development.md`](docs/development.md) — run it locally, common snags
+- [`docs/api-reference.md`](docs/api-reference.md) — every route
+- [`docs/backend.md`](docs/backend.md) / [`frontend.md`](docs/frontend.md) / [`mobile.md`](docs/mobile.md) — per-app guides
 - [`docs/azure-deployment.md`](docs/azure-deployment.md) — Azure + startup credits
 - [`docs/API_KEYS.md`](docs/API_KEYS.md) — env vars
 - [`docs/SUPABASE_AUTH.md`](docs/SUPABASE_AUTH.md) — auth
-- [`mobile/README.md`](mobile/README.md) — Flutter
+- [`docs/changelog.md`](docs/changelog.md) — what changed
+- [`CONTRIBUTING.md`](CONTRIBUTING.md) — how to contribute
+- [`SECURITY.md`](SECURITY.md) — vulnerability reporting
+- [`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md) — community standards
+- [`LICENSE`](LICENSE) / [`NOTICE`](NOTICE) — MIT + medical / scraping disclaimer
+
+---
+
+## License
+
+MIT — see [`LICENSE`](LICENSE). Third-party pharmacy sites and clinical use are your responsibility; see [`NOTICE`](NOTICE).
 
 ---
 

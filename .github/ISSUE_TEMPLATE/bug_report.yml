@@ -1,0 +1,68 @@
+name: Bug report
+description: Something isn't working as expected
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the report. Fill in what you can — more detail = faster fix.
+        **Security issues:** use a [private advisory](https://github.com/MedMxLabs/MediScan/security/advisories/new), not this form.
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - API (backend)
+        - Web (frontend)
+        - Android (mobile)
+        - Auth / Supabase
+        - Scrapers / search
+        - OCR / prescriptions / lab reports
+        - Docs / CI / other
+    validations:
+      required: true
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: Clear description of the bug.
+      placeholder: Search for "paracetamol" stays on pending forever…
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. …
+        2. …
+        3. …
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behaviour
+    validations:
+      required: true
+  - type: input
+    id: env
+    attributes:
+      label: Environment
+      description: e.g. Web Chrome on Windows / Android emulator API 34 / local API
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs / screenshots
+      description: Paste relevant API logs, browser console, or attach screenshots. Redact tokens and emails.
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checklist
+      options:
+        - label: I searched existing issues and didn't find a duplicate
+          required: true
+        - label: I am not reporting a security vulnerability here (those go private)
+          required: true

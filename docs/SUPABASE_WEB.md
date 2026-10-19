@@ -2,7 +2,7 @@
 
 The **web app uses only Supabase Auth** for sign-in/sign-up (no legacy `/api/auth/login` or Google Identity script). After Supabase sign-in, the app exchanges the Supabase access token for a **MedScan JWT** via `POST /api/auth/supabase` and uses that for all `/api/*` calls.
 
-Mobile may still use legacy endpoints until migrated.
+The Android app uses the same flow (see [mobile.md](mobile.md)).
 
 ## 1. Supabase project
 
@@ -27,9 +27,6 @@ Mobile may still use legacy endpoints until migrated.
 2. **Authorized redirect URIs** (required — use your Supabase project host):
 
    `https://YOUR-PROJECT-REF.supabase.co/auth/v1/callback`
-
-   Example for this repo’s project:  
-   `https://omuxukvhmeeobyoszdde.supabase.co/auth/v1/callback`
 
 3. Supabase dashboard → **Authentication → Providers → Google**:
    - Turn **Enable Google** ON
