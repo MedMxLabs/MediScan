@@ -2,8 +2,12 @@
 from __future__ import annotations
 
 import pytest
+from flask_jwt_extended import create_access_token
 
 from app.utils.client_api_key import CLIENT_API_KEY_HEADER
+
+# Guarded, side-effect free route (search-medicine would start a live scrape).
+GUARDED = "/api/medicine/1"
 
 
 @pytest.fixture
@@ -20,10 +24,10 @@ def test_health_without_key(app_with_key):
     assert r.status_code == 200
 
 
-def test_auth_login_without_key(app_with_key):
+def test_auth_routes_exempt_without_key(app_with_key):
     client = app_with_key.test_client()
-    r = client.post("/api/auth/login", json={"email": "x@y.com", "password": "password123"})
-    assert r.status_code in (400, 401, 404)
+    r = client.get("/api/auth/supabase/config")
+    assert r.status_code != 403
 
 
 def test_protected_route_rejects_missing_key(app_with_key):
@@ -36,11 +40,22 @@ def test_protected_route_rejects_missing_key(app_with_key):
 
 def test_protected_route_accepts_valid_key(app_with_key):
     client = app_with_key.test_client()
-    r = client.get(
-        "/api/search-medicine?query=para",
-        headers={CLIENT_API_KEY_HEADER: "test-client-key-abc"},
-    )
-    assert r.status_code != 403
+    r = client.get(GUARDED, headers={CLIENT_API_KEY_HEADER: "test-client-key-abc"})
+    assert r.status_code == 200
+
+
+def test_bogus_bearer_rejected_without_key(app_with_key):
+    client = app_with_key.test_client()
+    r = client.get(GUARDED, headers={"Authorization": "Bearer " + "x" * 40})
+    assert r.status_code == 401
+
+
+def test_valid_jwt_allowed_without_key(app_with_key):
+    with app_with_key.app_context():
+        token = create_access_token(identity="1")
+    client = app_with_key.test_client()
+    r = client.get(GUARDED, headers={"Authorization": f"Bearer {token}"})
+    assert r.status_code == 200
 
 
 def test_no_keys_configured_allows_requests(monkeypatch):
@@ -50,5 +65,5 @@ def test_no_keys_configured_allows_requests(monkeypatch):
 
     app = create_app("testing")
     client = app.test_client()
-    r = client.get("/api/search-medicine?query=para")
-    assert r.status_code != 403
+    r = client.get(GUARDED)
+    assert r.status_code == 200

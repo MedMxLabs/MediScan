@@ -73,19 +73,20 @@ class _AssistantScreenState extends State<AssistantScreen> {
 
   void _scrollToBottom() {
     Future.delayed(const Duration(milliseconds: 100), () {
-      if (_scroll.hasClients) {
-        _scroll.animateTo(
-          _scroll.position.maxScrollExtent,
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeOut,
-        );
-      }
+      if (!mounted || !_scroll.hasClients) return;
+      _scroll.animateTo(
+        _scroll.position.maxScrollExtent,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOut,
+      );
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    final name = context.watch<AuthProvider>().user?['name']?.toString().split(' ').first ?? 'there';
+    final name = context.select<AuthProvider, String>(
+      (a) => a.user?['name']?.toString().split(' ').first ?? 'there',
+    );
 
     return DarkScaffold(
       appBar: DarkAppBar(

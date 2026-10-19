@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/back_navigation.dart';
+import '../../core/l10n_ext.dart';
 import '../../core/theme.dart';
 import '../../providers/auth_provider.dart';
 import '../../widgets/ui_components.dart';
@@ -31,7 +32,7 @@ class _SignupScreenState extends State<SignupScreen> {
   Future<void> _submit() async {
     if (_password.text.length < 8) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Password must be at least 8 characters')),
+        SnackBar(content: Text(context.l10n.passwordTooShort)),
       );
       return;
     }
@@ -42,7 +43,7 @@ class _SignupScreenState extends State<SignupScreen> {
       context.go('/home');
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(auth.error ?? 'Signup failed')),
+        SnackBar(content: Text(auth.error ?? context.l10n.signupFailed)),
       );
     }
   }
@@ -51,7 +52,7 @@ class _SignupScreenState extends State<SignupScreen> {
     final auth = context.read<AuthProvider>();
     if (!auth.supabaseActive) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Supabase Auth is not configured on this API.')),
+        SnackBar(content: Text(context.l10n.supabaseNotConfigured)),
       );
       return;
     }
@@ -67,6 +68,7 @@ class _SignupScreenState extends State<SignupScreen> {
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
+    final l10n = context.l10n;
 
     return DarkScaffold(
       appBar: AppBar(
@@ -83,43 +85,34 @@ class _SignupScreenState extends State<SignupScreen> {
             children: [
               const FadeSlideIn(child: MedMxLogo(height: 52)),
               const SizedBox(height: 32),
-              const FadeSlideIn(
+              FadeSlideIn(
                 child: Text(
-                  'Create Account',
-                  style: TextStyle(fontSize: 28, fontWeight: FontWeight.w800, color: Colors.white),
+                  l10n.signupTitle,
+                  style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w800, color: Colors.white),
                 ),
               ),
               const SizedBox(height: 8),
               Text(
-                'Join MedMx for smarter healthcare',
+                l10n.signupSubtitle,
                 style: TextStyle(color: Colors.white.withValues(alpha: 0.6)),
               ),
               const SizedBox(height: 32),
               if (auth.supabaseActive) ...[
                 GoogleSignInButton(onPressed: _googleSignIn, loading: auth.loading),
                 const SizedBox(height: 16),
-                Row(
-                  children: [
-                    Expanded(child: Divider(color: Colors.white.withValues(alpha: 0.2))),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                      child: Text('or', style: TextStyle(color: Colors.white.withValues(alpha: 0.5))),
-                    ),
-                    Expanded(child: Divider(color: Colors.white.withValues(alpha: 0.2))),
-                  ],
-                ),
+                OrDivider(label: l10n.orDivider),
                 const SizedBox(height: 16),
               ],
               DarkTextField(
                 controller: _email,
-                hint: 'Email',
+                hint: l10n.signupEmail,
                 prefixIcon: Icons.mail_outline,
                 keyboardType: TextInputType.emailAddress,
               ),
               const SizedBox(height: 14),
               DarkTextField(
                 controller: _password,
-                hint: 'Password (8+ chars)',
+                hint: l10n.signupPasswordHint,
                 prefixIcon: Icons.lock_outline,
                 obscureText: _obscure,
                 suffixIcon: IconButton(
@@ -129,15 +122,15 @@ class _SignupScreenState extends State<SignupScreen> {
                 ),
               ),
               const SizedBox(height: 28),
-              GradientButton(label: 'Get Started', onPressed: _submit, loading: auth.loading),
+              GradientButton(label: l10n.landingGetStarted, onPressed: _submit, loading: auth.loading),
               const SizedBox(height: 20),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text('Already have an account? ', style: TextStyle(color: Colors.white.withValues(alpha: 0.6))),
+                  Text(l10n.loginPrompt, style: TextStyle(color: Colors.white.withValues(alpha: 0.6))),
                   GestureDetector(
                     onTap: () => context.go('/login'),
-                    child: const Text('Login', style: TextStyle(color: AppColors.lime, fontWeight: FontWeight.w700)),
+                    child: Text(l10n.loginButton, style: const TextStyle(color: AppColors.lime, fontWeight: FontWeight.w700)),
                   ),
                 ],
               ),

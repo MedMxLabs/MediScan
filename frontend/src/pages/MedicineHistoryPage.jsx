@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react';
 import { Search, FileText, Calendar, ExternalLink, History } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import { getHistory, getHistoryAnalytics } from '../services/api';
+import useAsync, { errorMessage } from '../hooks/useAsync';
 import { Link } from 'react-router-dom';
 import PageShell from '../components/dashboard/PageShell';
 import PageHeader from '../components/dashboard/PageHeader';
@@ -10,52 +10,42 @@ import LoadingState from '../components/dashboard/LoadingState';
 import EmptyState from '../components/dashboard/EmptyState';
 import Button from '../components/ui/Button';
 
-const MedicineHistoryPage = () => {
-  const [history, setHistory] = useState([]);
-  const [analytics, setAnalytics] = useState(null);
-  const [loading, setLoading] = useState(true);
+function historyRows(data) {
+  const rows = [];
+  (data.searches || []).forEach((s) => {
+    rows.push({ id: `search-${s.id}`, type: 'search', query: s.query, date: s.created_at });
+  });
+  (data.prescriptions || []).forEach((p) => {
+    const names = Array.isArray(p.medicine_list)
+      ? p.medicine_list.map((m) => m.name || m).join(', ')
+      : '';
+    rows.push({
+      id: `rx-${p.id}`,
+      type: 'prescription',
+      query: names || 'Prescription upload',
+      date: p.uploaded_at,
+    });
+  });
+  (data.lab_reports || []).forEach((lr) => {
+    rows.push({
+      id: `lab-${lr.id}`,
+      type: 'lab',
+      query: lr.insights_preview || `Lab report (${lr.row_count || 0} markers)`,
+      date: lr.created_at,
+    });
+  });
+  return rows.sort((a, b) => new Date(b.date) - new Date(a.date));
+}
 
-  useEffect(() => {
-    const fetchHistory = async () => {
-      try {
-        const [data, stats] = await Promise.all([
-          getHistory(),
-          getHistoryAnalytics().catch(() => null),
-        ]);
-        setAnalytics(stats);
-        const rows = [];
-        (data.searches || []).forEach((s) => {
-          rows.push({ id: `search-${s.id}`, type: 'search', query: s.query, date: s.created_at });
-        });
-        (data.prescriptions || []).forEach((p) => {
-          const names = Array.isArray(p.medicine_list)
-            ? p.medicine_list.map((m) => m.name || m).join(', ')
-            : '';
-          rows.push({
-            id: `rx-${p.id}`,
-            type: 'prescription',
-            query: names || 'Prescription upload',
-            date: p.uploaded_at,
-          });
-        });
-        (data.lab_reports || []).forEach((lr) => {
-          rows.push({
-            id: `lab-${lr.id}`,
-            type: 'lab',
-            query: lr.insights_preview || `Lab report (${lr.row_count || 0} markers)`,
-            date: lr.created_at,
-          });
-        });
-        rows.sort((a, b) => new Date(b.date) - new Date(a.date));
-        setHistory(rows);
-      } catch {
-        setHistory([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchHistory();
-  }, []);
+async function loadHistory() {
+  const [data, stats] = await Promise.all([getHistory(), getHistoryAnalytics().catch(() => null)]);
+  return { history: historyRows(data || {}), analytics: stats };
+}
+
+const MedicineHistoryPage = () => {
+  const { data, loading, error } = useAsync(loadHistory, []);
+  const history = data?.history || [];
+  const analytics = data?.analytics || null;
 
   const formatDate = (dateString) =>
     new Date(dateString).toLocaleDateString(undefined, {
@@ -73,6 +63,12 @@ const MedicineHistoryPage = () => {
         subtitle="Past searches and prescriptions extracted from uploads."
         icon={History}
       />
+
+      {error && (
+        <div className="rounded-xl dash-alert-error px-4 py-3 text-sm" role="alert">
+          {errorMessage(error, 'Could not load history.')}
+        </div>
+      )}
 
       {analytics?.totals ? (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">

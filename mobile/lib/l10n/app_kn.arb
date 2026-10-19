@@ -72,5 +72,15 @@
   "signupLink": "ಸೈನ್ ಅಪ್",
   "landingGetStarted": "ಪ್ರಾರಂಭಿಸಿ",
   "landingLogin": "ಲಾಗಿನ್",
-  "landingTagline": "ಭಾರತದಾದ್ಯಂತ ಔಷಧ ಬೆಲೆ ಹೋಲಿಕೆ"
+  "landingTagline": "ಭಾರತದಾದ್ಯಂತ ಔಷಧ ಬೆಲೆ ಹೋಲಿಕೆ",
+  "signupTitle": "ಖಾತೆ ರಚಿಸಿ",
+  "signupSubtitle": "ಉತ್ತಮ ಆರೋಗ್ಯ ಸೇವೆಗಾಗಿ MedMx ಸೇರಿ",
+  "signupEmail": "ಇಮೇಲ್",
+  "signupPasswordHint": "ಪಾಸ್‌ವರ್ಡ್ (8+ ಅಕ್ಷರಗಳು)",
+  "passwordTooShort": "ಪಾಸ್‌ವರ್ಡ್ ಕನಿಷ್ಠ 8 ಅಕ್ಷರಗಳಿರಬೇಕು",
+  "signupFailed": "ಸೈನ್ ಅಪ್ ವಿಫಲವಾಗಿದೆ",
+  "supabaseNotConfigured": "ಈ API ನಲ್ಲಿ Supabase Auth ಕಾನ್ಫಿಗರ್ ಆಗಿಲ್ಲ.",
+  "orDivider": "ಅಥವಾ",
+  "loginPrompt": "ಈಗಾಗಲೇ ಖಾತೆ ಇದೆಯೇ? ",
+  "retry": "ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ"
 }

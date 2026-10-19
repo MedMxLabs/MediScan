@@ -1,9 +1,11 @@
+import { Suspense } from 'react';
 import { Link } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import Logo from '../components/Logo';
 import Button from '../components/ui/Button';
 import BackedByMicrosoft from '../components/BackedByMicrosoft';
-import PublicBleedBackground from '../components/PublicBleedBackground';
+import BleedBackground from '../components/BleedBackground';
+import LoadingState from '../components/dashboard/LoadingState';
 
 const ACCENT_BAR = {
   teal: 'border-b-teal/25',
@@ -23,7 +25,7 @@ export default function PublicLayout({ children, title, accent = 'teal' }) {
       className={`min-h-screen light-shell public-shell public-shell--${accent} relative`}
       data-accent={accent}
     >
-      <PublicBleedBackground accent={accent} />
+      <BleedBackground variant="public" accent={accent} />
       <div className="relative z-0 flex min-h-screen flex-col">
         <header
           className={`sticky top-0 z-40 border-b-2 bg-white/75 backdrop-blur-md ${accentBar} shadow-sm`}
@@ -55,7 +57,9 @@ export default function PublicLayout({ children, title, accent = 'teal' }) {
             </div>
           </div>
         </header>
-        <main className="layout-wide flex-1 px-4 sm:px-6 py-6 sm:py-8">{children}</main>
+        <main className="layout-wide flex-1 px-4 sm:px-6 py-6 sm:py-8">
+          <Suspense fallback={<LoadingState />}>{children}</Suspense>
+        </main>
         <footer className="layout-wide px-4 sm:px-6 py-6 border-t border-slate-200/60 flex justify-center bg-white/40 backdrop-blur-sm">
           <BackedByMicrosoft />
         </footer>

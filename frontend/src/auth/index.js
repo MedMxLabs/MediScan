@@ -9,7 +9,6 @@ import {
   sendSupabasePasswordReset,
   updateSupabasePassword,
   isSupabaseRecoveryRedirect,
-  signOutSupabase,
   isSupabaseAuthAvailable,
   supabaseAuthEnabled,
 } from './supabaseAuth'

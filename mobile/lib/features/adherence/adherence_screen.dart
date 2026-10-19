@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../../core/api/medscan_api.dart';
 import '../../core/app_helpers.dart';
 import '../../core/theme.dart';
+import '../../widgets/async_body.dart';
 import '../../widgets/common_widgets.dart';
 import '../../widgets/ui_components.dart';
 import '../reminders/models/reminder_draft.dart';
@@ -18,10 +19,9 @@ class AdherenceScreen extends StatefulWidget {
   State<AdherenceScreen> createState() => _AdherenceScreenState();
 }
 
-class _AdherenceScreenState extends State<AdherenceScreen> {
+class _AdherenceScreenState extends State<AdherenceScreen> with AsyncLoadState {
   Map<String, dynamic>? _data;
   List<Map<String, dynamic>> _reminders = [];
-  bool _loading = true;
 
   @override
   void initState() {
@@ -29,22 +29,15 @@ class _AdherenceScreenState extends State<AdherenceScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) => _load());
   }
 
-  Future<void> _load() async {
-    setState(() => _loading = true);
-    try {
-      final api = context.read<MedscanApi>();
-      final results = await Future.wait([api.getAdherence(), api.getReminders()]);
-      if (!mounted) return;
-      setState(() {
-        _data = results[0] as Map<String, dynamic>;
-        _reminders = results[1] as List<Map<String, dynamic>>;
-        _loading = false;
+  Future<void> _load() => runLoad(() async {
+        final api = context.read<MedscanApi>();
+        final results = await Future.wait([api.getAdherence(), api.getReminders()]);
+        if (!mounted) return;
+        setState(() {
+          _data = results[0] as Map<String, dynamic>;
+          _reminders = results[1] as List<Map<String, dynamic>>;
+        });
       });
-    } catch (_) {
-      if (!mounted) return;
-      setState(() => _loading = false);
-    }
-  }
 
   Map<String, dynamic>? _findReminder(int? id) {
     if (id == null) return null;
@@ -110,9 +103,12 @@ class _AdherenceScreenState extends State<AdherenceScreen> {
     return PageShell(
       title: 'Adherence',
       showBack: true,
-      child: _loading
-          ? const LoadingOverlay()
-          : RefreshIndicator(
+      child: AsyncBody(
+        loading: loading,
+        error: loadError,
+        errorTitle: 'Could not load adherence',
+        onRetry: _load,
+        builder: (context) => RefreshIndicator(
               color: AppColors.teal,
               onRefresh: _load,
               child: ListView(
@@ -266,6 +262,7 @@ class _AdherenceScreenState extends State<AdherenceScreen> {
                 ],
               ),
             ),
+      ),
     );
   }
 }

@@ -1,8 +1,8 @@
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
 import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { logout } from '../store/slices/authSlice';
-import { logoutApi } from '../services/api';
+import { logoutApi } from '../auth';
 import { setToken } from '../api/client';
 import {
   LayoutDashboard,
@@ -20,6 +20,7 @@ import {
   User as UserIcon,
 } from 'lucide-react';
 import Logo from '../components/Logo';
+import LoadingState from '../components/dashboard/LoadingState';
 import BackedByMicrosoft from '../components/BackedByMicrosoft';
 import useAppThemeDark from '../hooks/useAppThemeDark';
 
@@ -175,7 +176,9 @@ const DashboardLayout = () => {
         </header>
 
         <main className="dash-main flex-1 overflow-y-auto overflow-x-hidden p-4 sm:p-6 lg:p-8 pb-[max(1rem,env(safe-area-inset-bottom))] bg-slate-50 dark:bg-navy bg-gradient-to-br from-slate-50 via-white to-teal/[0.04] dark:from-navy dark:via-[#0f2744] dark:to-[#0a192f] dot-grid overscroll-y-contain">
-          <Outlet />
+          <Suspense fallback={<LoadingState />}>
+            <Outlet />
+          </Suspense>
         </main>
       </div>
     </div>

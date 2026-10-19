@@ -227,4 +227,35 @@ class AppLocalizationsKn extends AppLocalizations {
 
   @override
   String get landingTagline => 'ಭಾರತದಾದ್ಯಂತ ಔಷಧ ಬೆಲೆ ಹೋಲಿಕೆ';
+
+  @override
+  String get signupTitle => 'ಖಾತೆ ರಚಿಸಿ';
+
+  @override
+  String get signupSubtitle => 'ಉತ್ತಮ ಆರೋಗ್ಯ ಸೇವೆಗಾಗಿ MedMx ಸೇರಿ';
+
+  @override
+  String get signupEmail => 'ಇಮೇಲ್';
+
+  @override
+  String get signupPasswordHint => 'ಪಾಸ್‌ವರ್ಡ್ (8+ ಅಕ್ಷರಗಳು)';
+
+  @override
+  String get passwordTooShort => 'ಪಾಸ್‌ವರ್ಡ್ ಕನಿಷ್ಠ 8 ಅಕ್ಷರಗಳಿರಬೇಕು';
+
+  @override
+  String get signupFailed => 'ಸೈನ್ ಅಪ್ ವಿಫಲವಾಗಿದೆ';
+
+  @override
+  String get supabaseNotConfigured =>
+      'ಈ API ನಲ್ಲಿ Supabase Auth ಕಾನ್ಫಿಗರ್ ಆಗಿಲ್ಲ.';
+
+  @override
+  String get orDivider => 'ಅಥವಾ';
+
+  @override
+  String get loginPrompt => 'ಈಗಾಗಲೇ ಖಾತೆ ಇದೆಯೇ? ';
+
+  @override
+  String get retry => 'ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ';
 }

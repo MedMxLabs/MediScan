@@ -1,4 +1,4 @@
-import AuthBleedBackground from './AuthBleedBackground';
+import BleedBackground from './BleedBackground';
 
 /** Wraps auth routes (login, signup, forgot, reset) — bleed + readable contrast */
 export default function AuthPageShell({ children, className = '' }) {
@@ -6,7 +6,7 @@ export default function AuthPageShell({ children, className = '' }) {
     <div
       className={`auth-shell h-[100dvh] max-h-[100dvh] overflow-hidden flex light-shell relative ${className}`.trim()}
     >
-      <AuthBleedBackground />
+      <BleedBackground variant="auth" />
       <div className="relative z-0 flex h-full w-full justify-center overflow-hidden">{children}</div>
     </div>
   );

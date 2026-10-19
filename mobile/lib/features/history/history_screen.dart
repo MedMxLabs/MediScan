@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../../core/api/medscan_api.dart';
 import '../../core/app_helpers.dart';
 import '../../core/theme.dart';
+import '../../widgets/async_body.dart';
 import '../../widgets/common_widgets.dart';
 import '../../widgets/ui_components.dart';
 
@@ -15,9 +16,8 @@ class HistoryScreen extends StatefulWidget {
   State<HistoryScreen> createState() => _HistoryScreenState();
 }
 
-class _HistoryScreenState extends State<HistoryScreen> {
+class _HistoryScreenState extends State<HistoryScreen> with AsyncLoadState {
   Map<String, dynamic>? _data;
-  bool _loading = true;
   String _filter = 'All';
 
   @override
@@ -26,20 +26,10 @@ class _HistoryScreenState extends State<HistoryScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) => _load());
   }
 
-  Future<void> _load() async {
-    setState(() => _loading = true);
-    try {
-      final data = await context.read<MedscanApi>().getHistory();
-      if (!mounted) return;
-      setState(() {
-        _data = data;
-        _loading = false;
+  Future<void> _load() => runLoad(() async {
+        final data = await context.read<MedscanApi>().getHistory();
+        if (mounted) setState(() => _data = data);
       });
-    } catch (_) {
-      if (!mounted) return;
-      setState(() => _loading = false);
-    }
-  }
 
   List<Map<String, dynamic>> get _allItems {
     final searches = (_data?['searches'] as List?) ?? [];
@@ -86,9 +76,12 @@ class _HistoryScreenState extends State<HistoryScreen> {
     return PageShell(
       title: 'Medicine History',
       showBack: true,
-      child: _loading
-          ? const LoadingOverlay()
-          : RefreshIndicator(
+      child: AsyncBody(
+        loading: loading,
+        error: loadError,
+        errorTitle: 'Could not load history',
+        onRetry: _load,
+        builder: (context) => RefreshIndicator(
               color: AppColors.teal,
               onRefresh: _load,
               child: ListView(
@@ -160,6 +153,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 ],
               ),
             ),
+      ),
     );
   }
 }

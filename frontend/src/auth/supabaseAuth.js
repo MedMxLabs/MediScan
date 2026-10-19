@@ -26,10 +26,11 @@ export async function exchangeSupabaseSession(accessToken) {
     if (err?.code === 'ERR_NETWORK' || !err?.response) {
       throw new Error(
         'Cannot reach the MedScan API. Start the backend (python run.py on port 5000) and try again.',
+        { cause: err },
       )
     }
     const msg = err.response?.data?.error || err.response?.data?.message || err.message
-    throw new Error(msg || 'MedScan token exchange failed')
+    throw new Error(msg || 'MedScan token exchange failed', { cause: err })
   }
 }
 

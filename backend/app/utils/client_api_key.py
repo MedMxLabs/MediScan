@@ -33,32 +33,40 @@ def _path_exempt(path: str) -> bool:
     return any(path.startswith(p) for p in _EXEMPT_PREFIXES)
 
 
-def check_client_api_key() -> tuple[bool, str]:
+def check_client_api_key() -> tuple[bool, str, int]:
     """
     When MEDSCAN_CLIENT_API_KEY(S) is set, require a matching X-Medscan-Api-Key header.
-    Returns (allowed, error_message).
+    Returns (allowed, error_message, http_status).
     """
     from flask import request
 
     if request.method == "OPTIONS":
-        return True, ""
+        return True, "", 200
     if not request.path.startswith("/api"):
-        return True, ""
+        return True, "", 200
     if _path_exempt(request.path):
-        return True, ""
+        return True, "", 200
 
     valid = _parse_keys()
     if not valid:
-        return True, ""
+        return True, "", 200
 
     provided = (request.headers.get(CLIENT_API_KEY_HEADER) or "").strip()
     if provided and provided in valid:
-        return True, ""
+        return True, "", 200
 
-    auth_header = (request.headers.get("Authorization") or "").strip()
-    if auth_header.startswith("Bearer ") and len(auth_header) > 20:
-        return True, ""
+    # Signed-in clients built without the key still pass, but only with a valid MedScan JWT.
+    # An expired/invalid token gets 401 so clients run their normal refresh / re-login path.
+    if not provided and (request.headers.get("Authorization") or "").startswith("Bearer "):
+        from flask_jwt_extended import get_jwt_identity, verify_jwt_in_request
+
+        try:
+            verify_jwt_in_request(optional=True)
+        except Exception:
+            return False, "Invalid or expired token", 401
+        if get_jwt_identity() is not None:
+            return True, "", 200
 
     if not provided:
-        return False, "Client API key required. Set X-Medscan-Api-Key (mobile: MEDSCAN_API_KEY dart-define)."
-    return False, "Invalid client API key."
+        return False, "Client API key required. Set X-Medscan-Api-Key (mobile: MEDSCAN_API_KEY dart-define).", 403
+    return False, "Invalid client API key.", 403

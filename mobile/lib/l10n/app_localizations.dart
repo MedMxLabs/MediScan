@@ -543,6 +543,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Compare medicine prices across India'**
   String get landingTagline;
+
+  /// No description provided for @signupTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Create Account'**
+  String get signupTitle;
+
+  /// No description provided for @signupSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Join MedMx for smarter healthcare'**
+  String get signupSubtitle;
+
+  /// No description provided for @signupEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Email'**
+  String get signupEmail;
+
+  /// No description provided for @signupPasswordHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Password (8+ chars)'**
+  String get signupPasswordHint;
+
+  /// No description provided for @passwordTooShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Password must be at least 8 characters'**
+  String get passwordTooShort;
+
+  /// No description provided for @signupFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Signup failed'**
+  String get signupFailed;
+
+  /// No description provided for @supabaseNotConfigured.
+  ///
+  /// In en, this message translates to:
+  /// **'Supabase Auth is not configured on this API.'**
+  String get supabaseNotConfigured;
+
+  /// No description provided for @orDivider.
+  ///
+  /// In en, this message translates to:
+  /// **'or'**
+  String get orDivider;
+
+  /// No description provided for @loginPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Already have an account? '**
+  String get loginPrompt;
+
+  /// No description provided for @retry.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get retry;
 }
 
 class _AppLocalizationsDelegate

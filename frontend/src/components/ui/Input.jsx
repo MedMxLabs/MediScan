@@ -1,7 +1,10 @@
-import React from 'react';
+import React, { useId } from 'react';
 
 const Input = React.forwardRef(
-  ({ label, error, icon: Icon, className = '', lightSurface = false, compact = false, ...props }, ref) => {
+  ({ label, error, icon: Icon, className = '', lightSurface = false, compact = false, id, 'aria-describedby': describedBy, ...props }, ref) => {
+  const autoId = useId();
+  const inputId = id || autoId;
+  const errorId = `${inputId}-error`;
   const labelCls = lightSurface ? 'text-navy' : 'dash-text';
   const iconCls = lightSurface ? 'text-muted' : 'dash-muted';
   const fieldCls = lightSurface
@@ -19,7 +22,11 @@ const Input = React.forwardRef(
 
   return (
   <div className={`w-full ${className}`}>
-    {label && <label className={`block font-semibold ${labelCls} ${labelSize} ml-0.5`}>{label}</label>}
+    {label && (
+      <label htmlFor={inputId} className={`block font-semibold ${labelCls} ${labelSize} ml-0.5`}>
+        {label}
+      </label>
+    )}
     <div className="relative">
       {Icon && (
         <div className={`absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none ${iconCls}`}>
@@ -28,11 +35,18 @@ const Input = React.forwardRef(
       )}
       <input
         ref={ref}
+        id={inputId}
         className={`block w-full rounded-xl border shadow-sm transition-all ${fieldPad} ${Icon ? 'pl-11' : ''} ${fieldCls}`}
+        aria-invalid={error ? true : undefined}
+        aria-describedby={[error ? errorId : null, describedBy].filter(Boolean).join(' ') || undefined}
         {...props}
       />
     </div>
-    {error && <p className={`mt-1.5 text-sm text-red-600 ${lightSurface ? '' : 'dark:text-red-400'}`}>{error}</p>}
+    {error && (
+      <p id={errorId} role="alert" className={`mt-1.5 text-sm text-red-600 ${lightSurface ? '' : 'dark:text-red-400'}`}>
+        {error}
+      </p>
+    )}
   </div>
   );
 });

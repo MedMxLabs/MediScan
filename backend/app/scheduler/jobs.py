@@ -21,9 +21,12 @@ def reminder_tick_job():
         return
     with _flask_app.app_context():
         try:
+            from app.extensions import db
             from app.models.reminder import Reminder
             from app.models.user import User
+            from app.routes.notifications import create_in_app_notification
             from app.services.notification_service import notify_reminder_due
+            from app.services.reminder_service import advance_after_dose
 
             now = datetime.utcnow()
             due = (
@@ -35,22 +38,27 @@ def reminder_tick_job():
                 .limit(50)
                 .all()
             )
+            if not due:
+                return
+            # Commit the advance first so a failed notification can't re-fire every tick.
             for r in due:
-                u = User.query.get(r.user_id)
+                advance_after_dose(r)
+            db.session.commit()
+            users = {u.id: u for u in User.query.filter(User.id.in_({r.user_id for r in due}))}
+            for r in due:
+                u = users.get(r.user_id)
                 if not u:
                     continue
                 prefs = u.preferences if isinstance(u.preferences, dict) else {}
                 if prefs.get("notifications_enabled", True) is False:
                     continue
-                notify_reminder_due(
-                    u.email if prefs.get("email_digest", True) else "",
-                    u.phone if prefs.get("sms_alerts", False) else "",
-                    r.medicine_name,
-                    r.dose,
-                )
                 try:
-                    from app.routes.notifications import create_in_app_notification
-
+                    notify_reminder_due(
+                        u.email if prefs.get("email_digest", True) else "",
+                        u.phone if prefs.get("sms_alerts", False) else "",
+                        r.medicine_name,
+                        r.dose,
+                    )
                     create_in_app_notification(
                         r.user_id,
                         title=f"Reminder: {r.medicine_name}",
@@ -58,31 +66,34 @@ def reminder_tick_job():
                         kind="reminder",
                     )
                 except Exception:
-                    pass
-            if due:
-                logger.info("reminder_tick: processed %d due reminders", len(due))
-        except Exception as exc:
-            logger.debug("reminder_tick_job skipped: %s", exc)
+                    logger.exception("reminder_tick: notify failed for reminder %s", r.id)
+            logger.info("reminder_tick: processed %d due reminders", len(due))
+        except Exception:
+            logger.exception("reminder_tick_job failed")
 
 
 def cache_sweep_job():
-    """Trim stale DB search cache rows older than 30 days."""
+    """Trim search cache rows older than 30 days and scrape jobs older than 1 day."""
     if _flask_app is None:
         return
     with _flask_app.app_context():
         try:
             from app.extensions import db
-            from app.models.medicine import SearchCache
+            from app.models.medicine import ScrapeJob, SearchCache
 
-            cutoff = (datetime.utcnow() - timedelta(days=30)).date().isoformat()
+            now = datetime.utcnow()
+            cutoff = (now - timedelta(days=30)).date().isoformat()
             deleted = SearchCache.query.filter(SearchCache.date_bucket < cutoff).delete(
                 synchronize_session=False
             )
-            if deleted:
+            jobs = ScrapeJob.query.filter(ScrapeJob.created_at < now - timedelta(days=1)).delete(
+                synchronize_session=False
+            )
+            if deleted or jobs:
                 db.session.commit()
-                logger.info("cache_sweep: removed %d stale search_cache rows", deleted)
-        except Exception as exc:
-            logger.debug("cache_sweep_job: %s", exc)
+                logger.info("cache_sweep: removed %d search_cache rows, %d scrape_jobs", deleted, jobs)
+        except Exception:
+            logger.exception("cache_sweep_job failed")
 
 
 def scraper_retry_job():
@@ -104,7 +115,7 @@ def scraper_retry_job():
             if not query:
                 continue
             try:
-                search_medicine(query, user_id=None, force_refresh=True)
+                search_medicine(query, user_id=None, force_refresh=True, wait=True)
             except Exception as exc:
                 logger.debug("scraper retry failed for %r: %s", query, exc)
                 remaining.append(item)
@@ -129,6 +140,11 @@ def init_scheduler(app):
     if os.environ.get("MEDSCAN_DISABLE_SCHEDULER", "").lower() in ("1", "true", "yes"):
         return
     if _scheduler is not None:
+        return
+    from app.utils.process_lock import hold_for_process_lifetime
+
+    if not hold_for_process_lifetime("scheduler"):
+        logger.info("APScheduler already running in another worker")
         return
     _scheduler = BackgroundScheduler(daemon=True)
     _scheduler.add_job(reminder_tick_job, "interval", minutes=15, id="reminder_tick", replace_existing=True)

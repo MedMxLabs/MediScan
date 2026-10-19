@@ -19,30 +19,6 @@ class MedscanApi {
     return Map<String, dynamic>.from(res.data as Map);
   }
 
-  Future<Map<String, dynamic>> login(String email, String password) async {
-    final res = await _dio.post(
-      '/api/auth/login',
-      data: {
-        'email': email.trim().toLowerCase(),
-        'password': password,
-      },
-      options: Options(extra: {'skipAuth': true}),
-    );
-    return Map<String, dynamic>.from(res.data as Map);
-  }
-
-  Future<Map<String, dynamic>> register(String email, String password) async {
-    final res = await _dio.post(
-      '/api/auth/register',
-      data: {
-        'email': email.trim().toLowerCase(),
-        'password': password,
-      },
-      options: Options(extra: {'skipAuth': true}),
-    );
-    return Map<String, dynamic>.from(res.data as Map);
-  }
-
   Future<Map<String, dynamic>> getDashboard({bool refresh = false}) async {
     final res = await _dio.get(
       '/api/dashboard',
@@ -60,25 +36,13 @@ class MedscanApi {
     String query, {
     bool refresh = false,
   }) async {
-    final res = await _dio.get(
-      '/api/search-medicine',
-      queryParameters: {
-        'query': query.trim(),
-        if (refresh) 'refresh': '1',
-      },
-      options: Options(receiveTimeout: AppConfig.scrapeTimeout),
-    );
+    final res = await _getScraped('/api/search-medicine', {
+      'query': query.trim(),
+      if (refresh) 'refresh': '1',
+    });
     final data = _client.unwrap(res) as Map;
     if (data['failed_all'] == true) {
-      final errors = data['scrape_errors'] as List?;
-      final firstErr = errors != null && errors.isNotEmpty
-          ? (errors.first as Map)['error']?.toString()
-          : null;
-      throw DioException(
-        requestOptions: res.requestOptions,
-        response: res,
-        message: firstErr ?? 'All pharmacy sources failed',
-      );
+      throw _scrapeFailure(res, _firstScrapeError(data));
     }
     final prices = (data['prices'] as List?) ?? [];
     final md = data['medicine_display'] ?? query;
@@ -97,13 +61,66 @@ class MedscanApi {
   }
 
   Future<Map<String, dynamic>> compareMedicine(String medicine) async {
-    final res = await _dio.get(
-      '/api/compare',
-      queryParameters: {'medicine': medicine.trim()},
-      options: Options(receiveTimeout: AppConfig.scrapeTimeout),
-    );
+    final res = await _getScraped('/api/compare', {'medicine': medicine.trim()});
     return Map<String, dynamic>.from(_client.unwrap(res) as Map);
   }
+
+  /// GET a scrape-backed endpoint. On 202 (cache miss) polls the background
+  /// job until done, then re-issues the request without `refresh`.
+  Future<Response<dynamic>> _getScraped(
+    String path,
+    Map<String, dynamic> query,
+  ) async {
+    final deadline = DateTime.now().add(AppConfig.scrapeTimeout);
+    var params = query;
+    while (true) {
+      final res = await _dio.get(
+        path,
+        queryParameters: params,
+        options: Options(receiveTimeout: AppConfig.scrapeTimeout),
+      );
+      if (res.statusCode != 202) return res;
+
+      final job = _client.unwrap(res) as Map;
+      final pollEvery = Duration(
+        milliseconds: (job['poll_after_ms'] as num?)?.toInt() ?? 2000,
+      );
+      while (true) {
+        if (DateTime.now().add(pollEvery).isAfter(deadline)) {
+          throw DioException(
+            requestOptions: res.requestOptions,
+            type: DioExceptionType.receiveTimeout,
+            message: 'Price lookup timed out',
+          );
+        }
+        await Future<void>.delayed(pollEvery);
+        final poll = await _dio.get('/api/scrape-jobs/${job['job_id']}');
+        final status = _client.unwrap(poll) as Map;
+        if (status['state'] == 'done') break;
+        if (status['state'] == 'failed') {
+          throw _scrapeFailure(
+            poll,
+            status['error']?.toString() ?? _firstScrapeError(status),
+          );
+        }
+      }
+      params = Map.of(query)..remove('refresh');
+    }
+  }
+
+  String? _firstScrapeError(Map data) {
+    final errors = data['scrape_errors'] as List?;
+    return errors != null && errors.isNotEmpty
+        ? (errors.first as Map)['error']?.toString()
+        : null;
+  }
+
+  DioException _scrapeFailure(Response<dynamic> res, String? message) =>
+      DioException(
+        requestOptions: res.requestOptions,
+        response: res,
+        message: message ?? 'All pharmacy sources failed',
+      );
 
   Future<Map<String, dynamic>> uploadPrescription(FormData formData) async {
     final res = await _dio.post(

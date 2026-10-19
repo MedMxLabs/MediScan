@@ -72,5 +72,15 @@
   "signupLink": "பதிவு செய்",
   "landingGetStarted": "தொடங்கு",
   "landingLogin": "உள்நுழை",
-  "landingTagline": "இந்தியா முழுவதும் மருந்து விலை ஒப்பீடு"
+  "landingTagline": "இந்தியா முழுவதும் மருந்து விலை ஒப்பீடு",
+  "signupTitle": "கணக்கை உருவாக்கு",
+  "signupSubtitle": "சிறந்த சுகாதார சேவைக்கு MedMx-இல் சேருங்கள்",
+  "signupEmail": "மின்னஞ்சல்",
+  "signupPasswordHint": "கடவுச்சொல் (8+ எழுத்துகள்)",
+  "passwordTooShort": "கடவுச்சொல் குறைந்தது 8 எழுத்துகள் இருக்க வேண்டும்",
+  "signupFailed": "பதிவு தோல்வியடைந்தது",
+  "supabaseNotConfigured": "இந்த API-இல் Supabase Auth அமைக்கப்படவில்லை.",
+  "orDivider": "அல்லது",
+  "loginPrompt": "ஏற்கனவே கணக்கு உள்ளதா? ",
+  "retry": "மீண்டும் முயற்சி செய்"
 }

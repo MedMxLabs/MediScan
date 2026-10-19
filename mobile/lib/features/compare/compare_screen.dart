@@ -7,6 +7,7 @@ import '../../core/api/api_client.dart';
 import '../../core/api/medscan_api.dart';
 import '../../core/back_navigation.dart';
 import '../../core/theme.dart';
+import '../../widgets/async_body.dart';
 import '../../widgets/common_widgets.dart';
 import '../../widgets/ui_components.dart';
 
@@ -19,16 +20,15 @@ class CompareScreen extends StatefulWidget {
   State<CompareScreen> createState() => _CompareScreenState();
 }
 
-class _CompareScreenState extends State<CompareScreen> {
+class _CompareScreenState extends State<CompareScreen> with AsyncLoadState {
   final _query = TextEditingController();
   Map<String, dynamic>? _data;
   List<Map<String, dynamic>> _generics = [];
-  bool _loading = false;
-  String? _error;
 
   @override
   void initState() {
     super.initState();
+    loading = false;
     if (widget.initialQuery != null && widget.initialQuery!.isNotEmpty) {
       _query.text = widget.initialQuery!;
       WidgetsBinding.instance.addPostFrameCallback((_) => _compare());
@@ -43,40 +43,27 @@ class _CompareScreenState extends State<CompareScreen> {
 
   Future<void> _compare() async {
     if (_query.text.trim().isEmpty) return;
-    setState(() {
-      _loading = true;
-      _error = null;
-    });
-    try {
-      final api = context.read<MedscanApi>();
-      final data = await api.compareMedicine(_query.text);
-      List<Map<String, dynamic>> generics = [];
-      try {
-        final alts = await api.getAlternatives(_query.text);
-        final rows = (alts['alternatives'] as List?) ?? [];
-        generics = rows.map((e) => Map<String, dynamic>.from(e as Map)).toList();
-      } catch (_) {
-        generics = [];
-      }
-      if (!mounted) return;
-      setState(() {
-        _data = data;
-        _generics = generics;
-        _loading = false;
-      });
-    } on DioException catch (e) {
-      if (!mounted) return;
-      setState(() {
-        _error = context.read<ApiClient>().errorMessage(e);
-        _loading = false;
-      });
-    } catch (e) {
-      if (!mounted) return;
-      setState(() {
-        _error = e.toString();
-        _loading = false;
-      });
-    }
+    final api = context.read<MedscanApi>();
+    final client = context.read<ApiClient>();
+    await runLoad(
+      () async {
+        final data = await api.compareMedicine(_query.text);
+        List<Map<String, dynamic>> generics = [];
+        try {
+          final alts = await api.getAlternatives(_query.text);
+          final rows = (alts['alternatives'] as List?) ?? [];
+          generics = rows.map((e) => Map<String, dynamic>.from(e as Map)).toList();
+        } catch (_) {
+          generics = [];
+        }
+        if (!mounted) return;
+        setState(() {
+          _data = data;
+          _generics = generics;
+        });
+      },
+      describeError: (e) => e is DioException ? client.errorMessage(e) : e.toString(),
+    );
   }
 
   @override
@@ -108,20 +95,20 @@ class _CompareScreenState extends State<CompareScreen> {
                 ),
                 const SizedBox(width: 8),
                 IconButton.filled(
-                  onPressed: _loading ? null : _compare,
+                  onPressed: loading ? null : _compare,
                   style: IconButton.styleFrom(backgroundColor: AppColors.teal),
-                  icon: _loading
+                  icon: loading
                       ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
                       : const Icon(Icons.compare_arrows),
                 ),
               ],
             ),
           ),
-          if (_error != null)
-            Expanded(child: EmptyState(title: 'Comparison unavailable', subtitle: _error))
-          else if (prices.isEmpty && !_loading)
+          if (loadError != null)
+            Expanded(child: EmptyState(title: 'Comparison unavailable', subtitle: loadError))
+          else if (prices.isEmpty && !loading)
             const Expanded(child: EmptyState(title: 'Enter a medicine to compare'))
-          else if (_loading)
+          else if (loading)
             const Expanded(child: LoadingOverlay(message: 'Comparing live prices…'))
           else
             Expanded(

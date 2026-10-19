@@ -21,7 +21,7 @@ export default defineConfig(({ mode }) => {
       tailwindcss(),
       VitePWA({
         registerType: 'prompt',
-        includeAssets: ['medmx-logo.png', 'apple-touch-icon.png'],
+        includeAssets: ['pwa-192x192.png', 'apple-touch-icon.png'],
         manifest: {
           name: 'MedMx LABS',
           short_name: 'MedMx',
@@ -36,19 +36,19 @@ export default defineConfig(({ mode }) => {
           categories: ['health', 'medical', 'productivity'],
           icons: [
             {
-              src: 'medmx-logo.png',
+              src: 'pwa-192x192.png',
               sizes: '192x192',
               type: 'image/png',
               purpose: 'any',
             },
             {
-              src: 'medmx-logo.png',
+              src: 'pwa-512x512.png',
               sizes: '512x512',
               type: 'image/png',
               purpose: 'any',
             },
             {
-              src: 'medmx-logo.png',
+              src: 'maskable-512x512.png',
               sizes: '512x512',
               type: 'image/png',
               purpose: 'maskable',
@@ -59,18 +59,18 @@ export default defineConfig(({ mode }) => {
               name: 'Search medicines',
               short_name: 'Search',
               url: '/search',
-              icons: [{ src: 'medmx-logo.png', sizes: '192x192' }],
+              icons: [{ src: 'pwa-192x192.png', sizes: '192x192' }],
             },
             {
               name: 'Upload prescription',
               short_name: 'Upload',
               url: '/upload',
-              icons: [{ src: 'medmx-logo.png', sizes: '192x192' }],
+              icons: [{ src: 'pwa-192x192.png', sizes: '192x192' }],
             },
           ],
         },
         workbox: {
-          globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2,webmanifest}'],
+          globPatterns: ['**/*.{js,css,html,ico,png,webp,svg,woff2,webmanifest}'],
           navigateFallback: '/index.html',
           navigateFallbackDenylist: [/^\/api\//],
           runtimeCaching: [
@@ -118,11 +118,18 @@ export default defineConfig(({ mode }) => {
       chunkSizeWarningLimit: 600,
       rollupOptions: {
         output: {
-          manualChunks(id) {
-            if (!id.includes('node_modules')) return;
-            if (id.includes('recharts')) return 'charts';
-            if (id.includes('framer-motion')) return 'motion';
-            if (id.includes('react') || id.includes('redux') || id.includes('@reduxjs')) return 'vendor';
+          // Groups also capture their dependencies, so vendor must outrank charts: recharts imports
+          // react/redux, and if charts claims them the entry has to preload the whole chart bundle.
+          codeSplitting: {
+            groups: [
+              {
+                name: 'vendor',
+                test: /[\\/]node_modules[\\/](react|react-dom|react-router|react-router-dom|react-redux|redux|redux-thunk|@reduxjs|immer|reselect|use-sync-external-store|scheduler|react-is)[\\/]/,
+                priority: 3,
+              },
+              { name: 'motion', test: /[\\/]node_modules[\\/](framer-motion|motion-dom|motion-utils)[\\/]/, priority: 2 },
+              { name: 'charts', test: /[\\/]node_modules[\\/]recharts[\\/]/, priority: 1 },
+            ],
           },
         },
       },

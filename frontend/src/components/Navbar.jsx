@@ -1,18 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence, LayoutGroup } from 'framer-motion';
-import { Menu, X, ArrowRight, User } from 'lucide-react';
-import AndroidAppDownloadButton from './AndroidAppDownloadButton';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Menu, X } from 'lucide-react';
 import Logo from './Logo';
-import Button from './ui/Button';
-
-const NAV = [
-  { label: 'Home', to: '/', hash: '' },
-  { label: 'Features', to: '/', hash: '#features' },
-  { label: 'How it Works', to: '/', hash: '#how-it-works' },
-  { label: 'About Us', to: '/', hash: '#about' },
-  { label: 'Contact', to: '/', hash: '#contact' },
-];
+import DesktopNav from './navbar/DesktopNav';
+import MobileNav from './navbar/MobileNav';
 
 /** Section ids on the landing page — order matters for scroll spy */
 const SCROLL_SECTIONS = [
@@ -25,55 +17,6 @@ const SCROLL_SECTIONS = [
 const SCROLL_SPY_OFFSET = 140;
 const CLICK_SCROLL_LOCK_MS = 1000;
 
-const navSpring = { type: 'spring', stiffness: 420, damping: 34 };
-const fadeDown = {
-  hidden: { opacity: 0, y: -14 },
-  visible: (i) => ({
-    opacity: 1,
-    y: 0,
-    transition: { delay: 0.12 + i * 0.06, duration: 0.45, ease: [0.22, 1, 0.36, 1] },
-  }),
-};
-
-const DesktopNavLink = ({ item, active, to, index, onClick }) => (
-  <motion.div
-    custom={index}
-    variants={fadeDown}
-    initial="hidden"
-    animate="visible"
-    className="relative"
-  >
-    <motion.div whileHover={{ scale: active ? 1 : 1.02 }} whileTap={{ scale: 0.98 }} transition={{ duration: 0.2 }}>
-      <Link
-        to={to}
-        onClick={onClick}
-        className="group relative block px-5 xl:px-6 py-2.5 text-sm font-semibold whitespace-nowrap rounded-full"
-      >
-        {active && (
-          <motion.span
-            layout
-            layoutId="nav-active-pill"
-            className="absolute inset-0 rounded-full bg-brand-gradient shadow-brand"
-            transition={navSpring}
-            aria-hidden
-          />
-        )}
-
-        <span
-          className={`relative z-10 transition-colors duration-300 ${
-            active ? 'text-white' : 'text-navy group-hover:text-teal-dark'
-          }`}
-        >
-          {item.label}
-        </span>
-      </Link>
-    </motion.div>
-  </motion.div>
-);
-
-const getNavTo = (item) =>
-  item.hash ? `${item.to}${item.hash}` : { pathname: '/', hash: '' };
-
 const Navbar = ({ embedded = false }) => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -81,6 +24,7 @@ const Navbar = ({ embedded = false }) => {
   const [scrolled, setScrolled] = useState(false);
   const [spyHash, setSpyHash] = useState('');
   const clickLock = useRef(false);
+  const clickLockTimer = useRef(null);
   const scrollTicking = useRef(false);
 
   useEffect(() => {
@@ -147,9 +91,12 @@ const Navbar = ({ embedded = false }) => {
     };
   }, [open]);
 
+  useEffect(() => () => window.clearTimeout(clickLockTimer.current), []);
+
   const lockScrollSpy = () => {
     clickLock.current = true;
-    window.setTimeout(() => {
+    window.clearTimeout(clickLockTimer.current);
+    clickLockTimer.current = window.setTimeout(() => {
       clickLock.current = false;
     }, CLICK_SCROLL_LOCK_MS);
   };
@@ -219,75 +166,7 @@ const Navbar = ({ embedded = false }) => {
               </Link>
             </motion.div>
 
-            <nav
-              className="hidden lg:flex items-center justify-center flex-1 px-4 xl:px-8"
-              aria-label="Main navigation"
-            >
-              <LayoutGroup id="desktop-nav">
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: 0.15, type: 'spring', stiffness: 280, damping: 22 }}
-                  whileHover={{ scale: 1.01 }}
-                  className="nav-capsule inline-flex items-center gap-1 rounded-full p-1"
-                >
-                  {NAV.map((item, index) => {
-                    const active = isActive(item);
-                    return (
-                      <DesktopNavLink
-                        key={item.label}
-                        item={item}
-                        active={active}
-                        to={getNavTo(item)}
-                        onClick={handleNavClick(item)}
-                        index={index}
-                      />
-                    );
-                  })}
-                </motion.div>
-              </LayoutGroup>
-            </nav>
-
-            <motion.div
-              initial={{ opacity: 0, x: 16 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.2, duration: 0.45 }}
-              className="hidden lg:flex items-center gap-4 xl:gap-5 shrink-0 pl-2"
-            >
-              <motion.div whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.97 }}>
-                <AndroidAppDownloadButton variant="outline" size="sm" className="whitespace-nowrap">
-                  Android App
-                </AndroidAppDownloadButton>
-              </motion.div>
-              <motion.div whileHover={{ x: 2 }} transition={{ duration: 0.2 }}>
-                <Link
-                  to="/login"
-                  className="flex items-center gap-2.5 text-sm font-semibold text-slate-600 hover:text-navy transition-colors whitespace-nowrap px-2"
-                >
-                  <motion.span whileHover={{ rotate: [0, -8, 8, 0] }} transition={{ duration: 0.4 }}>
-                    <User size={18} className="text-teal" />
-                  </motion.span>
-                  Sign in
-                </Link>
-              </motion.div>
-              <Link to="/signup">
-                <motion.div
-                  whileHover={{ scale: 1.04, y: -1 }}
-                  whileTap={{ scale: 0.97 }}
-                  transition={{ type: 'spring', stiffness: 400, damping: 24 }}
-                >
-                  <Button variant="primary" size="sm" className="gap-1.5 shadow-brand whitespace-nowrap">
-                    Get Started
-                    <motion.span
-                      animate={{ x: [0, 3, 0] }}
-                      transition={{ duration: 1.6, repeat: Infinity, ease: 'easeInOut' }}
-                    >
-                      <ArrowRight size={15} />
-                    </motion.span>
-                  </Button>
-                </motion.div>
-              </Link>
-            </motion.div>
+            <DesktopNav isActive={isActive} onNavClick={handleNavClick} />
 
             <motion.button
               type="button"
@@ -325,105 +204,12 @@ const Navbar = ({ embedded = false }) => {
         </div>
       </motion.header>
 
-      <AnimatePresence>
-        {open && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.25 }}
-            className="fixed inset-0 z-40 lg:hidden"
-          >
-            <motion.button
-              type="button"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="absolute inset-0 bg-navy/40 backdrop-blur-sm"
-              onClick={() => setOpen(false)}
-              aria-label="Close menu"
-            />
-            <motion.nav
-              initial={{ x: '100%' }}
-              animate={{ x: 0 }}
-              exit={{ x: '100%' }}
-              transition={{ type: 'spring', damping: 28, stiffness: 280 }}
-              className="absolute top-0 right-0 h-full w-[min(100%,320px)] bg-white shadow-2xl p-6 flex flex-col"
-              aria-label="Mobile navigation"
-            >
-              <div className="flex justify-end mb-6">
-                <button type="button" onClick={() => setOpen(false)} className="p-2 text-navy">
-                  <X size={22} />
-                </button>
-              </div>
-              <LayoutGroup id="mobile-nav">
-              <motion.div
-                className="space-y-1 flex-1"
-                initial="hidden"
-                animate="visible"
-                variants={{
-                  visible: { transition: { staggerChildren: 0.07, delayChildren: 0.1 } },
-                }}
-              >
-                {NAV.map((item) => {
-                  const active = isActive(item);
-                  return (
-                    <motion.div
-                      key={item.label}
-                      variants={{
-                        hidden: { opacity: 0, x: 24 },
-                        visible: { opacity: 1, x: 0, transition: { duration: 0.35 } },
-                      }}
-                      whileHover={{ x: 4 }}
-                      whileTap={{ scale: 0.98 }}
-                    >
-                      <Link
-                        to={getNavTo(item)}
-                        onClick={handleNavClick(item)}
-                        className="relative block px-4 py-3 rounded-full text-sm font-semibold overflow-hidden"
-                      >
-                        {active && (
-                          <motion.span
-                            layout
-                            layoutId="nav-active-pill-mobile"
-                            className="absolute inset-0 rounded-full bg-brand-gradient shadow-brand"
-                            transition={navSpring}
-                            aria-hidden
-                          />
-                        )}
-                        <span className={`relative z-10 ${active ? 'text-white' : 'text-navy'}`}>
-                          {item.label}
-                        </span>
-                      </Link>
-                    </motion.div>
-                  );
-                })}
-              </motion.div>
-              </LayoutGroup>
-              <motion.div
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.35, duration: 0.4 }}
-                className="space-y-3 pt-4 border-t border-slate-100"
-              >
-                <AndroidAppDownloadButton variant="secondary" size="md" fullWidth>
-                  Download Android App
-                </AndroidAppDownloadButton>
-                <Link to="/login">
-                  <Button variant="outline" fullWidth>
-                    Sign in
-                  </Button>
-                </Link>
-                <Link to="/signup">
-                  <Button variant="primary" fullWidth className="gap-2">
-                    Get Started <ArrowRight size={16} />
-                  </Button>
-                </Link>
-              </motion.div>
-            </motion.nav>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <MobileNav
+        open={open}
+        onClose={() => setOpen(false)}
+        isActive={isActive}
+        onNavClick={handleNavClick}
+      />
     </>
   );
 };

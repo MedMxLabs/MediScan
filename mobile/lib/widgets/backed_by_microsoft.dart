@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../core/theme.dart';
-
 /// Pill badge matching web landing — "Backed by Microsoft".
 class BackedByMicrosoftPill extends StatelessWidget {
   const BackedByMicrosoftPill({super.key});
@@ -80,28 +78,4 @@ class _MicrosoftMark extends StatelessWidget {
         height: 10 * u,
         color: c,
       );
-}
-
-/// Compact row for dark screens.
-class BackedByMicrosoftCompact extends StatelessWidget {
-  const BackedByMicrosoftCompact({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        const _MicrosoftMark(size: 12),
-        const SizedBox(width: 6),
-        Text(
-          'Backed by Microsoft',
-          style: TextStyle(
-            fontSize: 11,
-            color: AppColors.textMuted,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-      ],
-    );
-  }
 }

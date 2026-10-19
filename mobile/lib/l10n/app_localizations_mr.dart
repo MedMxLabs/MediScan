@@ -227,4 +227,35 @@ class AppLocalizationsMr extends AppLocalizations {
 
   @override
   String get landingTagline => 'भारतभर औषध किंमतींची तुलना';
+
+  @override
+  String get signupTitle => 'खाते तयार करा';
+
+  @override
+  String get signupSubtitle => 'उत्तम आरोग्यसेवेसाठी MedMx मध्ये सामील व्हा';
+
+  @override
+  String get signupEmail => 'ईमेल';
+
+  @override
+  String get signupPasswordHint => 'पासवर्ड (8+ अक्षरे)';
+
+  @override
+  String get passwordTooShort => 'पासवर्ड किमान 8 अक्षरांचा असावा';
+
+  @override
+  String get signupFailed => 'साइन अप अयशस्वी झाले';
+
+  @override
+  String get supabaseNotConfigured =>
+      'या API वर Supabase Auth कॉन्फिगर केलेले नाही.';
+
+  @override
+  String get orDivider => 'किंवा';
+
+  @override
+  String get loginPrompt => 'आधीच खाते आहे? ';
+
+  @override
+  String get retry => 'पुन्हा प्रयत्न करा';
 }

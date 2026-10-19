@@ -72,5 +72,15 @@
   "signupLink": "Sign Up",
   "landingGetStarted": "Get Started",
   "landingLogin": "Login",
-  "landingTagline": "Compare medicine prices across India"
+  "landingTagline": "Compare medicine prices across India",
+  "signupTitle": "Create Account",
+  "signupSubtitle": "Join MedMx for smarter healthcare",
+  "signupEmail": "Email",
+  "signupPasswordHint": "Password (8+ chars)",
+  "passwordTooShort": "Password must be at least 8 characters",
+  "signupFailed": "Signup failed",
+  "supabaseNotConfigured": "Supabase Auth is not configured on this API.",
+  "orDivider": "or",
+  "loginPrompt": "Already have an account? ",
+  "retry": "Retry"
 }

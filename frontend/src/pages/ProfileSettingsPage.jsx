@@ -4,17 +4,18 @@ import { getProfile, updateProfile } from '../services/api';
 import { applyTheme } from '../utils/theme';
 import { saveWebNotifyPref } from '../utils/reminderNotifications';
 import { updateProfile as updateReduxProfile } from '../store/slices/authSlice';
-import { Settings, Download, Check } from 'lucide-react';
+import { Settings } from 'lucide-react';
 import PageShell from '../components/dashboard/PageShell';
 import PageHeader from '../components/dashboard/PageHeader';
 import DashPanel from '../components/dashboard/DashPanel';
 import LoadingState from '../components/dashboard/LoadingState';
-import Button from '../components/ui/Button';
+import ProfileInfoTab from '../components/profile/ProfileInfoTab';
+import PreferencesTab from '../components/profile/PreferencesTab';
+import NotificationsTab from '../components/profile/NotificationsTab';
 import usePwaInstall from '../hooks/usePwaInstall';
+import useAsync, { errorMessage } from '../hooks/useAsync';
 
 const tabs = ['Profile', 'Preferences', 'Notifications'];
-
-const GENDERS = ['', 'Male', 'Female', 'Other', 'Prefer not to say'];
 
 const emptyProfile = {
   email: '',
@@ -32,40 +33,36 @@ const emptyProfile = {
 const ProfileSettingsPage = () => {
   const dispatch = useDispatch();
   const reduxUser = useSelector((s) => s.auth.user);
-  const { canInstall, install, isStandalone } = usePwaInstall();
+  const pwa = usePwaInstall();
   const [activeTab, setActiveTab] = useState('Profile');
-  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [status, setStatus] = useState({ text: '', kind: '' });
   const [p, setP] = useState(emptyProfile);
 
-  useEffect(() => {
-    (async () => {
-      try {
-        const data = await getProfile();
-        setP({
-          email: data?.email || reduxUser?.email || '',
-          name: data?.name || '',
-          phone: data?.phone || '',
-          date_of_birth: data?.date_of_birth || '',
-          gender: data?.gender || '',
-          preferences: data?.preferences || {},
-          notifications_enabled: Boolean(data?.notifications_enabled ?? true),
-          email_digest: Boolean(data?.email_digest ?? false),
-          sms_alerts: Boolean(data?.sms_alerts ?? false),
-          theme: data?.preferences?.theme || 'system',
-        });
-        applyTheme(data?.preferences?.theme || localStorage.getItem('medscan_theme') || 'system');
-      } catch (e) {
-        setStatus({
-          text: e.response?.data?.message || e.message || 'Could not load profile',
-          kind: 'err',
-        });
-      } finally {
-        setLoading(false);
-      }
-    })();
+  const { data: loaded, loading, error: loadError } = useAsync(async () => {
+    const data = await getProfile();
+    return {
+      form: {
+        email: data?.email || reduxUser?.email || '',
+        name: data?.name || '',
+        phone: data?.phone || '',
+        date_of_birth: data?.date_of_birth || '',
+        gender: data?.gender || '',
+        preferences: data?.preferences || {},
+        notifications_enabled: Boolean(data?.notifications_enabled ?? true),
+        email_digest: Boolean(data?.email_digest ?? false),
+        sms_alerts: Boolean(data?.sms_alerts ?? false),
+        theme: data?.preferences?.theme || 'system',
+      },
+      theme: data?.preferences?.theme || localStorage.getItem('medscan_theme') || 'system',
+    };
   }, [reduxUser?.email]);
+
+  useEffect(() => {
+    if (!loaded) return;
+    setP(loaded.form);
+    applyTheme(loaded.theme);
+  }, [loaded]);
 
   const setField = (k, v) => setP((prev) => ({ ...prev, [k]: v }));
 
@@ -86,10 +83,7 @@ const ProfileSettingsPage = () => {
       );
       setStatus({ text: message, kind: 'ok' });
     } catch (e) {
-      setStatus({
-        text: e.response?.data?.message || e.message || 'Save failed',
-        kind: 'err',
-      });
+      setStatus({ text: errorMessage(e, 'Save failed'), kind: 'err' });
     } finally {
       setSaving(false);
     }
@@ -125,9 +119,11 @@ const ProfileSettingsPage = () => {
     return save({ theme: p.theme }, 'Preferences saved.');
   };
 
-  if (loading) return <LoadingState label="Loading profile…" />;
+  if (loading && !loaded) return <LoadingState label="Loading profile…" />;
 
   const initials = (p.name || p.email || '?').slice(0, 1).toUpperCase();
+  const shown =
+    status.text || !loadError ? status : { text: errorMessage(loadError, 'Could not load profile'), kind: 'err' };
 
   return (
     <PageShell className="max-w-5xl">
@@ -139,7 +135,9 @@ const ProfileSettingsPage = () => {
           {tabs.map((tab) => (
             <button
               key={tab}
+              type="button"
               onClick={() => setActiveTab(tab)}
+              aria-current={activeTab === tab ? 'page' : undefined}
               className={`py-4 px-1 text-[15px] whitespace-nowrap transition-colors ${
                 activeTab === tab
                   ? 'border-b-2 border-teal text-teal font-bold'
@@ -152,15 +150,16 @@ const ProfileSettingsPage = () => {
         </nav>
       </div>
 
-      {status.text && (
+      {shown.text && (
         <div
+          role={shown.kind === 'err' ? 'alert' : 'status'}
           className={`mx-4 sm:mx-6 mt-4 rounded-xl border px-4 py-3 text-sm ${
-            status.kind === 'ok'
+            shown.kind === 'ok'
               ? 'border-teal/20 bg-teal/10 dark:bg-teal/15 text-teal-dark dark:text-teal'
               : 'border-red-100 dark:border-red-900 bg-red-50 dark:bg-red-950/40 text-red-800 dark:text-red-300'
           }`}
         >
-          {status.text}
+          {shown.text}
         </div>
       )}
 
@@ -177,163 +176,19 @@ const ProfileSettingsPage = () => {
 
         <div className="md:col-span-8">
           {activeTab === 'Profile' && (
-            <div className="dash-inset p-6 sm:p-8 bg-slate-50/50 dark:bg-transparent">
-              <h3 className="text-[16px] font-bold dash-text mb-8">Personal information</h3>
-              <form className="space-y-6" onSubmit={saveProfile}>
-                <div className="space-y-2">
-                  <label className="dash-form-label">Full name</label>
-                  <input
-                    type="text"
-                    value={p.name}
-                    onChange={(e) => setField('name', e.target.value)}
-                    className="dash-input"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="dash-form-label">Email</label>
-                  <input type="email" value={p.email} readOnly className="dash-input-readonly" />
-                </div>
-                <div className="space-y-2">
-                  <label className="dash-form-label">Phone</label>
-                  <input
-                    type="text"
-                    value={p.phone}
-                    onChange={(e) => setField('phone', e.target.value)}
-                    placeholder="+91 98765 43210"
-                    className="dash-input"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="dash-form-label">Date of birth</label>
-                  <input
-                    type="date"
-                    value={p.date_of_birth}
-                    onChange={(e) => setField('date_of_birth', e.target.value)}
-                    className="dash-input"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="dash-form-label">Gender</label>
-                  <select
-                    value={p.gender}
-                    onChange={(e) => setField('gender', e.target.value)}
-                    className="dash-input"
-                  >
-                    {GENDERS.map((g) => (
-                      <option key={g} value={g}>
-                        {g || 'Select…'}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div className="pt-2">
-                  <button
-                    type="submit"
-                    disabled={saving}
-                    className="bg-brand-gradient text-white text-[14px] font-bold py-2.5 px-6 rounded-xl shadow-sm hover:opacity-90 transition-colors disabled:opacity-60"
-                  >
-                    {saving ? 'Saving…' : 'Save changes'}
-                  </button>
-                </div>
-              </form>
-            </div>
+            <ProfileInfoTab p={p} setField={setField} onSubmit={saveProfile} saving={saving} />
           )}
-
           {activeTab === 'Preferences' && (
-            <div className="dash-inset p-8 space-y-6">
-              <h3 className="text-[16px] font-bold dash-text">System preferences</h3>
-              <div className="space-y-2">
-                <label className="dash-form-label">Theme</label>
-                <select
-                  value={p.theme}
-                  onChange={(e) => setField('theme', e.target.value)}
-                  className="dash-input max-w-xs"
-                >
-                  <option value="system">System</option>
-                  <option value="light">Light</option>
-                  <option value="dark">Dark</option>
-                </select>
-              </div>
-              <p className="text-sm dash-muted">
-                Language and time zone: English · Asia/Kolkata (mobile app supports additional languages).
-              </p>
-              <Button type="button" onClick={savePreferences} disabled={saving}>
-                {saving ? 'Saving…' : 'Save preferences'}
-              </Button>
-
-              <div className="border-t border-slate-100 dark:border-slate-700 pt-6 mt-2">
-                <h3 className="text-[16px] font-bold dash-text mb-1">Install app</h3>
-                <p className="text-sm dash-muted mb-4">
-                  Add MedMx LABS to your home screen for faster access and an app-like experience.
-                </p>
-                {isStandalone ? (
-                  <span className="inline-flex items-center gap-2 rounded-xl border border-teal/20 bg-teal/10 px-4 py-2.5 text-sm font-semibold text-teal-dark dark:text-teal">
-                    <Check size={16} /> App installed
-                  </span>
-                ) : canInstall ? (
-                  <Button type="button" onClick={() => install()}>
-                    <span className="inline-flex items-center gap-2">
-                      <Download size={16} /> Install MedMx LABS
-                    </span>
-                  </Button>
-                ) : (
-                  <p className="text-sm dash-muted">
-                    Open the browser menu and choose <strong>Install app</strong> / <strong>Add to Home screen</strong>.
-                    On iPhone, use Share → Add to Home Screen.
-                  </p>
-                )}
-              </div>
-            </div>
+            <PreferencesTab
+              theme={p.theme}
+              onThemeChange={(v) => setField('theme', v)}
+              onSave={savePreferences}
+              saving={saving}
+              pwa={pwa}
+            />
           )}
-
           {activeTab === 'Notifications' && (
-            <div className="dash-inset p-6 sm:p-8 bg-slate-50/50 dark:bg-transparent">
-              <h3 className="text-[16px] font-bold dash-text mb-6">
-                Notification preferences
-              </h3>
-
-              <div className="space-y-4">
-                {[
-                  {
-                    key: 'notifications_enabled',
-                    title: 'Medicine reminders',
-                    desc: 'Receive daily alerts to take your medicines.',
-                  },
-                  {
-                    key: 'email_digest',
-                    title: 'Weekly email digest',
-                    desc: 'Adherence summary and refill alerts on your email.',
-                  },
-                  {
-                    key: 'sms_alerts',
-                    title: 'SMS alerts',
-                    desc: 'Critical reminders and refill warnings via SMS.',
-                  },
-                ].map((row) => (
-                  <label
-                    key={row.key}
-                    className="flex items-center justify-between gap-4 py-2 border-b border-slate-100 dark:border-slate-700 last:border-0"
-                  >
-                    <div>
-                      <h4 className="text-[14px] font-bold dash-text">{row.title}</h4>
-                      <p className="text-[13px] dash-muted mt-0.5">{row.desc}</p>
-                    </div>
-                    <input
-                      type="checkbox"
-                      checked={Boolean(p[row.key])}
-                      onChange={(e) => setField(row.key, e.target.checked)}
-                      className="h-5 w-9 accent-teal"
-                    />
-                  </label>
-                ))}
-              </div>
-
-              <div className="pt-6">
-                <Button type="button" onClick={saveNotifications} disabled={saving}>
-                  {saving ? 'Saving…' : 'Save preferences'}
-                </Button>
-              </div>
-            </div>
+            <NotificationsTab p={p} setField={setField} onSave={saveNotifications} saving={saving} />
           )}
         </div>
       </div>

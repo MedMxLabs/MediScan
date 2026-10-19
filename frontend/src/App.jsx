@@ -1,28 +1,31 @@
+import { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
-import DashboardLayout from './layout/DashboardLayout';
 import PublicLayout from './layout/PublicLayout';
-
 import LandingPage from './pages/LandingPage';
-import LoginPage from './pages/LoginPage';
-import SignupPage from './pages/SignupPage';
-import AuthCallbackPage from './pages/AuthCallbackPage';
-import ForgotPasswordPage from './pages/ForgotPasswordPage';
-import ResetPasswordPage from './pages/ResetPasswordPage';
-
-import DashboardPage from './pages/DashboardPage';
-import SearchMedicinePage from './pages/SearchMedicinePage';
-import MedicineComparisonPage from './pages/MedicineComparisonPage';
-import UploadPrescriptionPage from './pages/UploadPrescriptionPage';
-import MedicineHistoryPage from './pages/MedicineHistoryPage';
-import RemindersPage from './pages/RemindersPage';
-import AdherenceTrackingPage from './pages/AdherenceTrackingPage';
-import LabReportAnalysisPage from './pages/LabReportAnalysisPage';
-import AiAssistantPage from './pages/AiAssistantPage';
-import ProfileSettingsPage from './pages/ProfileSettingsPage';
-import NearbyPharmacyPage from './pages/NearbyPharmacyPage';
-import JanAushadhiPage from './pages/JanAushadhiPage';
 import PwaShell from './components/pwa/PwaShell';
+import LoadingState from './components/dashboard/LoadingState';
+
+const DashboardLayout = lazy(() => import('./layout/DashboardLayout'));
+
+const LoginPage = lazy(() => import('./pages/LoginPage'));
+const SignupPage = lazy(() => import('./pages/SignupPage'));
+const AuthCallbackPage = lazy(() => import('./pages/AuthCallbackPage'));
+const ForgotPasswordPage = lazy(() => import('./pages/ForgotPasswordPage'));
+const ResetPasswordPage = lazy(() => import('./pages/ResetPasswordPage'));
+
+const DashboardPage = lazy(() => import('./pages/DashboardPage'));
+const SearchMedicinePage = lazy(() => import('./pages/SearchMedicinePage'));
+const MedicineComparisonPage = lazy(() => import('./pages/MedicineComparisonPage'));
+const UploadPrescriptionPage = lazy(() => import('./pages/UploadPrescriptionPage'));
+const MedicineHistoryPage = lazy(() => import('./pages/MedicineHistoryPage'));
+const RemindersPage = lazy(() => import('./pages/RemindersPage'));
+const AdherenceTrackingPage = lazy(() => import('./pages/AdherenceTrackingPage'));
+const LabReportAnalysisPage = lazy(() => import('./pages/LabReportAnalysisPage'));
+const AiAssistantPage = lazy(() => import('./pages/AiAssistantPage'));
+const ProfileSettingsPage = lazy(() => import('./pages/ProfileSettingsPage'));
+const NearbyPharmacyPage = lazy(() => import('./pages/NearbyPharmacyPage'));
+const JanAushadhiPage = lazy(() => import('./pages/JanAushadhiPage'));
 
 function PublicSearch() {
   return (
@@ -62,6 +65,7 @@ function App() {
   return (
     <BrowserRouter>
       <PwaShell />
+      <Suspense fallback={<LoadingState />}>
       <Routes>
         <Route path="/" element={<LandingPage />} />
 
@@ -97,6 +101,7 @@ function App() {
 
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
+      </Suspense>
     </BrowserRouter>
   );
 }

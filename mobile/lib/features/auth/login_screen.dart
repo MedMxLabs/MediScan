@@ -48,7 +48,7 @@ class _LoginScreenState extends State<LoginScreen> {
     final auth = context.read<AuthProvider>();
     if (!auth.supabaseActive) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Supabase Auth is not configured on this API.')),
+        SnackBar(content: Text(context.l10n.supabaseNotConfigured)),
       );
       return;
     }
@@ -105,16 +105,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     if (auth.supabaseActive) ...[
                       GoogleSignInButton(onPressed: _googleSignIn, loading: auth.loading),
                       const SizedBox(height: 16),
-                      Row(
-                        children: [
-                          Expanded(child: Divider(color: Colors.white.withValues(alpha: 0.2))),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 12),
-                            child: Text('or', style: TextStyle(color: Colors.white.withValues(alpha: 0.5))),
-                          ),
-                          Expanded(child: Divider(color: Colors.white.withValues(alpha: 0.2))),
-                        ],
-                      ),
+                      OrDivider(label: l10n.orDivider),
                       const SizedBox(height: 16),
                     ],
                     DarkTextField(

@@ -100,20 +100,6 @@ def test_medicine_name_cleaning_strips_strength():
     assert "Amoxicillin" in _normalize_name("Cap Amoxicillin 500mg BD")
 
 
-def test_nlp_parses_indian_prescription_format():
-    from app.services.nlp_service import parse_medicines_from_text
-
-    text = """
-    Tab Paracetamol 650mg 1-0-1 for 5 days
-    Cap Amoxicillin 500mg BD for 7 days
-    """
-    meds = parse_medicines_from_text(text)
-    names = {m["name"].lower() for m in meds}
-    assert any("paracetamol" in n for n in names)
-    assert any("amoxicillin" in n for n in names)
-    assert any(m.get("frequency") for m in meds)
-
-
 def test_pdf_embedded_text_without_tesseract():
     import fitz
 
@@ -208,7 +194,7 @@ def test_azure_di_used_when_configured(monkeypatch):
 def test_combination_topical_gel_extracts_single_formulation():
     from app.services import medicine_extract_service as mes
 
-    mes._CATALOG_LOOKUP = None
+    mes.catalog._CATALOG_LOOKUP = None
     result = mes.extract_medicine_names(
         """
     CHIEF COMPLAINT ROUTINE
@@ -233,7 +219,7 @@ def test_combination_topical_gel_extracts_single_formulation():
 def test_combination_collapse_partial_catalog_hits():
     from app.services import medicine_extract_service as mes
 
-    mes._CATALOG_LOOKUP = None
+    mes.catalog._CATALOG_LOOKUP = None
     result = mes.extract_medicine_names(
         "Tab Diclofenac Diethylamine Linseed Oil Methyl Salicylate Menthol Capsaicin Gel 1.16% BD"
     )
@@ -245,7 +231,7 @@ def test_combination_collapse_partial_catalog_hits():
 def test_fdc_montelukast_levocetirizine_merged():
     from app.services import medicine_extract_service as mes
 
-    mes._CATALOG_LOOKUP = None
+    mes.catalog._CATALOG_LOOKUP = None
     result = mes.extract_medicine_names(
         "Montelukast 10 mg and Levocetirizine 5 mg Oral Tablet HS"
     )
@@ -261,7 +247,7 @@ def test_fdc_montelukast_levocetirizine_merged():
 def test_full_prescription_five_medicines():
     from app.services import medicine_extract_service as mes
 
-    mes._CATALOG_LOOKUP = None
+    mes.catalog._CATALOG_LOOKUP = None
     text = """
     Tab Azithromycin 500 mg OD for 3 days
     Montelukast 10 mg and Levocetirizine 5 mg Oral Tablet HS
@@ -286,7 +272,7 @@ def test_full_prescription_five_medicines():
 def test_numbered_fdc_lines_not_duplicated():
     from app.services import medicine_extract_service as mes
 
-    mes._CATALOG_LOOKUP = None
+    mes.catalog._CATALOG_LOOKUP = None
     text = """
     1. Tab Azithromycin 500 mg OD
     2. MONTELUKAST 10 MG + LEVOCETIRIZINE 5 MG ORAL TABLET, Single Tab

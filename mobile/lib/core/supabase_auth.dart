@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:dio/dio.dart';
+import 'package:flutter/widgets.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'config.dart';
@@ -117,15 +118,34 @@ Future<String> signInWithGoogle() async {
 
   final auth = Supabase.instance.client.auth;
   final completer = Completer<String>();
-  late StreamSubscription<AuthState> sub;
+  Timer? resumeGrace;
 
-  sub = auth.onAuthStateChange.listen((data) {
+  final sub = auth.onAuthStateChange.listen((data) {
     final token = data.session?.accessToken;
-    if (data.event == AuthChangeEvent.signedIn && token != null && token.isNotEmpty) {
-      sub.cancel();
-      if (!completer.isCompleted) completer.complete(token);
+    if (data.event == AuthChangeEvent.signedIn &&
+        token != null &&
+        token.isNotEmpty &&
+        !completer.isCompleted) {
+      completer.complete(token);
     }
   });
+
+  // Back in the app without a session shortly after resuming = user abandoned the browser.
+  // Leaving the foreground again (e.g. resume fired while the browser was still opening) resets it.
+  void cancelGrace() => resumeGrace?.cancel();
+  final lifecycle = AppLifecycleListener(
+    onResume: () {
+      cancelGrace();
+      resumeGrace = Timer(const Duration(seconds: 3), () {
+        if (!completer.isCompleted) {
+          completer.completeError(Exception('Google sign-in was cancelled'));
+        }
+      });
+    },
+    onInactive: cancelGrace,
+    onHide: cancelGrace,
+    onPause: cancelGrace,
+  );
 
   try {
     await auth.signInWithOAuth(
@@ -133,18 +153,13 @@ Future<String> signInWithGoogle() async {
       redirectTo: AppConfig.oauthRedirectUrl,
       authScreenLaunchMode: LaunchMode.externalApplication,
     );
-  } catch (e) {
-    await sub.cancel();
-    rethrow;
-  }
-
-  try {
     return await completer.future.timeout(
       const Duration(minutes: 5),
       onTimeout: () => throw Exception('Google sign-in timed out or was cancelled'),
     );
-  } catch (e) {
+  } finally {
+    cancelGrace();
+    lifecycle.dispose();
     await sub.cancel();
-    rethrow;
   }
 }

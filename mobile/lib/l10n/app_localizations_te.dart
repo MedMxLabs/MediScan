@@ -227,4 +227,35 @@ class AppLocalizationsTe extends AppLocalizations {
 
   @override
   String get landingTagline => 'భారతదేశం అంతటా మందు ధరల పోలిక';
+
+  @override
+  String get signupTitle => 'ఖాతాను సృష్టించండి';
+
+  @override
+  String get signupSubtitle => 'మెరుగైన ఆరోగ్య సంరక్షణ కోసం MedMx లో చేరండి';
+
+  @override
+  String get signupEmail => 'ఇమెయిల్';
+
+  @override
+  String get signupPasswordHint => 'పాస్‌వర్డ్ (8+ అక్షరాలు)';
+
+  @override
+  String get passwordTooShort => 'పాస్‌వర్డ్ కనీసం 8 అక్షరాలు ఉండాలి';
+
+  @override
+  String get signupFailed => 'సైన్ అప్ విఫలమైంది';
+
+  @override
+  String get supabaseNotConfigured =>
+      'ఈ API లో Supabase Auth కాన్ఫిగర్ చేయబడలేదు.';
+
+  @override
+  String get orDivider => 'లేదా';
+
+  @override
+  String get loginPrompt => 'ఇప్పటికే ఖాతా ఉందా? ';
+
+  @override
+  String get retry => 'మళ్లీ ప్రయత్నించండి';
 }

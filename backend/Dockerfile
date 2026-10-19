@@ -19,4 +19,4 @@ RUN mkdir -p /app/uploads
 
 # Azure App Service (and other hosts) set PORT; local/docker-compose uses 5000 when unset
 EXPOSE 5000
-CMD ["sh", "-c", "exec gunicorn -w 2 -t 180 -b 0.0.0.0:${PORT:-5000} wsgi:app"]
+CMD ["sh", "-c", "exec gunicorn -w 2 --threads 4 -t 180 -b 0.0.0.0:${PORT:-5000} wsgi:app"]

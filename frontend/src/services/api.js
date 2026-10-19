@@ -6,6 +6,8 @@
 import client from '../api/client';
 
 const SCRAPE_TIMEOUT_MS = 180_000;
+const SCRAPE_JOB_DEADLINE_MS = 180_000;
+const SCRAPE_POLL_TIMEOUT_MS = 15_000;
 const OCR_UPLOAD_TIMEOUT_MS = 120_000;
 
 function unwrap(res) {
@@ -14,7 +16,44 @@ function unwrap(res) {
   return d;
 }
 
-export { loginWithPassword, registerAccount, forgotPassword, loginWithGoogle, logoutApi } from '../auth'
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+/**
+ * Cache misses return 202 + a background scrape job. Poll it, then replay the request
+ * without `refresh` so the backend serves the freshly cached payload.
+ */
+async function getScraped(url, params) {
+  const deadline = Date.now() + SCRAPE_JOB_DEADLINE_MS;
+  const replay = { ...params };
+  delete replay.refresh;
+  let res = await client.get(url, { params, timeout: SCRAPE_TIMEOUT_MS });
+  while (res.status === 202) {
+    const pending = unwrap(res) || {};
+    const pollMs = Number(pending.poll_after_ms) || 2000;
+    for (;;) {
+      if (Date.now() + pollMs > deadline) {
+        throw new Error('Live price lookup timed out. Retry shortly.');
+      }
+      await sleep(pollMs);
+      const job =
+        unwrap(
+          await client.get(`/api/scrape-jobs/${encodeURIComponent(pending.job_id)}`, {
+            timeout: SCRAPE_POLL_TIMEOUT_MS,
+          }),
+        ) || {};
+      if (job.state === 'done') break;
+      if (job.state === 'failed') {
+        const err = new Error(job.error || job.scrape_errors?.[0]?.error || 'All pharmacy sources failed');
+        err.scrape_errors = job.scrape_errors;
+        err.query = pending.query;
+        err.response = { status: 502, data: { status: 'error', message: err.message } };
+        throw err;
+      }
+    }
+    res = await client.get(url, { params: replay, timeout: SCRAPE_TIMEOUT_MS });
+  }
+  return unwrap(res);
+}
 
 function mapDashboard(raw) {
   const stats = raw.stats || {};
@@ -104,20 +143,12 @@ function mapPriceRows(data, query) {
 export async function searchMedicines(query, options = {}) {
   const params = { query: query.trim() };
   if (options.refresh) params.refresh = '1';
-  const res = await client.get('/api/search-medicine', {
-    params,
-    timeout: SCRAPE_TIMEOUT_MS,
-  });
-  const data = unwrap(res);
+  const data = await getScraped('/api/search-medicine', params);
   return mapPriceRows(data, query);
 }
 
 export async function compareMedicine(medicine) {
-  const res = await client.get('/api/compare', {
-    params: { medicine: medicine.trim() },
-    timeout: SCRAPE_TIMEOUT_MS,
-  });
-  return unwrap(res);
+  return getScraped('/api/compare', { medicine: medicine.trim() });
 }
 
 export async function uploadPrescription(formData) {
@@ -222,14 +253,6 @@ export async function getLabReports() {
 
 export async function getHistoryAnalytics() {
   const res = await client.get('/api/history/analytics');
-  return unwrap(res);
-}
-
-export async function getJanAushadhiNearby({ lat, lng, radius = 5000 }) {
-  const res = await client.get('/api/jan-aushadhi/nearby', {
-    params: { lat, lng, radius },
-    timeout: 30_000,
-  });
   return unwrap(res);
 }
 

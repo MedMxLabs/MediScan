@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../core/back_navigation.dart';
 import '../core/theme.dart';
+import 'ui_components.dart';
 
 class EmptyState extends StatelessWidget {
   const EmptyState({
@@ -8,11 +8,13 @@ class EmptyState extends StatelessWidget {
     required this.title,
     this.subtitle,
     this.icon = Icons.inbox_outlined,
+    this.action,
   });
 
   final String title;
   final String? subtitle;
   final IconData icon;
+  final Widget? action;
 
   @override
   Widget build(BuildContext context) {
@@ -32,6 +34,10 @@ class EmptyState extends StatelessWidget {
             if (subtitle != null) ...[
               const SizedBox(height: 8),
               Text(subtitle!, textAlign: TextAlign.center, style: const TextStyle(color: AppColors.textMuted)),
+            ],
+            if (action != null) ...[
+              const SizedBox(height: 16),
+              action!,
             ],
           ],
         ),
@@ -124,25 +130,10 @@ class PageShell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: AppTheme.darkBgDecoration,
-      child: Scaffold(
-        backgroundColor: Colors.transparent,
-        drawer: drawer,
-        appBar: AppBar(
-          backgroundColor: Colors.transparent,
-          title: Text(title, style: const TextStyle(fontWeight: FontWeight.w700)),
-          centerTitle: true,
-          leading: showBack
-              ? IconButton(
-                  icon: const Icon(Icons.arrow_back_ios_new, size: 20),
-                  onPressed: () => navigateBack(context),
-                )
-              : null,
-          actions: actions,
-        ),
-        body: child,
-      ),
+    return DarkScaffold(
+      drawer: drawer,
+      appBar: DarkAppBar(title: title, actions: actions, showBack: showBack),
+      body: child,
     );
   }
 }

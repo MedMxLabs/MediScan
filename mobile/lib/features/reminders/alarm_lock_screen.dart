@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
@@ -27,12 +29,12 @@ class _AlarmLockScreenState extends State<AlarmLockScreen> {
   void initState() {
     super.initState();
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
-    AlarmVibration.start();
+    unawaited(AlarmVibration.start());
   }
 
   @override
   void dispose() {
-    AlarmVibration.stop();
+    unawaited(AlarmVibration.stop());
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
     super.dispose();
   }

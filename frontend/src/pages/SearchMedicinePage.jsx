@@ -1,9 +1,8 @@
 import { useState, useEffect } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
 import { useSearchParams, Link } from 'react-router-dom';
 import { CheckCircle2, Search, RefreshCw, ExternalLink, Sparkles } from 'lucide-react';
-import { setSearchResults, addRecentSearch, setLoading, setError } from '../store/slices/medicineSlice';
 import { searchMedicines } from '../services/api';
+import useAsync from '../hooks/useAsync';
 import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
 import Card from '../components/ui/Card';
@@ -17,65 +16,50 @@ const TIPS = [
   { title: 'Compare prices & save more', hint: 'Live prices from 6 major pharmacies' },
 ];
 
+function searchErrorMessage(err) {
+  const status = err.response?.status;
+  const body = err.response?.data;
+  const backendMsg =
+    typeof body === 'object' && body !== null && typeof body.message === 'string'
+      ? body.message
+      : typeof body === 'string'
+        ? body
+        : null;
+  if (status === 502) {
+    return (
+      backendMsg ||
+      'Live prices could not be loaded (502). Usually every pharmacy scrape failed, or the request timed out. Retry shortly.'
+    );
+  }
+  return backendMsg || err.message || 'Search failed';
+}
+
 const SearchMedicinePage = ({ publicMode = false }) => {
-  const dispatch = useDispatch();
-  const { searchResults, loading } = useSelector((state) => state.medicine);
   const [searchParams] = useSearchParams();
   const [query, setQuery] = useState(searchParams.get('q') || '');
   const compareBase = publicMode ? '/compare' : '/dashboard/compare';
-  const [hasSearched, setHasSearched] = useState(false);
-  const [fetchError, setFetchError] = useState('');
-
-  useEffect(() => {
-    dispatch(setSearchResults([]));
-  }, [dispatch]);
+  const [request, setRequest] = useState(null);
+  const { data, loading: fetching, error } = useAsync(
+    () => (request ? searchMedicines(request.query, { refresh: request.refresh }) : []),
+    [request],
+  );
+  const hasSearched = Boolean(request);
+  const loading = hasSearched && fetching;
+  const fetchError = hasSearched && error ? searchErrorMessage(error) : '';
+  const searchResults = (hasSearched && !error && data) || [];
 
   useEffect(() => {
     const q = searchParams.get('q');
     if (q && q.trim()) {
       setQuery(q);
-      setHasSearched(true);
-      dispatch(setLoading(true));
-      searchMedicines(q)
-        .then((results) => dispatch(setSearchResults(results)))
-        .catch(() => dispatch(setSearchResults([])))
-        .finally(() => dispatch(setLoading(false)));
+      setRequest({ query: q, refresh: false });
     }
-  }, [searchParams, dispatch]);
+  }, [searchParams]);
 
-  const handleSearch = async (e, opts = {}) => {
+  const handleSearch = (e, opts = {}) => {
     if (e) e.preventDefault();
     if (!query.trim()) return;
-
-    setHasSearched(true);
-    setFetchError('');
-    dispatch(setLoading(true));
-    dispatch(addRecentSearch(query));
-
-    try {
-      const results = await searchMedicines(query, { refresh: Boolean(opts.refresh) });
-      dispatch(setSearchResults(results));
-    } catch (err) {
-      const status = err.response?.status;
-      const body = err.response?.data;
-      const backendMsg =
-        typeof body === 'object' && body !== null && typeof body.message === 'string'
-          ? body.message
-          : typeof body === 'string'
-            ? body
-            : null;
-      let msg = backendMsg || err.message || 'Search failed';
-      if (status === 502) {
-        msg =
-          backendMsg ||
-          'Live prices could not be loaded (502). Usually every pharmacy scrape failed, or the request timed out. Retry shortly.';
-      }
-      setFetchError(msg);
-      dispatch(setError(msg));
-      dispatch(setSearchResults([]));
-    } finally {
-      dispatch(setLoading(false));
-    }
+    setRequest({ query, refresh: Boolean(opts.refresh) });
   };
 
   return (
@@ -166,7 +150,7 @@ const SearchMedicinePage = ({ publicMode = false }) => {
               )}
               <button
                 type="button"
-                onClick={() => { setHasSearched(false); setQuery(''); }}
+                onClick={() => { setRequest(null); setQuery(''); }}
                 className="text-xs font-bold text-muted hover:text-teal dark:hover:text-teal"
               >
                 Clear search

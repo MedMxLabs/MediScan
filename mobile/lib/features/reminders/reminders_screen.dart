@@ -8,10 +8,13 @@ import '../../core/notifications/alarm_vibration.dart';
 import '../../core/notifications/reminder_alarm_prefs.dart';
 import '../../core/notifications/reminder_notification_service.dart';
 import '../../core/theme.dart';
+import '../../widgets/async_body.dart';
 import '../../widgets/common_widgets.dart';
 import '../../widgets/ui_components.dart';
 import 'reminder_notification_sheet.dart';
 import 'reminder_widgets.dart';
+
+part 'reminders_screen_widgets.dart';
 
 class RemindersScreen extends StatefulWidget {
   const RemindersScreen({super.key});
@@ -20,9 +23,8 @@ class RemindersScreen extends StatefulWidget {
   State<RemindersScreen> createState() => _RemindersScreenState();
 }
 
-class _RemindersScreenState extends State<RemindersScreen> {
+class _RemindersScreenState extends State<RemindersScreen> with AsyncLoadState {
   List<Map<String, dynamic>> _reminders = [];
-  bool _loading = true;
   bool _notificationsEnabled = true;
   bool _alarmMode = true;
   bool _strictBlock = false;
@@ -35,8 +37,7 @@ class _RemindersScreenState extends State<RemindersScreen> {
 
   Future<void> _load() async {
     final api = context.read<MedscanApi>();
-    setState(() => _loading = true);
-    try {
+    final ok = await runLoad(() async {
       final enabled = await ReminderNotificationService.instance.requestPermissions();
       final alarmMode = await ReminderAlarmPrefs.alarmModeEnabled();
       final strictBlock = await ReminderAlarmPrefs.strictBlockEnabled();
@@ -48,16 +49,16 @@ class _RemindersScreenState extends State<RemindersScreen> {
         _notificationsEnabled = enabled;
         _alarmMode = alarmMode;
         _strictBlock = strictBlock;
-        _loading = false;
       });
-      await _handlePendingNotification(rows);
+    });
+    if (!ok) return;
+    // Follow-up prompts are best-effort; the loaded list stays visible if they fail.
+    try {
+      await _handlePendingNotification(_reminders);
       if (ReminderNotificationService.instance.pendingReminderId == null) {
-        await _maybeShowDueReminder(rows);
+        await _maybeShowDueReminder(_reminders);
       }
-    } catch (_) {
-      if (!mounted) return;
-      setState(() => _loading = false);
-    }
+    } catch (_) {}
   }
 
   Future<void> _handlePendingNotification(List<Map<String, dynamic>> rows) async {
@@ -201,9 +202,12 @@ class _RemindersScreenState extends State<RemindersScreen> {
     return PageShell(
       title: 'Reminders',
       showBack: true,
-      child: _loading
-          ? const LoadingOverlay()
-          : Column(
+      child: AsyncBody(
+        loading: loading,
+        error: loadError,
+        errorTitle: 'Could not load reminders',
+        onRetry: _load,
+        builder: (context) => Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 if (!_notificationsEnabled)
@@ -228,45 +232,12 @@ class _RemindersScreenState extends State<RemindersScreen> {
                   ),
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-                  child: DarkCard(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text('Alert settings', style: TextStyle(fontWeight: FontWeight.w700, color: Colors.white, fontSize: 15)),
-                        const SizedBox(height: 4),
-                        Text(
-                          'Customize vibration and lock-screen behaviour',
-                          style: TextStyle(color: Colors.white.withValues(alpha: 0.5), fontSize: 12),
-                        ),
-                        SwitchListTile(
-                          contentPadding: EdgeInsets.zero,
-                          title: const Text('Alarm mode', style: TextStyle(color: Colors.white, fontSize: 14)),
-                          subtitle: const Text('Loud alert + strong vibration', style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
-                          value: _alarmMode,
-                          activeTrackColor: AppColors.lime.withValues(alpha: 0.4),
-                          thumbColor: WidgetStateProperty.resolveWith(
-                            (s) => s.contains(WidgetState.selected) ? AppColors.lime : null,
-                          ),
-                          onChanged: _setAlarmMode,
-                        ),
-                        SwitchListTile(
-                          contentPadding: EdgeInsets.zero,
-                          title: const Text('Strict mode (optional)', style: TextStyle(color: Colors.white, fontSize: 14)),
-                          subtitle: const Text('Must tap Yes/No before using the app', style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
-                          value: _strictBlock,
-                          activeTrackColor: AppColors.amber.withValues(alpha: 0.4),
-                          thumbColor: WidgetStateProperty.resolveWith(
-                            (s) => s.contains(WidgetState.selected) ? AppColors.amber : null,
-                          ),
-                          onChanged: _setStrictBlock,
-                        ),
-                        if (_strictBlock)
-                          TextButton(
-                            onPressed: _previewAlarmLock,
-                            child: const Text('Preview strict alarm screen'),
-                          ),
-                      ],
-                    ),
+                  child: _AlertSettingsCard(
+                    alarmMode: _alarmMode,
+                    strictBlock: _strictBlock,
+                    onAlarmMode: _setAlarmMode,
+                    onStrictBlock: _setStrictBlock,
+                    onPreview: _previewAlarmLock,
                   ),
                 ),
                 Padding(
@@ -288,74 +259,14 @@ class _RemindersScreenState extends State<RemindersScreen> {
                             itemCount: _reminders.length,
                             itemBuilder: (_, i) {
                               final r = _reminders[i];
-                              final timeLabel = reminderTimesLabel(r);
-                              final notes = reminderNotes(r);
-                              final enabled = r['enabled'] != false && r['status'] != 'paused';
-                              final due = isReminderDueNow(r);
                               return FadeSlideIn(
                                 delay: Duration(milliseconds: i * 60),
                                 child: Padding(
                                   padding: const EdgeInsets.only(bottom: 10),
-                                  child: DarkCard(
-                                    onTap: () => showReminderNotificationSheet(context, r),
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Row(
-                                          children: [
-                                            const Text('💊', style: TextStyle(fontSize: 24)),
-                                            const SizedBox(width: 12),
-                                            Expanded(
-                                              child: Column(
-                                                crossAxisAlignment: CrossAxisAlignment.start,
-                                                children: [
-                                                  if (timeLabel.isNotEmpty)
-                                                    Text(timeLabel, style: const TextStyle(color: AppColors.textMuted, fontSize: 12)),
-                                                  Text(
-                                                    r['medicine_name']?.toString() ?? '',
-                                                    style: const TextStyle(fontWeight: FontWeight.w700, color: Colors.white),
-                                                  ),
-                                                  Text(
-                                                    '${r['dose'] ?? ''} · ${r['frequency'] ?? 'Daily'}',
-                                                    style: const TextStyle(color: AppColors.textMuted, fontSize: 12),
-                                                  ),
-                                                  if (notes.isNotEmpty)
-                                                    Text(notes, style: const TextStyle(color: AppColors.lime, fontSize: 12)),
-                                                ],
-                                              ),
-                                            ),
-                                            Switch(
-                                              value: enabled,
-                                              activeTrackColor: AppColors.lime.withValues(alpha: 0.4),
-                                              thumbColor: WidgetStateProperty.resolveWith(
-                                                (s) => s.contains(WidgetState.selected) ? AppColors.lime : null,
-                                              ),
-                                              onChanged: (v) => _toggle(r['id'] as int, v),
-                                            ),
-                                            IconButton(
-                                              icon: const Icon(Icons.delete_outline, color: AppColors.red, size: 20),
-                                              onPressed: () => _delete(r['id'] as int),
-                                            ),
-                                          ],
-                                        ),
-                                        if (due) ...[
-                                          const SizedBox(height: 12),
-                                          Container(
-                                            width: double.infinity,
-                                            padding: const EdgeInsets.symmetric(vertical: 10),
-                                            decoration: BoxDecoration(
-                                              color: AppColors.lime.withValues(alpha: 0.12),
-                                              borderRadius: BorderRadius.circular(10),
-                                            ),
-                                            child: const Text(
-                                              'Due now — tap to respond',
-                                              textAlign: TextAlign.center,
-                                              style: TextStyle(color: AppColors.lime, fontWeight: FontWeight.w700, fontSize: 13),
-                                            ),
-                                          ),
-                                        ],
-                                      ],
-                                    ),
+                                  child: _ReminderTile(
+                                    reminder: r,
+                                    onToggle: (v) => _toggle(r['id'] as int, v),
+                                    onDelete: () => _delete(r['id'] as int),
                                   ),
                                 ),
                               );
@@ -372,6 +283,7 @@ class _RemindersScreenState extends State<RemindersScreen> {
                 ),
               ],
             ),
+      ),
     );
   }
 }

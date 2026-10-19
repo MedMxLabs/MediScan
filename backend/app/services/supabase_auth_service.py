@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import logging
 import os
+from functools import lru_cache
 from typing import Any
 
 import jwt
@@ -48,13 +49,16 @@ def _decode_hs256(token: str, secret: str) -> dict[str, Any]:
     return jwt.decode(token, secret, **kwargs)
 
 
+@lru_cache(maxsize=4)
+def _jwks_client(jwks_url: str) -> PyJWKClient:
+    return PyJWKClient(jwks_url, cache_keys=True)
+
+
 def _decode_jwks(token: str) -> dict[str, Any]:
     url = _project_url()
     if not url:
         raise SupabaseAuthError("SUPABASE_URL is not set")
-    jwks_url = f"{url}/auth/v1/.well-known/jwks.json"
-    client = PyJWKClient(jwks_url, cache_keys=True)
-    signing_key = client.get_signing_key_from_jwt(token)
+    signing_key = _jwks_client(f"{url}/auth/v1/.well-known/jwks.json").get_signing_key_from_jwt(token)
     alg = getattr(signing_key, "algorithm_name", None) or signing_key._jwk_data.get("alg")  # noqa: SLF001
     algorithms = [alg] if alg else ["RS256", "ES256", "ES384", "EdDSA"]
     issuer = _issuer()

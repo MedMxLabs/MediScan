@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import {
   CartesianGrid,
   Line,
@@ -11,6 +11,7 @@ import {
 import { TrendingUp } from 'lucide-react';
 import Card from '../components/ui/Card';
 import { getAdherence, getReminders, markDose } from '../services/api';
+import useAsync, { errorMessage } from '../hooks/useAsync';
 import PageShell from '../components/dashboard/PageShell';
 import PageHeader from '../components/dashboard/PageHeader';
 import LoadingState from '../components/dashboard/LoadingState';
@@ -26,31 +27,18 @@ function seriesFromWeekly(weekly) {
   });
 }
 
+async function loadAdherence() {
+  const [adh, rem] = await Promise.all([getAdherence(), getReminders().catch(() => [])]);
+  return { adherence: adh || {}, reminders: Array.isArray(rem) ? rem : [] };
+}
+
 const AdherenceTrackingPage = () => {
-  const [loading, setLoading] = useState(true);
-  const [err, setErr] = useState('');
-  const [adherence, setAdherence] = useState(null);
-  const [reminders, setReminders] = useState([]);
+  const { data, loading, error, reload } = useAsync(loadAdherence, []);
+  const [markErr, setMarkErr] = useState('');
   const [marking, setMarking] = useState(null);
-
-  const refresh = async () => {
-    try {
-      const [adh, rem] = await Promise.all([
-        getAdherence(),
-        getReminders().catch(() => []),
-      ]);
-      setAdherence(adh || {});
-      setReminders(Array.isArray(rem) ? rem : []);
-    } catch (e) {
-      setErr(e.response?.data?.message || e.message || 'Could not load adherence');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    refresh();
-  }, []);
+  const adherence = data?.adherence || null;
+  const reminders = useMemo(() => data?.reminders || [], [data]);
+  const err = markErr || (error ? errorMessage(error, 'Could not load adherence') : '');
 
   const perMedicine = useMemo(() => {
     const logs = adherence?.logs || [];
@@ -83,17 +71,18 @@ const AdherenceTrackingPage = () => {
 
   const handleMark = async (reminder, status) => {
     setMarking(`${reminder.id}:${status}`);
+    setMarkErr('');
     try {
       await markDose(reminder.id, status);
-      await refresh();
+      await reload();
     } catch (e) {
-      setErr(e.response?.data?.message || e.message || 'Mark failed');
+      setMarkErr(errorMessage(e, 'Mark failed'));
     } finally {
       setMarking(null);
     }
   };
 
-  if (loading) return <LoadingState label="Loading adherence…" />;
+  if (loading && !data) return <LoadingState label="Loading adherence…" />;
 
   const pct = Number(adherence?.completion_percent ?? 0);
   const taken = adherence?.taken_doses ?? 0;

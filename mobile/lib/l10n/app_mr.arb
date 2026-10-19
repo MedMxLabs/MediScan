@@ -72,5 +72,15 @@
   "signupLink": "साइन अप",
   "landingGetStarted": "सुरू करा",
   "landingLogin": "लॉगिन",
-  "landingTagline": "भारतभर औषध किंमतींची तुलना"
+  "landingTagline": "भारतभर औषध किंमतींची तुलना",
+  "signupTitle": "खाते तयार करा",
+  "signupSubtitle": "उत्तम आरोग्यसेवेसाठी MedMx मध्ये सामील व्हा",
+  "signupEmail": "ईमेल",
+  "signupPasswordHint": "पासवर्ड (8+ अक्षरे)",
+  "passwordTooShort": "पासवर्ड किमान 8 अक्षरांचा असावा",
+  "signupFailed": "साइन अप अयशस्वी झाले",
+  "supabaseNotConfigured": "या API वर Supabase Auth कॉन्फिगर केलेले नाही.",
+  "orDivider": "किंवा",
+  "loginPrompt": "आधीच खाते आहे? ",
+  "retry": "पुन्हा प्रयत्न करा"
 }

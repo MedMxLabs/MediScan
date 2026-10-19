@@ -7,7 +7,7 @@
       "/sw.js",
       "/workbox-*.js",
       "/manifest.webmanifest",
-      "*.{css,js,png,jpg,jpeg,gif,svg,ico,woff,woff2,webmanifest}"
+      "*.{css,js,png,jpg,jpeg,gif,webp,svg,ico,woff,woff2,webmanifest}"
     ]
   },
   "routes": [
@@ -20,7 +20,7 @@
     "X-Content-Type-Options": "nosniff",
     "X-Frame-Options": "DENY",
     "Referrer-Policy": "strict-origin-when-cross-origin",
-    "Permissions-Policy": "geolocation=(self), camera=(), microphone=()"
+    "Permissions-Policy": "geolocation=(self), camera=(self), microphone=()"
   },
   "mimeTypes": {
     ".json": "application/json",

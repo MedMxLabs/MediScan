@@ -694,7 +694,6 @@ Declared in `android/app/src/main/AndroidManifest.xml`:
 |----------|----------|
 | Monorepo overview | [`../README.md`](../README.md) |
 | Azure deployment | [`../docs/azure-deployment.md`](../docs/azure-deployment.md) |
-| API integration notes | [`../docs/integration-report.md`](../docs/integration-report.md) |
 | Web frontend | [`../frontend/`](../frontend/) |
 | Flask backend | [`../backend/`](../backend/) |
 

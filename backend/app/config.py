@@ -1,9 +1,11 @@
 import os
 from datetime import timedelta
 
+DEV_SECRET_KEY = "dev-change-me-medscan"
+
 
 class BaseConfig:
-    SECRET_KEY = os.environ.get("SECRET_KEY", "dev-change-me-medscan")
+    SECRET_KEY = os.environ.get("SECRET_KEY", DEV_SECRET_KEY)
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     JWT_SECRET_KEY = os.environ.get("JWT_SECRET_KEY", SECRET_KEY)
     JWT_ACCESS_TOKEN_EXPIRES = timedelta(minutes=int(os.environ.get("JWT_ACCESS_MINUTES", "15")))
@@ -12,8 +14,6 @@ class BaseConfig:
         "MEDSCAN_UPLOAD_FOLDER", os.path.join(os.path.dirname(__file__), "..", "..", "uploads")
     )
     MAX_CONTENT_LENGTH = 16 * 1024 * 1024
-    GOOGLE_OAUTH_CLIENT_ID = os.environ.get("GOOGLE_OAUTH_CLIENT_ID", "")
-    GOOGLE_OAUTH_CLIENT_SECRET = os.environ.get("GOOGLE_OAUTH_CLIENT_SECRET", "")
     REDIS_URL = os.environ.get("REDIS_URL", "")
     # Supabase Auth (primary when all three are set)
     SUPABASE_URL = os.environ.get("SUPABASE_URL", "").rstrip("/")
@@ -31,7 +31,6 @@ class DevelopmentConfig(BaseConfig):
     SQLALCHEMY_DATABASE_URI = _normalize_database_url(
         os.environ.get("DATABASE_URL", "sqlite:///medscan.db"),
     )
-    CACHE_TYPE = os.environ.get("CACHE_TYPE", "simple")
 
 
 class ProductionConfig(BaseConfig):

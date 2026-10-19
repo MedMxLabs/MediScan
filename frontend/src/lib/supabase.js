@@ -6,8 +6,6 @@ const envAnon = (import.meta.env.VITE_SUPABASE_ANON_KEY || '').trim()
 let _client = null
 let _configChecked = false
 let _enabledFromApi = false
-let _resolvedUrl = ''
-let _resolvedAnon = ''
 
 /** True when Vite env has both values (sync check for UI). */
 export const supabaseAuthEnabled = Boolean(envUrl && envAnon)
@@ -54,8 +52,6 @@ export async function getSupabaseClient() {
   if (_client) return _client
 
   if (envUrl && envAnon) {
-    _resolvedUrl = envUrl
-    _resolvedAnon = envAnon
     _client = buildClient(envUrl, envAnon)
     return _client
   }
@@ -66,8 +62,6 @@ export async function getSupabaseClient() {
       const cfg = await fetchBackendConfig()
       if (cfg?.enabled && cfg.url && cfg.anon_key) {
         _enabledFromApi = true
-        _resolvedUrl = cfg.url
-        _resolvedAnon = cfg.anon_key
         _client = buildClient(cfg.url, cfg.anon_key)
       }
     } catch {

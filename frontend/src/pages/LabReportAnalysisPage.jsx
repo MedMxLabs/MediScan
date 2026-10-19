@@ -1,9 +1,11 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { FileUp, AlertCircle, CheckCircle2, Info, X, FileText } from 'lucide-react';
 import PageShell from '../components/dashboard/PageShell';
 import PageHeader from '../components/dashboard/PageHeader';
 import DashPanel from '../components/dashboard/DashPanel';
 import { analyzeReport, getLabReports } from '../services/api';
+import useAsync from '../hooks/useAsync';
+import { activateOnEnterOrSpace } from '../utils/a11y';
 
 const flagLabel = {
   normal: { label: 'Normal', cls: 'text-teal', bucket: 'normal' },
@@ -25,14 +27,9 @@ const LabReportAnalysisPage = () => {
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
   const [result, setResult] = useState(null);
-  const [pastReports, setPastReports] = useState([]);
   const fileInputRef = useRef(null);
-
-  useEffect(() => {
-    getLabReports()
-      .then((data) => setPastReports(data?.reports || []))
-      .catch(() => setPastReports([]));
-  }, [result]);
+  const { data: past, error: pastError } = useAsync(getLabReports, [result]);
+  const pastReports = (!pastError && past?.reports) || [];
 
   const rows = useMemo(() => result?.extracted_rows || [], [result]);
   const counts = useMemo(() => {
@@ -99,9 +96,10 @@ const LabReportAnalysisPage = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
         <DashPanel title="Upload lab report" className="flex flex-col" bodyClassName="flex flex-col flex-1">
           <div
-            role="button"
-            tabIndex={0}
-            onKeyDown={(e) => e.key === 'Enter' && pickFile()}
+            role={file ? undefined : 'button'}
+            tabIndex={file ? undefined : 0}
+            aria-label={file ? undefined : 'Choose a lab report file (JPG, PNG or PDF, max 10 MB)'}
+            onKeyDown={file ? undefined : (e) => activateOnEnterOrSpace(e, pickFile)}
             className="dash-inset-dashed flex-1 min-h-[280px] p-8 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors"
             onClick={pickFile}
           >

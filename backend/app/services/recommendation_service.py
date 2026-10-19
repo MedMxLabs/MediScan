@@ -45,55 +45,38 @@ def affordability_insights(prices: list[dict[str, Any]]) -> dict[str, Any]:
     }
 
 
-def suggest_alternatives(medicine_name: str, composition_hint: str | None = None) -> list[dict[str, Any]]:
-    """Catalog matches by composition or generic name (same logic as /api/alternatives)."""
+def find_alternatives(medicine_name: str, composition_hint: str | None = None):
+    """Catalog matches by composition, falling back to generic name. Returns (seed_row, items)."""
     from app.models.medicine import MedicineCatalog
 
     name = (medicine_name or "").strip()
     if not name:
-        return []
+        return None, []
 
     seed = MedicineCatalog.query.filter(MedicineCatalog.name.ilike(f"%{name}%")).first()
-    composition = composition_hint or (seed.composition if seed else None)
-    generic = seed.generic_name if seed else None
-    items: list[dict[str, Any]] = []
+    searches = (
+        ("composition", MedicineCatalog.composition, composition_hint or (seed.composition if seed else None)),
+        ("generic_name", MedicineCatalog.generic_name, seed.generic_name if seed else None),
+    )
+    for basis, column, value in searches:
+        if not value:
+            continue
+        items = [
+            {
+                "id": r.id,
+                "name": r.name,
+                "generic_name": r.generic_name,
+                "composition": r.composition,
+                "manufacturer": r.manufacturer,
+                "match_basis": basis,
+            }
+            for r in MedicineCatalog.query.filter(column.ilike(f"%{value}%")).limit(10).all()
+            if not (seed and r.id == seed.id)
+        ]
+        if items:
+            return seed, items
+    return seed, []
 
-    if composition:
-        rows = (
-            MedicineCatalog.query.filter(MedicineCatalog.composition.ilike(f"%{composition}%"))
-            .limit(10)
-            .all()
-        )
-        for r in rows:
-            if seed and r.id == seed.id:
-                continue
-            items.append(
-                {
-                    "id": r.id,
-                    "name": r.name,
-                    "generic_name": r.generic_name,
-                    "composition": r.composition,
-                    "manufacturer": r.manufacturer,
-                    "match_basis": "composition",
-                }
-            )
-    if not items and generic:
-        rows = (
-            MedicineCatalog.query.filter(MedicineCatalog.generic_name.ilike(f"%{generic}%"))
-            .limit(10)
-            .all()
-        )
-        for r in rows:
-            if seed and r.id == seed.id:
-                continue
-            items.append(
-                {
-                    "id": r.id,
-                    "name": r.name,
-                    "generic_name": r.generic_name,
-                    "composition": r.composition,
-                    "manufacturer": r.manufacturer,
-                    "match_basis": "generic_name",
-                }
-            )
-    return items
+
+def suggest_alternatives(medicine_name: str, composition_hint: str | None = None) -> list[dict[str, Any]]:
+    return find_alternatives(medicine_name, composition_hint)[1]

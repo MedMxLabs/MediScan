@@ -20,18 +20,9 @@ import WhyMedMx from '../components/landing/WhyMedMx';
 import Testimonials from '../components/landing/Testimonials';
 import FAQ from '../components/landing/FAQ';
 import LandingFooter from '../components/landing/LandingFooter';
-import LandingBleedBackground from '../components/landing/LandingBleedBackground';
+import BleedBackground from '../components/BleedBackground';
 import BackedByMicrosoft from '../components/BackedByMicrosoft';
-
-const fadeUp = {
-  hidden: { opacity: 0, y: 28 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.55, ease: [0.22, 1, 0.36, 1] } },
-};
-
-const stagger = {
-  hidden: { opacity: 0 },
-  visible: { opacity: 1, transition: { staggerChildren: 0.1, delayChildren: 0.15 } },
-};
+import { fadeUp, staggerContainer as stagger } from '../components/landing/landingMotion';
 
 const AVATARS = ['AS', 'PK', 'RM', 'JD'];
 
@@ -39,14 +30,15 @@ const LandingPage = () => {
   const location = useLocation();
 
   useEffect(() => {
-    if (location.hash) {
-      const id = location.hash.replace('#', '');
-      setTimeout(() => {
-        document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
-      }, 100);
-    } else {
+    if (!location.hash) {
       window.scrollTo(0, 0);
+      return undefined;
     }
+    const id = location.hash.replace('#', '');
+    const timer = setTimeout(() => {
+      document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
+    }, 100);
+    return () => clearTimeout(timer);
   }, [location.pathname, location.hash]);
 
   return (
@@ -55,7 +47,7 @@ const LandingPage = () => {
       animate={{ opacity: 1 }}
       className="relative min-h-screen flex flex-col overflow-x-hidden w-full"
     >
-      <LandingBleedBackground />
+      <BleedBackground variant="landing" />
 
       <div className="relative z-10 flex flex-col">
       {/* Hero + navbar */}

@@ -227,4 +227,36 @@ class AppLocalizationsTa extends AppLocalizations {
 
   @override
   String get landingTagline => 'இந்தியா முழுவதும் மருந்து விலை ஒப்பீடு';
+
+  @override
+  String get signupTitle => 'கணக்கை உருவாக்கு';
+
+  @override
+  String get signupSubtitle => 'சிறந்த சுகாதார சேவைக்கு MedMx-இல் சேருங்கள்';
+
+  @override
+  String get signupEmail => 'மின்னஞ்சல்';
+
+  @override
+  String get signupPasswordHint => 'கடவுச்சொல் (8+ எழுத்துகள்)';
+
+  @override
+  String get passwordTooShort =>
+      'கடவுச்சொல் குறைந்தது 8 எழுத்துகள் இருக்க வேண்டும்';
+
+  @override
+  String get signupFailed => 'பதிவு தோல்வியடைந்தது';
+
+  @override
+  String get supabaseNotConfigured =>
+      'இந்த API-இல் Supabase Auth அமைக்கப்படவில்லை.';
+
+  @override
+  String get orDivider => 'அல்லது';
+
+  @override
+  String get loginPrompt => 'ஏற்கனவே கணக்கு உள்ளதா? ';
+
+  @override
+  String get retry => 'மீண்டும் முயற்சி செய்';
 }

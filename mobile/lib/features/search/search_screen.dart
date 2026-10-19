@@ -8,6 +8,7 @@ import '../../core/api/api_client.dart';
 import '../../core/api/medscan_api.dart';
 import '../../core/app_helpers.dart';
 import '../../core/theme.dart';
+import '../../widgets/async_body.dart';
 import '../../widgets/common_widgets.dart';
 import '../../widgets/ui_components.dart';
 
@@ -18,13 +19,17 @@ class SearchScreen extends StatefulWidget {
   State<SearchScreen> createState() => _SearchScreenState();
 }
 
-class _SearchScreenState extends State<SearchScreen> {
+class _SearchScreenState extends State<SearchScreen> with AsyncLoadState {
   final _query = TextEditingController();
   List<Map<String, dynamic>> _results = [];
-  bool _loading = false;
-  String? _error;
   String _filter = 'All';
   static const _filters = ['All', 'Tablet', 'Syrup', 'Drops', 'Capsule'];
+
+  @override
+  void initState() {
+    super.initState();
+    loading = false;
+  }
 
   @override
   void dispose() {
@@ -34,31 +39,15 @@ class _SearchScreenState extends State<SearchScreen> {
 
   Future<void> _search({bool refresh = false}) async {
     if (_query.text.trim().isEmpty) return;
-    setState(() {
-      _loading = true;
-      _error = null;
-    });
-    try {
-      final api = context.read<MedscanApi>();
-      final rows = await api.searchMedicine(_query.text, refresh: refresh);
-      if (!mounted) return;
-      setState(() {
-        _results = rows;
-        _loading = false;
-      });
-    } on DioException catch (e) {
-      if (!mounted) return;
-      setState(() {
-        _error = context.read<ApiClient>().errorMessage(e);
-        _loading = false;
-      });
-    } catch (e) {
-      if (!mounted) return;
-      setState(() {
-        _error = e.toString();
-        _loading = false;
-      });
-    }
+    final api = context.read<MedscanApi>();
+    final client = context.read<ApiClient>();
+    await runLoad(
+      () async {
+        final rows = await api.searchMedicine(_query.text, refresh: refresh);
+        if (mounted) setState(() => _results = rows);
+      },
+      describeError: (e) => e is DioException ? client.errorMessage(e) : e.toString(),
+    );
   }
 
   List<Map<String, dynamic>> get _filtered {
@@ -134,21 +123,20 @@ class _SearchScreenState extends State<SearchScreen> {
             ),
           ),
           const SizedBox(height: 12),
-          if (_loading)
-            const Expanded(child: LoadingOverlay(message: 'Fetching live prices…'))
-          else if (_error != null)
-            Expanded(child: EmptyState(title: 'Search failed', subtitle: _error))
-          else if (_results.isEmpty)
-            const Expanded(
-              child: EmptyState(
-                title: 'Search for a medicine',
-                subtitle: 'Live prices from 6 Indian pharmacies',
-                icon: Icons.local_pharmacy_outlined,
-              ),
-            )
-          else
-            Expanded(
-              child: ListView.builder(
+          Expanded(
+            child: AsyncBody(
+              loading: loading,
+              error: loadError,
+              loadingMessage: 'Fetching live prices…',
+              errorTitle: 'Search failed',
+              onRetry: _search,
+              builder: (context) => _results.isEmpty
+                  ? const EmptyState(
+                      title: 'Search for a medicine',
+                      subtitle: 'Live prices from 6 Indian pharmacies',
+                      icon: Icons.local_pharmacy_outlined,
+                    )
+                  : ListView.builder(
                 padding: const EdgeInsets.fromLTRB(16, 0, 16, AppSpacing.bottomNavClearance),
                 itemCount: _filtered.length,
                 itemBuilder: (_, i) {
@@ -215,6 +203,7 @@ class _SearchScreenState extends State<SearchScreen> {
                 },
               ),
             ),
+          ),
           if (_filtered.isNotEmpty)
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),

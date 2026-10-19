@@ -119,11 +119,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final auth = context.watch<AuthProvider>();
     final settings = context.watch<SettingsProvider>();
     final l10n = context.l10n;
-    final email = auth.user?['email']?.toString() ?? '';
-    final displayName = userDisplayName(auth.user);
+    final email = context.select<AuthProvider, String>((a) => a.user?['email']?.toString() ?? '');
+    final displayName = context.select<AuthProvider, String>((a) => userDisplayName(a.user));
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final bodyBg = isDark ? AppColors.darkBg : AppColors.lightBg;
     final textColor = AppTheme.primaryText(context);

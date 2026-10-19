@@ -5,9 +5,10 @@ from app.extensions import db
 
 class Reminder(db.Model):
     __tablename__ = "reminders"
+    __table_args__ = (db.Index("ix_reminders_status_next_trigger", "status", "next_trigger"),)
 
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False, index=True)
     medicine_name = db.Column(db.String(512), nullable=False)
     dose = db.Column(db.String(128), nullable=True)
     schedule = db.Column(db.JSON, default=dict)
@@ -20,6 +21,7 @@ class Reminder(db.Model):
 
 class AdherenceLog(db.Model):
     __tablename__ = "adherence_logs"
+    __table_args__ = (db.Index("ix_adherence_logs_user_id_taken_at", "user_id", "taken_at"),)
 
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)

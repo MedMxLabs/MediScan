@@ -227,4 +227,35 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get landingTagline => 'Compare medicine prices across India';
+
+  @override
+  String get signupTitle => 'Create Account';
+
+  @override
+  String get signupSubtitle => 'Join MedMx for smarter healthcare';
+
+  @override
+  String get signupEmail => 'Email';
+
+  @override
+  String get signupPasswordHint => 'Password (8+ chars)';
+
+  @override
+  String get passwordTooShort => 'Password must be at least 8 characters';
+
+  @override
+  String get signupFailed => 'Signup failed';
+
+  @override
+  String get supabaseNotConfigured =>
+      'Supabase Auth is not configured on this API.';
+
+  @override
+  String get orDivider => 'or';
+
+  @override
+  String get loginPrompt => 'Already have an account? ';
+
+  @override
+  String get retry => 'Retry';
 }

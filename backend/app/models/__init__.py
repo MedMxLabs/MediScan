@@ -1,6 +1,6 @@
 from app.models.user import User
 from app.models.prescription import Prescription
-from app.models.medicine import MedicineCatalog, PriceCache, SearchCache
+from app.models.medicine import MedicineCatalog, ScrapeJob, SearchCache
 from app.models.price import Price
 from app.models.reminder import Reminder, AdherenceLog
 from app.models.report import LabReport
@@ -11,7 +11,7 @@ __all__ = [
     "User",
     "Prescription",
     "MedicineCatalog",
-    "PriceCache",
+    "ScrapeJob",
     "Price",
     "SearchCache",
     "Reminder",

@@ -55,47 +55,60 @@ def test_health(client):
     assert r.get_json()["status"] == "ok"
 
 
-@pytest.mark.skip(reason="Legacy register/login routes removed; web uses Supabase Auth now")
-def test_register_login_refresh(client):
-    r = client.post("/api/auth/register", json={"email": "test@example.com", "password": "password123"})
-    assert r.status_code == 201
-    r = client.post("/api/auth/login", json={"email": "test@example.com", "password": "password123"})
+def test_search_runs_in_background_job(client, monkeypatch):
+    import time
+
+    from app.services import scrape_job_service
+    from app.services.scraper_service import ScrapeOutcome
+
+    row = {"pharmacy_name": "Test", "price": 10.0, "medicine_display": "Dolo 650", "url": "https://1mg.com/x"}
+    monkeypatch.setattr(scrape_job_service, "run_live_scrape", lambda q: ScrapeOutcome([row], []))
+
+    r = client.get("/api/search-medicine?query=dolo 650")
+    assert r.status_code == 202
+    job_id = r.get_json()["data"]["job_id"]
+
+    state = None
+    for _ in range(50):
+        state = client.get(f"/api/scrape-jobs/{job_id}").get_json()["data"]["state"]
+        if state in ("done", "failed"):
+            break
+        time.sleep(0.1)
+    assert state == "done"
+
+    r = client.get("/api/search-medicine?query=dolo 650")
     assert r.status_code == 200
-    body = r.get_json()
-    assert body.get("access_token")
-    refresh = body.get("refresh_token")
-    r = client.post("/api/auth/refresh", headers={"Authorization": f"Bearer {refresh}"})
-    assert r.status_code == 200
-    assert r.get_json().get("access_token")
+    data = r.get_json()["data"]
+    assert data["cache_hit"] is True
+    assert data["prices"][0]["pharmacy_name"] == "Test"
+    assert client.get("/api/scrape-jobs/nope").status_code == 404
 
 
-@pytest.mark.skip(reason="Legacy change-password route removed; web uses Supabase Auth now")
-def test_change_password(client):
-    h = _auth_headers(client, "changepw@example.com")
-    r = client.post(
-        "/api/auth/change-password",
-        json={"current_password": "password123", "new_password": "newpassword99"},
+def test_reminder_tick_advances_due_reminder(client, monkeypatch):
+    from datetime import datetime, timedelta
+
+    from app.scheduler import jobs
+
+    h = _auth_headers(client, "tick@example.com")
+    rid = client.post(
+        "/api/reminders/create",
+        json={"medicine_name": "Metformin", "times": ["09:00"], "duration_days": 7},
         headers=h,
-    )
-    assert r.status_code == 200
-    r = client.post("/api/auth/login", json={"email": "changepw@example.com", "password": "newpassword99"})
-    assert r.status_code == 200
+    ).get_json()["data"]["id"]
+    with client.application.app_context():
+        from app.extensions import db
+        from app.models.reminder import Reminder
 
+        r = db.session.get(Reminder, rid)
+        r.next_trigger = datetime.utcnow() - timedelta(minutes=1)
+        db.session.commit()
 
-@pytest.mark.skip(reason="Legacy forgot/reset-password routes removed; web uses Supabase Auth now")
-def test_forgot_and_reset_password(client):
-    client.post("/api/auth/register", json={"email": "reset@example.com", "password": "password123"})
-    r = client.post("/api/auth/forgot-password", json={"email": "reset@example.com"})
-    assert r.status_code == 200
-    data = r.get_json()
-    token_url = data.get("dev_reset_url") or ""
-    assert token_url or data.get("ok")
-    if "token=" in token_url:
-        token = token_url.split("token=")[-1]
-        r = client.post("/api/auth/reset-password", json={"token": token, "new_password": "resetpass99"})
-        assert r.status_code == 200
-        r = client.post("/api/auth/login", json={"email": "reset@example.com", "password": "resetpass99"})
-        assert r.status_code == 200
+    monkeypatch.setattr(jobs, "_flask_app", client.application)
+    monkeypatch.setattr("app.services.notification_service.notify_reminder_due", lambda *a: None)
+    jobs.reminder_tick_job()
+
+    with client.application.app_context():
+        assert db.session.get(Reminder, rid).next_trigger > datetime.utcnow()
 
 
 def test_delete_account(client):

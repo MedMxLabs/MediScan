@@ -8,11 +8,12 @@ from flask import Flask, jsonify
 from flask_cors import CORS
 from werkzeug.exceptions import HTTPException
 
-from app.config import get_config
+from app.config import DEV_SECRET_KEY, get_config
 from app.extensions import db, jwt
-from app.utils.logger import configure_logging
-from app.utils.sqlite_schema import patch_sqlite_users_columns
 from app.utils.catalog_seed import seed_medicine_catalog_if_empty
+from app.utils.logger import configure_logging
+from app.utils.process_lock import exclusive
+from app.utils.schema_patch import patch_schema
 
 _log = logging.getLogger(__name__)
 
@@ -40,6 +41,11 @@ def create_app(config_name: str | None = None):
     app = Flask(__name__)
     cfg = get_config()
     app.config.from_object(cfg)
+    if os.environ.get("FLASK_ENV") == "production" and DEV_SECRET_KEY in (
+        app.config["SECRET_KEY"],
+        app.config["JWT_SECRET_KEY"],
+    ):
+        raise RuntimeError("SECRET_KEY and JWT_SECRET_KEY must be set in production")
     uri = os.environ.get("DATABASE_URL", "").strip()
     if uri:
         if uri.startswith("postgres://"):
@@ -69,9 +75,9 @@ def create_app(config_name: str | None = None):
     def _client_api_key_guard():
         from app.utils.client_api_key import check_client_api_key
 
-        ok, msg = check_client_api_key()
+        ok, msg, status = check_client_api_key()
         if not ok:
-            return jsonify({"status": "error", "message": msg}), 403
+            return jsonify({"status": "error", "message": msg}), status
         return None
 
     @app.before_request
@@ -92,14 +98,14 @@ def create_app(config_name: str | None = None):
     @app.errorhandler(500)
     def _handle_500(exc):
         _log.exception("Unhandled 500 error")
-        return jsonify({"status": "error", "message": f"Internal server error: {exc}"}), 500
+        return jsonify({"status": "error", "message": "Internal server error"}), 500
 
     @app.errorhandler(Exception)
     def _handle_exception(exc):
         if isinstance(exc, HTTPException):
             return jsonify({"status": "error", "message": exc.description}), exc.code
         _log.exception("Unhandled exception: %s", exc)
-        return jsonify({"status": "error", "message": f"Internal server error: {exc}"}), 500
+        return jsonify({"status": "error", "message": "Internal server error"}), 500
 
     @app.get("/")
     def root():
@@ -125,6 +131,11 @@ def create_app(config_name: str | None = None):
     @app.get("/api/health")
     def api_health():
         """Same as /health; frontend and clients call /api/* only."""
+        return jsonify({"status": "ok", "service": "medscan-api"})
+
+    @app.get("/api/health/detail")
+    def api_health_detail():
+        """OCR / extraction capability probe — imports heavy engines, keep off load-balancer pings."""
         from app.services.medicine_extract_service import scan_extraction_capabilities
         from app.services.ocr_service import scan_ocr_capabilities
 
@@ -151,6 +162,7 @@ def create_app(config_name: str | None = None):
         refill,
         reminder,
         reports,
+        scrape_jobs,
     )
 
     app.register_blueprint(auth.bp)
@@ -168,10 +180,11 @@ def create_app(config_name: str | None = None):
     app.register_blueprint(profile.bp)
     app.register_blueprint(pharmacy.bp)
     app.register_blueprint(refill.bp)
+    app.register_blueprint(scrape_jobs.bp)
 
-    with app.app_context():
+    with app.app_context(), exclusive("db-init"):
         db.create_all()
-        patch_sqlite_users_columns(db)
+        patch_schema(db)
         seed_medicine_catalog_if_empty()
 
     try:
@@ -179,6 +192,6 @@ def create_app(config_name: str | None = None):
 
         init_scheduler(app)
     except Exception:
-        pass
+        _log.exception("Scheduler failed to start")
 
     return app

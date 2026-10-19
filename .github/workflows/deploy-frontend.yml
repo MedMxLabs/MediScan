@@ -38,7 +38,9 @@ jobs:
         working-directory: mobile
         run: |
           flutter pub get
-          flutter build apk --release --dart-define=API_BASE_URL=https://medscan-api.azurewebsites.net
+          flutter build apk --release --split-per-abi \
+            --dart-define=API_BASE_URL=https://medscan-api.azurewebsites.net \
+            --dart-define=MEDSCAN_API_KEY=${{ secrets.VITE_MEDSCAN_API_KEY }}
 
       - name: Copy APK into frontend public
         working-directory: frontend

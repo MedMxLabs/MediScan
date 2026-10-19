@@ -72,5 +72,15 @@
   "signupLink": "साइन अप",
   "landingGetStarted": "शुरू करें",
   "landingLogin": "लॉगिन",
-  "landingTagline": "भारत भर में दवा की कीमतों की तुलना करें"
+  "landingTagline": "भारत भर में दवा की कीमतों की तुलना करें",
+  "signupTitle": "खाता बनाएं",
+  "signupSubtitle": "बेहतर स्वास्थ्य सेवा के लिए MedMx से जुड़ें",
+  "signupEmail": "ईमेल",
+  "signupPasswordHint": "पासवर्ड (8+ अक्षर)",
+  "passwordTooShort": "पासवर्ड कम से कम 8 अक्षरों का होना चाहिए",
+  "signupFailed": "साइन अप विफल रहा",
+  "supabaseNotConfigured": "इस API पर Supabase Auth कॉन्फ़िगर नहीं है।",
+  "orDivider": "या",
+  "loginPrompt": "पहले से खाता है? ",
+  "retry": "पुनः प्रयास करें"
 }

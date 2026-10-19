@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Crosshair, ExternalLink, MapPin, Phone, Search } from 'lucide-react';
 import { getNearbyPharmacies } from '../services/api';
+import useAsync, { errorMessage } from '../hooks/useAsync';
 import PageShell from '../components/dashboard/PageShell';
 import PageHeader from '../components/dashboard/PageHeader';
 import DashPanel from '../components/dashboard/DashPanel';
@@ -14,50 +15,40 @@ function metres(m) {
 const NearbyPharmacyPage = () => {
   const [pos, setPos] = useState(null);
   const [radius, setRadius] = useState(2000);
-  const [loading, setLoading] = useState(false);
-  const [err, setErr] = useState('');
-  const [results, setResults] = useState([]);
-  const [center, setCenter] = useState(null);
+  const [locating, setLocating] = useState(false);
+  const [geoErr, setGeoErr] = useState('');
+  const { data, loading: searching, error, reload: search } = useAsync(
+    async () => {
+      if (!pos) return null;
+      const res = await getNearbyPharmacies({ lat: pos.lat, lng: pos.lng, radius });
+      return { results: res?.results || [], center: res?.center || pos };
+    },
+    [pos, radius],
+  );
+  const loading = locating || (Boolean(pos) && searching);
+  const results = (!error && data?.results) || [];
+  const center = data?.center || null;
+  const err = geoErr || (error ? errorMessage(error, 'Lookup failed') : '');
 
   const locate = () => {
-    setErr('');
+    setGeoErr('');
     if (!navigator.geolocation) {
-      setErr("Your browser doesn't support geolocation.");
+      setGeoErr("Your browser doesn't support geolocation.");
       return;
     }
-    setLoading(true);
+    setLocating(true);
     navigator.geolocation.getCurrentPosition(
       (p) => {
         setPos({ lat: p.coords.latitude, lng: p.coords.longitude });
-        setLoading(false);
+        setLocating(false);
       },
       (e) => {
-        setLoading(false);
-        setErr(e.message || 'Could not access location.');
+        setLocating(false);
+        setGeoErr(e.message || 'Could not access location.');
       },
       { enableHighAccuracy: true, timeout: 10_000 },
     );
   };
-
-  const search = async () => {
-    if (!pos) return;
-    setLoading(true);
-    setErr('');
-    try {
-      const data = await getNearbyPharmacies({ lat: pos.lat, lng: pos.lng, radius });
-      setResults(data?.results || []);
-      setCenter(data?.center || pos);
-    } catch (e) {
-      setErr(e.response?.data?.message || e.message || 'Lookup failed');
-      setResults([]);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    if (pos) search();
-  }, [pos, radius]);
 
   const mapEmbed = center
     ? `https://www.openstreetmap.org/export/embed.html?bbox=${center.lng - 0.02},${center.lat - 0.015},${center.lng + 0.02},${center.lat + 0.015}&layer=mapnik&marker=${center.lat},${center.lng}`
