@@ -6,6 +6,7 @@ Start with [architecture](architecture.md) if you're new. Everything else is ref
 | --- | --- |
 | [architecture.md](architecture.md) | How the pieces fit: clients, API, scrapers, OCR, DB, background jobs |
 | [development.md](development.md) | Run everything locally, tests, lint, common breakages |
+| [faq.md](faq.md) | Self-hosting: scraping responsibilities, lightweight setup, caching, medical disclaimer |
 | [backend.md](backend.md) | Flask code layout, services, config knobs, DB + migrations, scheduler |
 | [api-reference.md](api-reference.md) | Every `/api` route, params, auth, response shapes |
 | [frontend.md](frontend.md) | React app layout, routing, data fetching, PWA, build |
