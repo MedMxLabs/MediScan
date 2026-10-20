@@ -1,4 +1,4 @@
-# Self-hosting FAQ
+# Self-hosting FAQ: scraping and ToS
 
 ## Where does pharmacy data come from?
 
