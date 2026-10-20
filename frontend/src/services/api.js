@@ -22,12 +22,13 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
  * Cache misses return 202 + a background scrape job. Poll it, then replay the request
  * without `refresh` so the backend serves the freshly cached payload.
  */
-async function getScraped(url, params) {
+async function getScraped(url, params, { onPending } = {}) {
   const deadline = Date.now() + SCRAPE_JOB_DEADLINE_MS;
   const replay = { ...params };
   delete replay.refresh;
   let res = await client.get(url, { params, timeout: SCRAPE_TIMEOUT_MS });
   while (res.status === 202) {
+    onPending?.({ state: 'pending' });
     const pending = unwrap(res) || {};
     const pollMs = Number(pending.poll_after_ms) || 2000;
     for (;;) {
@@ -41,6 +42,7 @@ async function getScraped(url, params) {
             timeout: SCRAPE_POLL_TIMEOUT_MS,
           }),
         ) || {};
+      if (job.state !== 'done' && job.state !== 'failed') onPending?.({ state: job.state });
       if (job.state === 'done') break;
       if (job.state === 'failed') {
         const err = new Error(job.error || job.scrape_errors?.[0]?.error || 'All pharmacy sources failed');
@@ -143,12 +145,12 @@ function mapPriceRows(data, query) {
 export async function searchMedicines(query, options = {}) {
   const params = { query: query.trim() };
   if (options.refresh) params.refresh = '1';
-  const data = await getScraped('/api/search-medicine', params);
+  const data = await getScraped('/api/search-medicine', params, options);
   return mapPriceRows(data, query);
 }
 
-export async function compareMedicine(medicine) {
-  return getScraped('/api/compare', { medicine: medicine.trim() });
+export async function compareMedicine(medicine, options = {}) {
+  return getScraped('/api/compare', { medicine: medicine.trim() }, options);
 }
 
 export async function uploadPrescription(formData) {

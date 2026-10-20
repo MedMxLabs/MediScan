@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { CheckCircle2, Search, RefreshCw, ExternalLink, Sparkles } from 'lucide-react';
 import { searchMedicines } from '../services/api';
@@ -39,8 +39,27 @@ const SearchMedicinePage = ({ publicMode = false }) => {
   const [query, setQuery] = useState(searchParams.get('q') || '');
   const compareBase = publicMode ? '/compare' : '/dashboard/compare';
   const [request, setRequest] = useState(null);
+  const [pending, setPending] = useState(null);
+  const activeRequest = useRef(null);
+  useEffect(() => {
+    activeRequest.current = request;
+    return () => { activeRequest.current = null; };
+  }, [request]);
   const { data, loading: fetching, error } = useAsync(
-    () => (request ? searchMedicines(request.query, { refresh: request.refresh }) : []),
+    async () => {
+      setPending(null);
+      if (!request) return [];
+      try {
+        return await searchMedicines(request.query, {
+          refresh: request.refresh,
+          onPending: (job) => {
+            if (activeRequest.current === request) setPending(job);
+          },
+        });
+      } finally {
+        if (activeRequest.current === request) setPending(null);
+      }
+    },
     [request],
   );
   const hasSearched = Boolean(request);
@@ -157,6 +176,13 @@ const SearchMedicinePage = ({ publicMode = false }) => {
               </button>
             </div>
           </div>
+
+          {loading && pending && (
+            <p className="text-sm font-medium dash-muted" role="status">
+              Fetching live prices... this can take up to ~40s
+              {pending.state && ` (${pending.state})`}
+            </p>
+          )}
 
           {searchResults.length === 0 && !loading && !fetchError && (
             <Card className="p-8 text-center">
