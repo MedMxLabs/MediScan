@@ -15,6 +15,7 @@ const MedicineComparisonPage = ({ publicMode = false }) => {
   const searchPath = publicMode ? '/search' : '/dashboard/search';
 
   const [loading, setLoading] = useState(true);
+  const [pending, setPending] = useState(null);
   const [error, setError] = useState('');
   const [payload, setPayload] = useState(null);
   const [generics, setGenerics] = useState([]);
@@ -22,6 +23,7 @@ const MedicineComparisonPage = ({ publicMode = false }) => {
   useEffect(() => {
     let cancelled = false;
     const run = async () => {
+      setPending(null);
       if (!medicineName) {
         setLoading(false);
         setError('Pass a medicine query: /dashboard/compare?m=Your+Medicine');
@@ -31,7 +33,11 @@ const MedicineComparisonPage = ({ publicMode = false }) => {
       setError('');
       try {
         const [data, alts] = await Promise.all([
-          compareMedicine(medicineName),
+          compareMedicine(medicineName, {
+            onPending: (job) => {
+              if (!cancelled) setPending(job);
+            },
+          }),
           getAlternatives(medicineName).catch(() => null),
         ]);
         if (!cancelled) {
@@ -45,7 +51,10 @@ const MedicineComparisonPage = ({ publicMode = false }) => {
           'Could not load comparison (check backend / Playwright).';
         if (!cancelled) setError(msg);
       } finally {
-        if (!cancelled) setLoading(false);
+        if (!cancelled) {
+          setPending(null);
+          setLoading(false);
+        }
       }
     };
     run();
@@ -59,7 +68,9 @@ const MedicineComparisonPage = ({ publicMode = false }) => {
   const cheapest = prices.find((p) => Number(p.price) === lowest);
   const alternatives = payload?.alternatives || [];
 
-  if (loading) return <LoadingState label="Fetching live pharmacy listings…" />;
+  if (loading) return <LoadingState label={pending
+    ? `Fetching live prices... this can take up to ~40s${pending.state ? ` (${pending.state})` : ''}`
+    : 'Fetching live pharmacy listings…'} />;
 
   if (error || !payload) {
     return (
